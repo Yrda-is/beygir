@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "declarationMap": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./dreifing",
+    "rootDir": "."
+  },
+  "include": ["kóði/beygir/beygir.ts", "kóði/beygir/kjarni.ts"]
+}

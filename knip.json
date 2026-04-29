@@ -1,0 +1,5 @@
+{
+  "entry": ["kóði/**/*.test.ts", "próf/**/*.test.ts", "viðmið/kjarni/köld-opnun-barn.ts"],
+  "ignoreBinaries": ["skriftur/uppfæra-kristínarsnið-gagnaskyndiminni.sh"],
+  "project": ["**/*.ts"]
+}
