@@ -1,0 +1,223 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:ital,wght@0,400;0,500;1,400&display=swap");
+
+:root {
+  --dim-toolbar-contents-height: 3rem;
+
+  --letur-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --letur-serif: "IBM Plex Serif", Georgia, serif;
+
+  --sandur-50: #f6efe6;
+  --sandur-100: #ede5d9;
+  --sandur-125: #e8e0d6;
+  --sandur-150: #e6dccf;
+  --sandur-200: #ddd6ca;
+  --sandur-500: #a89e92;
+  --sandur-775: #4a4038;
+  --sandur-850: #3a342d;
+  --sandur-900: #2e2822;
+  --sandur-925: #2a2520;
+  --sandur-950: #242019;
+  --sandur-975: #1c1916;
+  --grár-600: #555555;
+  --grár-950: #111111;
+  --hvítur: #ffffff;
+  --blár-50: #ebf0f8;
+  --blár-500: #5b8fd4;
+  --blár-900: #1f5fa8;
+  --blár-dauf-50: #2f3047;
+  --blár-gegnsær-50: #0067f480;
+  --rauður-400: #e06070;
+  --rauður-500: #ec4141;
+  --rauður-600: #c43b44;
+  --grænn-400: #4aad8a;
+  --grænn-700: #2a8a6a;
+  --grænblár-400: #5ba0c8;
+  --grænblár-600: #2b6e96;
+  --fjólublár-400: #a87ee0;
+  --fjólublár-600: #8a5ec0;
+  --appelsína-300: #e0a040;
+  --appelsína-700: #c2700a;
+  --appelsína-800: #e07850;
+  --brúnn-300: #c0a040;
+  --brúnn-600: #8b6b2e;
+  --kóði-bakgrunnur-ljós: var(--hvítur);
+  --kóði-bakgrunnur-dökkur: var(--sandur-850);
+  --kóði-rammi-ljós: var(--sandur-200);
+  --kóði-rammi-dökkur: var(--sandur-775);
+  --kóði-rammi: var(--kóði-rammi-ljós);
+  --spjald-fylling-lóðrétt: 1rem;
+  --spjald-fylling-lárétt: 1.5rem;
+
+  --light-code-background: var(--kóði-bakgrunnur-ljós);
+  --dark-code-background: var(--kóði-bakgrunnur-dökkur);
+
+  --light-color-background: var(--sandur-50);
+  --light-color-background-secondary: var(--sandur-100);
+  --light-color-background-active: var(--blár-50);
+  --light-color-accent: var(--sandur-200);
+  --light-color-active-menu-item: var(--blár-50);
+  --light-color-text: var(--grár-950);
+  --light-color-contrast-text: var(--hvítur);
+  --light-color-text-aside: var(--grár-600);
+  --light-color-icon-background: var(--sandur-100);
+  --light-color-comment-tag: var(--sandur-100);
+  --light-color-link: var(--blár-900);
+  --light-color-focus-outline: var(--blár-gegnsær-50);
+
+  --dark-color-background: var(--sandur-975);
+  --dark-color-background-secondary: var(--sandur-950);
+  --dark-color-background-active: var(--blár-dauf-50);
+  --dark-color-accent: var(--sandur-850);
+  --dark-color-active-menu-item: var(--blár-dauf-50);
+  --dark-color-text: var(--sandur-125);
+  --dark-color-contrast-text: var(--hvítur);
+  --dark-color-text-aside: var(--sandur-500);
+  --dark-color-icon-background: var(--sandur-925);
+  --dark-color-comment-tag: var(--sandur-925);
+  --dark-color-link: var(--blár-500);
+  --dark-color-focus-outline: var(--blár-gegnsær-50);
+
+  --light-color-ts-keyword: var(--blár-900);
+  --light-color-ts-class: var(--blár-900);
+  --light-color-ts-interface: var(--grænn-700);
+  --light-color-ts-method: var(--rauður-600);
+  --light-color-ts-property: var(--brúnn-600);
+  --light-color-ts-type-alias: var(--fjólublár-600);
+  --light-color-ts-variable: var(--grænblár-600);
+  --light-color-ts-function: var(--blár-900);
+  --light-color-ts-enum: var(--brúnn-600);
+  --light-color-ts-type-parameter: var(--appelsína-700);
+
+  --dark-color-ts-keyword: var(--blár-500);
+  --dark-color-ts-class: var(--blár-500);
+  --dark-color-ts-interface: var(--grænn-400);
+  --dark-color-ts-method: var(--rauður-400);
+  --dark-color-ts-property: var(--appelsína-300);
+  --dark-color-ts-type-alias: var(--fjólublár-400);
+  --dark-color-ts-variable: var(--grænblár-400);
+  --dark-color-ts-function: var(--blár-500);
+  --dark-color-ts-enum: var(--brúnn-300);
+  --dark-color-ts-type-parameter: var(--appelsína-800);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kóði-rammi: var(--kóði-rammi-dökkur);
+  }
+}
+
+:root[data-theme="light"] {
+  --kóði-rammi: var(--kóði-rammi-ljós);
+}
+
+:root[data-theme="dark"] {
+  --kóði-rammi: var(--kóði-rammi-dökkur);
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea {
+  font-family: var(--letur-sans);
+}
+
+.tsd-page-toolbar {
+  background: color-mix(in srgb, var(--color-background) 82%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.tsd-widget {
+  align-items: center;
+  display: inline-flex;
+  height: var(--dim-toolbar-contents-height);
+  justify-content: center;
+  width: var(--dim-toolbar-contents-height);
+}
+
+@media (max-width: 769px) {
+  #tsd-toolbar-menu-trigger.tsd-widget {
+    display: inline-flex;
+    line-height: var(--dim-toolbar-contents-height);
+  }
+}
+
+.tsd-toolbar-contents > .title {
+  color: var(--rauður-500);
+  font-weight: 500;
+}
+
+:root[data-theme="dark"] .tsd-toolbar-contents > .title {
+  color: var(--rauður-400);
+}
+
+.tsd-panel,
+.tsd-signature,
+.tsd-index-panel,
+.tsd-member,
+.tsd-comment {
+  border-color: var(--color-accent);
+}
+
+.col-content > .tsd-panel,
+.tsd-panel-group.tsd-index-group > .tsd-panel,
+.tsd-member-group > section > .tsd-panel {
+  background: var(--color-background-secondary);
+  border-radius: 4px;
+  padding: var(--spjald-fylling-lóðrétt) var(--spjald-fylling-lárétt);
+}
+
+.tsd-page-title,
+.col-content > .tsd-signature {
+  margin-inline: var(--spjald-fylling-lárétt);
+}
+
+.col-content > .tsd-panel > :first-child,
+.tsd-panel-group.tsd-index-group > .tsd-panel > :first-child,
+.tsd-member-group > section > .tsd-panel > :first-child {
+  margin-top: 0;
+}
+
+.col-content > .tsd-panel > :last-child,
+.tsd-panel-group.tsd-index-group > .tsd-panel > :last-child,
+.tsd-member-group > section > .tsd-panel > :last-child {
+  margin-bottom: 0;
+}
+
+.tsd-panel > .tsd-comment.tsd-typography > :first-child {
+  margin-top: 0;
+}
+
+.tsd-panel > .tsd-comment.tsd-typography > :last-child {
+  margin-bottom: 0;
+}
+
+.tsd-typography,
+.tsd-comment {
+  line-height: 1.65;
+}
+
+.tsd-typography > p,
+.tsd-comment > p,
+.tsd-comment .tsd-typography {
+  font-family: var(--letur-serif);
+}
+
+.tsd-signature,
+code,
+pre {
+  border-radius: 4px;
+}
+
+:not(pre) > code:not(.tsd-tag) {
+  border: 1px solid var(--kóði-rammi);
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+a,
+.tsd-typography a {
+  text-decoration-color: color-mix(in srgb, var(--color-link) 35%, transparent);
+  text-underline-offset: 0.12em;
+}

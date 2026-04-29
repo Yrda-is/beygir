@@ -1,0 +1,67 @@
+x-yrda-beygir-mynd: &yrda_beygir_mynd
+  image: yrda-beygir
+  build:
+    context: .
+    target: yrda-beygir
+
+services:
+  gagnasaekjari:
+    <<: *yrda_beygir_mynd
+    init: true
+    command: ["bun", "run", "./skriftur/sækja-kristínarsnið.ts", "/gagnamagn"]
+    volumes:
+      - ./.gögn:/gagnamagn
+
+  kjarnasmidur:
+    <<: *yrda_beygir_mynd
+    init: true
+    depends_on:
+      gagnasaekjari:
+        condition: service_completed_successfully
+    volumes:
+      - ./.gögn:/gögn
+    command: ["bun", "run", "skriftur/smíða-kjarna.ts", "/gögn"]
+
+  yrda-beygir:
+    <<: *yrda_beygir_mynd
+    init: true
+    depends_on:
+      kjarnasmidur:
+        condition: service_completed_successfully
+    volumes:
+      - ./.gögn:/gögn:ro
+    environment:
+      - FOST_GILDI_PROF=1
+      - KRISTINARSNID_SLOD=/gögn/KRISTINsnid.csv
+      - KJARNI_SLOD=/gögn/beygir.bin
+
+  node-reykprof:
+    init: true
+    image: node:25.9.0-alpine3.22@sha256:45ee7adabf5073b70c18746ef34be804077b8f5fa09d0188c19697590463b53e
+    depends_on:
+      node-dreifingarsmidur:
+        condition: service_completed_successfully
+    working_dir: /app
+    volumes:
+      - ./package.json:/app/package.json:ro
+      - ./próf:/app/próf:ro
+      - node-dreifing:/app/dreifing:ro
+      - ./.gögn:/gögn:ro
+    environment:
+      - NODE_REYKPROF=1
+      - KJARNI_SLOD=/gögn/beygir.bin
+    command: ["node", "próf/node-reykpróf.mjs"]
+
+  node-dreifingarsmidur:
+    <<: *yrda_beygir_mynd
+    init: true
+    depends_on:
+      kjarnasmidur:
+        condition: service_completed_successfully
+    volumes:
+      - ./.gögn:/app/.gögn
+      - node-dreifing:/app/dreifing
+    command: ["bun", "run", "smíða:node"]
+
+volumes:
+  node-dreifing:

@@ -1,0 +1,4 @@
+{
+  "entry": ["kóði/**/*.test.ts", "próf/**/*.test.ts", "viðmið/kjarni/köld-opnun-barn.ts"],
+  "project": ["**/*.ts"]
+}

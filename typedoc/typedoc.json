@@ -1,0 +1,18 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "name": "@yrda/beygir",
+  "entryPoints": ["../kóði/beygir/beygir.ts", "../kóði/beygir/kjarni.ts"],
+  "entryPointStrategy": "resolve",
+  "tsconfig": "../tsconfig.node.json",
+  "out": "../skjöl/forritaskil",
+  "cleanOutputDir": true,
+  "customCss": "typedoc.css",
+  "excludeInternal": true,
+  "hostedBaseUrl": "https://beygir.yrda.is/",
+  "includeVersion": true,
+  "intentionallyNotExported": ["FALLHEITI", "GAGNASNIÐ_HEITI", "MARKAÞÆTTIR"],
+  "navigationLinks": {
+    "Aðferðir": "https://beygir.yrda.is/interfaces/beygir.Beygir.html#beygingar",
+    "GitHub": "https://github.com/Yrda-is/beygir"
+  }
+}
