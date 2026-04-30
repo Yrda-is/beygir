@@ -231,6 +231,7 @@ export interface Beygir {
    *
    * @see {@link Beygir.finnaUppflettiorð} til að finna eftir uppflettiorði.
    * @see {@link Beygir.finnaUppflettiorðAfBeygingarmynd} til að finna uppflettiorð út frá beygingarmynd.
+   * @see {@link Beygir.beygingarAuðkennis} til að sækja formfærslur beint eftir auðkenni.
    */
   sækja(auðkenni: Auðkenni): Uppflettiorð | null;
 
@@ -240,7 +241,8 @@ export interface Beygir {
    * Þetta er bein auðkennisleið fyrir þá sem hafa BÍN-auðkenni færslu og þurfa
    * aðeins einstakar beygingarmyndir. Hún jafngildir `sækja(auðkenni)` og
    * `beygingarmyndir(uppflettiorð)`, nema að tómt fylki fæst þegar auðkennið
-   * er ekki í kjarnanum.
+   * er ekki í kjarnanum. Notaðu {@link Beygir.beygingarAuðkennis} ef þú þarft
+   * fullar formfærslur.
    *
    * Tímaflækja: `O(e)`, þar sem `e` er fjöldi einstakra beygingarmynda fyrir
    * gefið auðkenni.
@@ -254,6 +256,35 @@ export interface Beygir {
    * ```
    */
   beygingarmyndirAuðkennis(auðkenni: Auðkenni): readonly string[];
+
+  /**
+   * Skilar geymdum formfærslum auðkennis án þess að smíða `Uppflettiorð`.
+   *
+   * Þetta er þægindaleið fyrir kóða sem hefur BÍN-auðkenni þegar til staðar.
+   * Hún jafngildir `sækja(auðkenni)` og `beygingar(uppflettiorð, ...)`, nema
+   * að `[]` fæst þegar auðkennið er ekki í kjarnanum. Notaðu áfram
+   * {@link Beygir.sækja} þegar lesa þarf uppflettiorðið sjálft.
+   *
+   * Síun og vörpun hegða sér eins og í {@link Beygir.beygingar}.
+   *
+   * Flækjustig: `O(1 + f)`, þar sem `f` er fjöldi formraða fyrir auðkennið.
+   *
+   * @param auðkenni BÍN-auðkenni.
+   * @param sía Valfrjáls marksía; `mark` er nákvæm geymd samsvörun.
+   * @returns Formfærslur sem passa við síuna eða vörpuð gildi, eða `[]`.
+   *
+   * @example
+   * ```ts
+   * const nefnifall = beygir.beygingarAuðkennis(6179, { með: ["NF"], án: ["gr"] });
+   * ```
+   */
+  beygingarAuðkennis(auðkenni: Auðkenni, sía?: Beygingarsía): readonly Færsla[];
+  beygingarAuðkennis<Valið>(auðkenni: Auðkenni, velja: Velja<Valið>): readonly Valið[];
+  beygingarAuðkennis<Valið>(
+    auðkenni: Auðkenni,
+    sía: Beygingarsía | undefined,
+    velja: Velja<Valið>,
+  ): readonly Valið[];
 
   /**
    * Les öll uppflettiorð kjarnans í sniðröð tvíundaskrár.

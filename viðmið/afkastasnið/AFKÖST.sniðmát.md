@@ -67,6 +67,13 @@ eru sértækari leiðir þegar gerð leitarstrengs er afmarkað.
 <!-- tafla: opinbert.beygingar -->
 <!-- /tafla -->
 
+### Auðkennaleið
+
+`beygingarAuðkennis` sækir beygingarfærslur beint út frá BÍN-auðkenni.
+
+<!-- tafla: opinbert.beygingar.auðkenni -->
+<!-- /tafla -->
+
 ## Beygingarmyndir og fallbeygingar
 
 <!-- tafla: opinbert.skiptaUmFall -->

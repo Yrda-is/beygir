@@ -296,6 +296,33 @@ export function keyraOpinberanViðmótssamning(
         expect(
           beygir.beygingar(hestur, { mark: "NFET" }, semÍtarlegFærsla)[0]?.gildiBeygingarmyndar,
         ).toBe("bgildi");
+        expect(beygir.beygingarAuðkennis(1).map((færsla) => færsla.mark)).toEqual([
+          "NFET",
+          "ÞFET",
+          "ÞGFET",
+          "EFET",
+          "NFFTgr",
+          "ÞFFTgr",
+          "ÞGFFTgr",
+          "EFFTgr",
+          "EFFTgr",
+        ]);
+        expect(
+          beygir.beygingarAuðkennis(1, { mark: "NFET" }).map((færsla) => færsla.beygingarmynd),
+        ).toEqual(["hestur"]);
+        expect(
+          beygir.beygingarAuðkennis(1, { með: ["EF"] }).map((færsla) => færsla.beygingarmynd),
+        ).toEqual(["hests", "hestanna", "hestanna"]);
+        expect(beygir.beygingarAuðkennis(1, (færsla) => færsla.mark).slice(0, 4)).toEqual([
+          "NFET",
+          "ÞFET",
+          "ÞGFET",
+          "EFET",
+        ]);
+        expect(
+          beygir.beygingarAuðkennis(1, { mark: "NFET" }, semÍtarlegFærsla)[0]?.gildiBeygingarmyndar,
+        ).toBe("bgildi");
+        expect(beygir.beygingarAuðkennis(999)).toEqual([]);
         expect(beygir.beygingarmyndir(hestur)).toEqual([
           "hestur",
           "hest",
@@ -466,6 +493,16 @@ export function keyraOpinberanViðmótssamning(
           /Ógildir markþættir/,
         );
         expect(() => beygir.beygingar({ ...hestur, orð: "rangt" })).toThrow(/passar ekki/);
+        expect(() => beygir.beygingarAuðkennis(1, "NFET" as never)).toThrow(
+          /Marksía verður að vera hlutur/,
+        );
+        expect(() => beygir.beygingarAuðkennis(1, { mark: 1 as never })).toThrow(/Marksía\.mark/);
+        expect(() => beygir.beygingarAuðkennis(1, { með: "NF" as never })).toThrow(
+          /`með` verður að vera fylki/,
+        );
+        expect(() => beygir.beygingarAuðkennis(1, { með: ["EKKI-MARK" as never] })).toThrow(
+          /Ógildir markþættir/,
+        );
         expect(() => beygir.skiptaUmFall({ ...hestanna, orð: "rangt" }, "NF")).toThrow(
           /passar ekki/,
         );
@@ -491,6 +528,7 @@ export function keyraOpinberanViðmótssamning(
           expect(() => beygir.hefurBeygingarfærslu("hestur")).toThrow(/lokaður/);
           expect(() => beygir.sækja(1)).toThrow(/lokaður/);
           expect(() => beygir.beygingarmyndirAuðkennis(1)).toThrow(/lokaður/);
+          expect(() => beygir.beygingarAuðkennis(1)).toThrow(/lokaður/);
           expect(() => {
             beygir.lesaUppflettiorð(() => undefined);
           }).toThrow(/lokaður/);

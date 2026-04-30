@@ -4,6 +4,7 @@ import { búaTilSnúningsmælingu } from "../kjarni/tól";
 const svíta = "opinbert.kjarni";
 const aðferð = "beygingar";
 const tafla = "opinbert.beygingar";
+const auðkennistafla = "opinbert.beygingar.auðkenni";
 
 function fjöldiFærslna(fjöldi: number): string {
   return fjöldi === 1 ? "1 færsla" : `${fjöldi} færslur`;
@@ -12,6 +13,11 @@ function fjöldiFærslna(fjöldi: number): string {
 const snúningur = búaTilSnúningsmælingu(
   (samhengi: Viðmiðssamhengi) => samhengi.sýni.snúningur.uppflettiorð,
   ({ kjarni }, uppflettiorð) => kjarni.beygingar(uppflettiorð),
+);
+
+const auðkennissnúningur = búaTilSnúningsmælingu(
+  (samhengi: Viðmiðssamhengi) => samhengi.sýni.snúningur.auðkenni,
+  ({ kjarni }, auðkenni) => kjarni.beygingarAuðkennis(auðkenni),
 );
 
 skráViðmið({
@@ -32,6 +38,21 @@ skráViðmið({
 skráViðmið({
   svíta,
   aðferð,
+  tilvik: "beygingarAuðkennis.lítið.sjálfgefið",
+  merki: ["opinbert", "beygingar", "auðkenni", "lítið"],
+  afköst: {
+    tafla: auðkennistafla,
+    aðgerð: "beygingarAuðkennis(hestur-auðkenni)",
+    tilvik: "lítið mynstur",
+    niðurstaða: ({ kjarni, sýni }) =>
+      fjöldiFærslna(kjarni.beygingarAuðkennis(sýni.auðkenni.lítið).length),
+  },
+  mæla: ({ kjarni, sýni }) => kjarni.beygingarAuðkennis(sýni.auðkenni.lítið),
+});
+
+skráViðmið({
+  svíta,
+  aðferð,
   tilvik: "beygingar.lítið.nákvæmt",
   merki: ["opinbert", "beygingar", "lítið", "nákvæmt"],
   afköst: {
@@ -42,6 +63,22 @@ skráViðmið({
       fjöldiFærslna(kjarni.beygingar(sýni.uppflettiorð.lítið, sýni.mörk.lítiðNákvæmt).length),
   },
   mæla: ({ kjarni, sýni }) => kjarni.beygingar(sýni.uppflettiorð.lítið, sýni.mörk.lítiðNákvæmt),
+});
+
+skráViðmið({
+  svíta,
+  aðferð,
+  tilvik: "beygingarAuðkennis.lítið.nákvæmt",
+  merki: ["opinbert", "beygingar", "auðkenni", "lítið", "nákvæmt"],
+  afköst: {
+    tafla: auðkennistafla,
+    aðgerð: 'beygingarAuðkennis(hestur-auðkenni, { mark: "NFET" })',
+    tilvik: "nákvæmt mark",
+    niðurstaða: ({ kjarni, sýni }) =>
+      fjöldiFærslna(kjarni.beygingarAuðkennis(sýni.auðkenni.lítið, sýni.mörk.lítiðNákvæmt).length),
+  },
+  mæla: ({ kjarni, sýni }) =>
+    kjarni.beygingarAuðkennis(sýni.auðkenni.lítið, sýni.mörk.lítiðNákvæmt),
 });
 
 skráViðmið({
@@ -147,4 +184,18 @@ skráViðmið({
     niðurstaða: ({ sýni }) => `${sýni.snúningur.uppflettiorð.length} uppflettiorð`,
   },
   mæla: snúningur,
+});
+
+skráViðmið({
+  svíta,
+  aðferð,
+  tilvik: "beygingarAuðkennis.snúningur",
+  merki: ["opinbert", "beygingar", "auðkenni", "snúningur"],
+  afköst: {
+    tafla: auðkennistafla,
+    aðgerð: "beygingarAuðkennis(snúningssett)",
+    tilvik: "handvalin auðkenni",
+    niðurstaða: ({ sýni }) => `${sýni.snúningur.auðkenni.length} auðkenni`,
+  },
+  mæla: auðkennissnúningur,
 });

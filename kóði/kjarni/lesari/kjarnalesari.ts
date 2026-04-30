@@ -177,6 +177,27 @@ export class Kjarnalesari implements LokanlegurBeygir {
     return beygingarmyndirFyrirStofnsæti(gögn, stofnsæti);
   }
 
+  beygingarAuðkennis(auðkenni: Auðkenni, sía?: Beygingarsía): readonly Færsla[];
+  beygingarAuðkennis<Valið>(auðkenni: Auðkenni, velja: Velja<Valið>): readonly Valið[];
+  beygingarAuðkennis<Valið>(
+    auðkenni: Auðkenni,
+    sía: Beygingarsía | undefined,
+    velja: Velja<Valið>,
+  ): readonly Valið[];
+  beygingarAuðkennis<Valið>(
+    auðkenni: Auðkenni,
+    síaEðaVelja?: Beygingarsía | Velja<Valið>,
+    velja?: Velja<Valið>,
+  ): readonly Færsla[] | readonly Valið[] {
+    const gögn = this.#sækjaGögn();
+    const stofnsæti = finnaStofnsætiFyrirAuðkenni(gögn, auðkenni);
+    if (stofnsæti === -1) {
+      return [];
+    }
+
+    return this.#sækjaBeygingarÚrStofni(gögn, stofnsæti, síaEðaVelja, velja);
+  }
+
   lesaUppflettiorð(vinna: VinnaUppflettiorð): void {
     lesaUppflettiorðÚrGögnum(this.#sækjaGögn(), vinna);
   }
@@ -644,44 +665,7 @@ export class Kjarnalesari implements LokanlegurBeygir {
   ): readonly Færsla[] | readonly Valið[] {
     const gögn = this.#sækjaGögn();
     const stofnsæti = finnaStofnsætiFyrirUppflettiorð(gögn, uppflettiorð, this.#textavinnubæti);
-    const sía = typeof síaEðaVelja === "function" ? undefined : síaEðaVelja;
-    const mótun = typeof síaEðaVelja === "function" ? síaEðaVelja : velja;
-    let kenniNákvæmsMarks: number | undefined;
-    let marksía: UndirbúinMarksía | undefined;
-    if (sía !== undefined) {
-      staðfestaSíuhlut("Marksía", sía);
-      const mark = sækjaValfrjálsanStreng(sía, "mark", "Marksía.mark");
-      if (mark !== undefined) {
-        staðfestaNákvæmtMark(mark);
-        const kenniBeygingar = finnaKenniBeygingarFyrirMark(this.#marklyklaminni, gögn, mark);
-        if (kenniBeygingar === -1) {
-          return [];
-        }
-        kenniNákvæmsMarks = kenniBeygingar;
-      }
-      marksía = staðfestaMarksíu(sía);
-    }
-
-    if (kenniNákvæmsMarks !== undefined) {
-      if (
-        marksía !== undefined &&
-        !passarMarksíuFyrirKenniBeygingar(gögn, kenniNákvæmsMarks, marksía)
-      ) {
-        return [];
-      }
-      return mótun === undefined
-        ? sækjaNákvæmarFærslurÚrStofni(gögn, stofnsæti, kenniNákvæmsMarks)
-        : sækjaNákvæmarFærslurÚrStofni(gögn, stofnsæti, kenniNákvæmsMarks, mótun);
-    }
-    if (marksía !== undefined) {
-      return mótun === undefined
-        ? sækjaSíaðarFærslurÚrStofni(gögn, stofnsæti, marksía)
-        : sækjaSíaðarVeljaFærslurÚrStofni(gögn, stofnsæti, marksía, mótun);
-    }
-
-    return mótun === undefined
-      ? sækjaFærslurÚrStofni(gögn, stofnsæti)
-      : sækjaFærslurÚrStofni(gögn, stofnsæti, mótun);
+    return this.#sækjaBeygingarÚrStofni(gögn, stofnsæti, síaEðaVelja, velja);
   }
 
   beygingarmyndir(uppflettiorð: Uppflettiorð): readonly string[] {
@@ -725,6 +709,52 @@ export class Kjarnalesari implements LokanlegurBeygir {
     }
 
     return this.#gögn;
+  }
+
+  #sækjaBeygingarÚrStofni<Valið>(
+    gögn: Kjarnasýn,
+    stofnsæti: number,
+    síaEðaVelja?: Beygingarsía | Velja<Valið>,
+    velja?: Velja<Valið>,
+  ): readonly Færsla[] | readonly Valið[] {
+    const sía = typeof síaEðaVelja === "function" ? undefined : síaEðaVelja;
+    const mótun = typeof síaEðaVelja === "function" ? síaEðaVelja : velja;
+    let kenniNákvæmsMarks: number | undefined;
+    let marksía: UndirbúinMarksía | undefined;
+    if (sía !== undefined) {
+      staðfestaSíuhlut("Marksía", sía);
+      const mark = sækjaValfrjálsanStreng(sía, "mark", "Marksía.mark");
+      if (mark !== undefined) {
+        staðfestaNákvæmtMark(mark);
+        const kenniBeygingar = finnaKenniBeygingarFyrirMark(this.#marklyklaminni, gögn, mark);
+        if (kenniBeygingar === -1) {
+          return [];
+        }
+        kenniNákvæmsMarks = kenniBeygingar;
+      }
+      marksía = staðfestaMarksíu(sía);
+    }
+
+    if (kenniNákvæmsMarks !== undefined) {
+      if (
+        marksía !== undefined &&
+        !passarMarksíuFyrirKenniBeygingar(gögn, kenniNákvæmsMarks, marksía)
+      ) {
+        return [];
+      }
+      return mótun === undefined
+        ? sækjaNákvæmarFærslurÚrStofni(gögn, stofnsæti, kenniNákvæmsMarks)
+        : sækjaNákvæmarFærslurÚrStofni(gögn, stofnsæti, kenniNákvæmsMarks, mótun);
+    }
+    if (marksía !== undefined) {
+      return mótun === undefined
+        ? sækjaSíaðarFærslurÚrStofni(gögn, stofnsæti, marksía)
+        : sækjaSíaðarVeljaFærslurÚrStofni(gögn, stofnsæti, marksía, mótun);
+    }
+
+    return mótun === undefined
+      ? sækjaFærslurÚrStofni(gögn, stofnsæti)
+      : sækjaFærslurÚrStofni(gögn, stofnsæti, mótun);
   }
 
   #finnaÓsíuðUppflettiorð(

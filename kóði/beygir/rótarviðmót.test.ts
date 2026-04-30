@@ -79,6 +79,7 @@ describe("rótarviðmót", () => {
     ]);
     const hestur = beygir.sækja(1);
     expect(beygir.beygingarmyndirAuðkennis(1)).toEqual(["hestur", "hests"]);
+    expect(beygir.beygingarAuðkennis(1, (færsla) => færsla.mark)).toEqual(["NFET", "EFET"]);
     const lesinAuðkenni: number[] = [];
     beygir.lesaUppflettiorð((uppflettiorð) => {
       lesinAuðkenni.push(uppflettiorð.auðkenni);

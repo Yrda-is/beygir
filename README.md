@@ -31,7 +31,7 @@ Með Beygi má:
 - Finna beygingarfærslur út frá beygingarmynd og sía þær eftir marki eða öðrum BÍN-reitum.
 - Athuga tilvist texta, auðkenna, uppflettiorða og beygingarfærslna án þess að smíða niðurstöður.
 - Sía og varpa niðurstöðum, t.d. eftir orðflokki, marki eða falli.
-- Sækja beygingar uppflettiorða og skipta um fall á einstökum beygingarfærslum.
+- Sækja beygingar uppflettiorða eða BÍN-auðkenna og skipta um fall á einstökum beygingarfærslum.
 - Ítra yfir uppflettiorð og beygingargögn í geymdri röð.
 
 Beygir var upphaflega hannaður fyrir [Yrðu.is](https://yrda.is) til að tengja beygingargögn
@@ -94,6 +94,10 @@ if (hestur !== null) {
   beygir.beygingar(hestur, { með: ["NF"], án: ["gr"] }, (f) => f.beygingarmynd);
   // ["hestur", "hestar"]
 }
+
+// Þegar BÍN-auðkennið er þegar þekkt má sleppa sækja + null-athugun.
+beygir.beygingarAuðkennis(6179, { með: ["NF"], án: ["gr"] }, (f) => f.beygingarmynd);
+// ["hestur", "hestar"]
 
 const [hestanna] = beygir.finnaBeygingarfærslur("hestanna", { orðflokkur: "kk" });
 if (hestanna !== undefined) {
