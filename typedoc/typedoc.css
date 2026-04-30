@@ -168,9 +168,38 @@ textarea {
   padding: var(--spjald-fylling-lóðrétt) var(--spjald-fylling-lárétt);
 }
 
+.tsd-panel > h1,
+.tsd-panel > h2,
+.tsd-panel > h3 {
+  margin-inline: calc(-1 * var(--spjald-fylling-lárétt));
+  padding-inline: var(--spjald-fylling-lárétt);
+}
+
 .tsd-page-title,
 .col-content > .tsd-signature {
   margin-inline: var(--spjald-fylling-lárétt);
+}
+
+@media (max-width: 769px) {
+  :root {
+    --síðufylling-lárétt: 1rem;
+    --spjald-fylling-lárétt: var(--síðufylling-lárétt);
+  }
+
+  .container {
+    padding-inline: var(--síðufylling-lárétt);
+  }
+
+  .col-content > .tsd-panel,
+  .tsd-panel-group.tsd-index-group > .tsd-panel,
+  .tsd-member-group > section > .tsd-panel {
+    margin-inline: calc(-1 * var(--síðufylling-lárétt));
+  }
+
+  .tsd-page-title,
+  .col-content > .tsd-signature {
+    margin-inline: 0;
+  }
 }
 
 .col-content > .tsd-panel > :first-child,
@@ -208,6 +237,16 @@ textarea {
 code,
 pre {
   border-radius: 4px;
+}
+
+.tsd-signature,
+pre {
+  overflow-x: auto;
+  white-space: pre;
+}
+
+pre code {
+  white-space: inherit;
 }
 
 :not(pre) > code:not(.tsd-tag) {

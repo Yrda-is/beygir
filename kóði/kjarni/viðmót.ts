@@ -102,7 +102,7 @@ export const semÍtarlegFærsla: Velja<ÍtarlegFærsla> = (færsla) => færsla;
  * gögnum eigi að skila og með hvaða sniði. Ógild mörk, föll eða önnur viðföng
  * skila villu.
  *
- * Í flækjustigslýsingum textaleitar er `t` fjöldi tætifallsprófana í viðeigandi
+ * Í tímaflækjugreiningu textaleitar er `t` fjöldi tætifallsprófana í viðeigandi
  * textavísi. Kóðun inntaks, tætireikningur og endanlegur textasamanburður eru
  * línuleg í lengd textans og eru ekki talin sérstaklega.
  */
@@ -122,7 +122,7 @@ export interface Beygir {
    * við skal nota {@link Beygir.hefurUppflettiorð} eða {@link Beygir.hefurBeygingarfærslu}.
    * Ath. einnig {@link Beygir.hefurAuðkenni} ef BÍN-auðkennið er til staðar.
    *
-   * Flækjustig: `O(t)`, þar sem `t` er fjöldi tætifallsprófana í uppflettiorða-
+   * Tímaflækja: `O(t)`, þar sem `t` er fjöldi tætifallsprófana í uppflettiorða-
    * og beygingarmyndavísum, án niðurstöðusmíði.
    *
    * @param texti Texti sem á að athuga.
@@ -143,7 +143,7 @@ export interface Beygir {
    * Þetta er Boole-fall sem skilar `sækja(auðkenni) !== null`, án þess að smíða
    * `Uppflettiorð`.
    *
-   * Flækjustig: `O(1)`. Notar `AUDK` uppflettitöfluna beint.
+   * Tímaflækja: `O(1)`. Notar `AUDK` uppflettitöfluna beint.
    *
    * @param auðkenni BÍN-auðkennið sem á að athuga.
    * @returns `true` ef auðkennið er til.
@@ -163,7 +163,7 @@ export interface Beygir {
    * Þetta er Boole-fall sem skilar `finnaUppflettiorð(orð, sía).length > 0`, án
    * þess að smíða niðurstöðufylki.
    *
-   * Flækjustig: `O(t + u)`, þar sem `t` er fjöldi tætifallsprófana í
+   * Tímaflækja: `O(t + u)`, þar sem `t` er fjöldi tætifallsprófana í
    * uppflettiorðavísi og `u` er fjöldi uppflettiorða sem þarf að prófa gegn
    * `sía` (0 án síu).
    *
@@ -185,7 +185,7 @@ export interface Beygir {
    * Þetta er Boole-fall sem skilar `finnaBeygingarfærslur(beygingarmynd, sía).length > 0`,
    * án þess að smíða niðurstöðufylki.
    *
-   * Flækjustig: `O(t + f)`, þar sem `t` er fjöldi tætifallsprófana í
+   * Tímaflækja: `O(t + f)`, þar sem `t` er fjöldi tætifallsprófana í
    * beygingarmyndavísi og `f` er fjöldi formfærslna sem þarf að prófa gegn
    * `sía` (0 án síu).
    *
@@ -208,7 +208,7 @@ export interface Beygir {
    * ekki" (fylkjaaðferðir skila `[]`). Uppflettiorðið sem skilað er má nota
    * sem viðfang í aðgerðir eins og {@link Beygir.beygingar} og {@link Beygir.beygingarmyndir}.
    *
-   * Flækjustig: `O(1)`. Notar `AUDK` uppflettitöfluna beint.
+   * Tímaflækja: `O(1)`. Notar `AUDK` uppflettitöfluna beint.
    *
    * @param auðkenni BÍN-auðkennið sem á að athuga.
    * @returns `Uppflettiorð` ef auðkennið er í kjarnanum, annars `null`.
@@ -242,7 +242,7 @@ export interface Beygir {
    * `beygingarmyndir(uppflettiorð)`, nema að tómt fylki fæst þegar auðkennið
    * er ekki í kjarnanum.
    *
-   * Flækjustig: `O(e)`, þar sem `e` er fjöldi einstakra beygingarmynda fyrir
+   * Tímaflækja: `O(e)`, þar sem `e` er fjöldi einstakra beygingarmynda fyrir
    * gefið auðkenni.
    *
    * @param auðkenni BÍN-auðkenni.
@@ -263,7 +263,7 @@ export interface Beygir {
    * Hvert `Uppflettiorð` er smíðað þegar stefjan keyrir. Ef `vinna` skilar
    * `false` er lestri hætt strax.
    *
-   * Flækjustig: `O(u)`, þar sem `u` er fjöldi heimsóttra uppflettiorða.
+   * Tímaflækja: `O(u)`, þar sem `u` er fjöldi heimsóttra uppflettiorða.
    *
    * @param vinna Fall sem keyrt er fyrir hvert uppflettiorð. Skilaðu `false` til
    * að stöðva lestur.
@@ -288,7 +288,7 @@ export interface Beygir {
    * heildarleiðin þegar aðeins er þörf á auðkenni og beygingarmynd því hún
    * smíðar hvorki `Uppflettiorð`, `Færsla` né fylki fyrir hvert auðkenni.
    *
-   * Flækjustig: `O(e)`, þar sem `e` er fjöldi heimsóttra sérstakra
+   * Tímaflækja: `O(e)`, þar sem `e` er fjöldi heimsóttra sérstakra
    * beygingarmynda.
    *
    * @param vinna Fall sem keyrt er fyrir hverja sérstaka beygingarmynd. Skilaðu
@@ -314,7 +314,7 @@ export interface Beygir {
    * og afkóðar ekki uppflettiorð eða orðflokk þegar aðeins þarf auðkenni,
    * beygingarmynd og mark.
    *
-   * Flækjustig: `O(f)`, þar sem `f` er fjöldi heimsóttra formraða.
+   * Tímaflækja: `O(f)`, þar sem `f` er fjöldi heimsóttra formraða.
    *
    * @param vinna Fall sem keyrt er fyrir hverja formfærslu. Skilaðu `false` til
    * að stöðva lestur.
@@ -340,7 +340,7 @@ export interface Beygir {
    * aðeins uppflettiorðum; notaðu {@link Beygir.finnaBeygingarfærslur} eða
    * {@link Beygir.finnaUppflettiorðAfBeygingarmynd} þegar inntakið er beygingarmynd.
    *
-   * Flækjustig: `O(t + u)`, þar sem `t` er fjöldi tætifallsprófana í
+   * Tímaflækja: `O(t + u)`, þar sem `t` er fjöldi tætifallsprófana í
    * uppflettiorðavísi og `u` er fjöldi uppflettiorða sem passa við `orð`.
    *
    * @param orð Uppflettiorð, ekki almenn beygingarmynd.
@@ -378,7 +378,7 @@ export interface Beygir {
    * sama uppflettiorð kemur aðeins einu sinni þótt textinn passi bæði sem
    * uppflettiorð og beygingarmynd.
    *
-   * Flækjustig: `O(t + u + f)`, þar sem `t` er fjöldi tætifallsprófana í
+   * Tímaflækja: `O(t + u + f)`, þar sem `t` er fjöldi tætifallsprófana í
    * textavísum, `u` er fjöldi uppflettiorða sem passa við `texti` og `f` er
    * fjöldi formvísana fyrir sama texta.
    *
@@ -412,7 +412,7 @@ export interface Beygir {
    * vörpun er byggt `Uppflettiorð` fyrir hverja samsvörun og `velja` ræður
    * skilagerðinni. Skilar `[]` þegar myndin er ekki í uppflettivísinum.
    *
-   * Flækjustig: `O(t + f)`, þar sem `t` er fjöldi tætifallsprófana í
+   * Tímaflækja: `O(t + f)`, þar sem `t` er fjöldi tætifallsprófana í
    * beygingarmyndavísi og `f` er fjöldi formvísana sem `beygingarmynd` vísar á
    * áður en niðurstöður eru sameinaðar eftir `auðkenni`.
    *
@@ -457,7 +457,7 @@ export interface Beygir {
    * nota skal {@link Beygir.finnaUppflettiorðAfBeygingarmynd} þegar þú þarft einstök
    * uppflettiorð fremur en allar formgreiningar.
    *
-   * Flækjustig: `O(t + f)`, þar sem `t` er fjöldi tætifallsprófana í
+   * Tímaflækja: `O(t + f)`, þar sem `t` er fjöldi tætifallsprófana í
    * beygingarmyndavísi og `f` er fjöldi formvísana fyrir `beygingarmynd` sem
    * þarf að heimsækja og, ef `sía` er gefin, prófa.
    *
@@ -496,7 +496,7 @@ export interface Beygir {
    * krefst þess að form innihaldi alla tilgreinda markþætti. `{ án }`
    * útilokar form sem innihalda einhvern tilgreindan markþátt.
    *
-   * Flækjustig: `O(f)`, þar sem `f` er fjöldi formraða fyrir `uppflettiorð`.
+   * Tímaflækja: `O(f)`, þar sem `f` er fjöldi formraða fyrir `uppflettiorð`.
    *
    * @param uppflettiorð Gildi úr `sækja`, `finnaUppflettiorð` eða `finnaUppflettiorðAfBeygingarmynd`.
    * @param sía Valfrjáls marksía; `mark` er nákvæm geymd samsvörun.
@@ -533,7 +533,7 @@ export interface Beygir {
    * gefið `Uppflettiorð`. `uppflettiorð` verður að koma úr sama opna kjarna;
    * úrelt eða framandi gildi skila `RangeError` villu.
    *
-   * Flækjustig: `O(e)`, þar sem `e` er fjöldi einstakra beygingarmynda fyrir
+   * Tímaflækja: `O(e)`, þar sem `e` er fjöldi einstakra beygingarmynda fyrir
    * `uppflettiorð`.
    *
    * @param uppflettiorð Uppflettiorð úr sama opna kjarna.
@@ -556,7 +556,7 @@ export interface Beygir {
    * Þegar inntakið er strengur þarf fyrst að finna formfærslu með
    * {@link Beygir.finnaBeygingarfærslur} og færa síðan einstaka niðurstöðu í nýtt fall.
    *
-   * Flækjustig: `O(f)`, þar sem `f` er fjöldi formraða fyrir sama auðkenni.
+   * Tímaflækja: `O(f)`, þar sem `f` er fjöldi formraða fyrir sama auðkenni.
    *
    * @param færsla Formfærsla úr sama opna kjarna.
    * @param fall Fallið sem á að setja inn í mark færslunnar.
