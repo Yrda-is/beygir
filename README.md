@@ -95,7 +95,7 @@ if (hestur !== null) {
   // ["hestur", "hestar"]
 }
 
-// Þegar BÍN-auðkennið er þegar þekkt má sleppa sækja + null-athugun.
+// Þegar BÍN-auðkennið er til staðar er óþarfi að sækja uppflettiorð fyrst.
 beygir.beygingarAuðkennis(6179, { með: ["NF"], án: ["gr"] }, (f) => f.beygingarmynd);
 // ["hestur", "hestar"]
 

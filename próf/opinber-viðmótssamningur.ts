@@ -201,7 +201,6 @@ export function keyraOpinberanViðmótssamning(
         expect(beygir.hefurBeygingarfærslu("skikkunin", { mark: "NFETgr" })).toBe(true);
         expect(beygir.hefurBeygingarfærslu("skikkunin", { mark: "ÞFET" })).toBe(false);
 
-        expect(beygir.finnaUppflettiorð("hestur").map((orð) => orð.auðkenni)).toEqual([1, 5]);
         expect(beygir.finnaUppflettiorð("hestur", { hluti: "gæl" })).toEqual([
           {
             ...hesturUppflettiorð(),
@@ -215,18 +214,18 @@ export function keyraOpinberanViðmótssamning(
         ]);
         expect(beygir.finnaUppflettiorð("ekki-til")).toEqual([]);
 
-        expect(beygir.finna("skikkun").map((orð) => orð.auðkenni)).toEqual([2]);
-        expect(beygir.finna("skikkunin").map((orð) => orð.auðkenni)).toEqual([2]);
-        expect(beygir.finna("hestur").map((orð) => orð.auðkenni)).toEqual([1, 5]);
-        expect(beygir.finna("hestur", { hluti: "gæl" }).map((orð) => orð.auðkenni)).toEqual([5]);
+        expect(beygir.finna("skikkun", (orð) => orð.auðkenni)).toEqual([2]);
+        expect(beygir.finna("skikkunin", (orð) => orð.auðkenni)).toEqual([2]);
+        expect(beygir.finna("hestur", (orð) => orð.auðkenni)).toEqual([1, 5]);
+        expect(beygir.finna("hestur", { hluti: "gæl" }, (orð) => orð.auðkenni)).toEqual([5]);
         expect(beygir.finna("skikkunin", { orðflokkur: "kvk" }, (orð) => orð.orð)).toEqual([
           "skikkun",
         ]);
         expect(beygir.finna("asdf")).toEqual([]);
 
-        expect(
-          beygir.finnaUppflettiorðAfBeygingarmynd("skikkunin").map((orð) => orð.auðkenni),
-        ).toEqual([2]);
+        expect(beygir.finnaUppflettiorðAfBeygingarmynd("skikkunin", (orð) => orð.auðkenni)).toEqual(
+          [2],
+        );
         expect(beygir.finnaUppflettiorðAfBeygingarmynd("skikkunin", (orð) => orð.orð)).toEqual([
           "skikkun",
         ]);
@@ -245,11 +244,11 @@ export function keyraOpinberanViðmótssamning(
 
     test("formleit, beygingar og strengjaleiðir", async () => {
       await meðViðmóti(opna, grunnfærslur(), (beygir) => {
-        expect(beygir.finnaBeygingarfærslur("hestur").map(létt)).toEqual([
+        expect(beygir.finnaBeygingarfærslur("hestur", létt)).toEqual([
           ["hestur", 1, "kk", "alm", "hestur", "NFET"],
           ["hestur", 5, "kk", "gæl", "hestur", "NFET"],
         ]);
-        expect(beygir.finnaBeygingarfærslur("hestur", { auðkenni: 1 }).map(létt)).toEqual([
+        expect(beygir.finnaBeygingarfærslur("hestur", { auðkenni: 1 }, létt)).toEqual([
           ["hestur", 1, "kk", "alm", "hestur", "NFET"],
         ]);
         expect(beygir.finnaBeygingarfærslur("hestur", { orðflokkur: "so" })).toEqual([]);
@@ -264,7 +263,7 @@ export function keyraOpinberanViðmótssamning(
         ]);
 
         const hestur = væntaGildi(beygir.sækja(1));
-        expect(beygir.beygingar(hestur).map((færsla) => færsla.mark)).toEqual([
+        expect(beygir.beygingar(hestur, (færsla) => færsla.mark)).toEqual([
           "NFET",
           "ÞFET",
           "ÞGFET",
@@ -276,12 +275,12 @@ export function keyraOpinberanViðmótssamning(
           "EFFTgr",
         ]);
         expect(
-          beygir.beygingar(hestur, { mark: "NFET" }).map((færsla) => færsla.beygingarmynd),
+          beygir.beygingar(hestur, { mark: "NFET" }, (færsla) => færsla.beygingarmynd),
         ).toEqual(["hestur"]);
-        expect(
-          beygir.beygingar(hestur, { með: ["EF"] }).map((færsla) => færsla.beygingarmynd),
-        ).toEqual(["hests", "hestanna", "hestanna"]);
-        expect(beygir.beygingar(hestur, { án: ["gr"] }).map((færsla) => færsla.mark)).toEqual([
+        expect(beygir.beygingar(hestur, { með: ["EF"] }, (færsla) => færsla.beygingarmynd)).toEqual(
+          ["hests", "hestanna", "hestanna"],
+        );
+        expect(beygir.beygingar(hestur, { án: ["gr"] }, (færsla) => færsla.mark)).toEqual([
           "NFET",
           "ÞFET",
           "ÞGFET",
@@ -296,7 +295,7 @@ export function keyraOpinberanViðmótssamning(
         expect(
           beygir.beygingar(hestur, { mark: "NFET" }, semÍtarlegFærsla)[0]?.gildiBeygingarmyndar,
         ).toBe("bgildi");
-        expect(beygir.beygingarAuðkennis(1).map((færsla) => færsla.mark)).toEqual([
+        expect(beygir.beygingarAuðkennis(1, (færsla) => færsla.mark)).toEqual([
           "NFET",
           "ÞFET",
           "ÞGFET",
@@ -308,11 +307,8 @@ export function keyraOpinberanViðmótssamning(
           "EFFTgr",
         ]);
         expect(
-          beygir.beygingarAuðkennis(1, { mark: "NFET" }).map((færsla) => færsla.beygingarmynd),
+          beygir.beygingarAuðkennis(1, { mark: "NFET" }, (færsla) => færsla.beygingarmynd),
         ).toEqual(["hestur"]);
-        expect(
-          beygir.beygingarAuðkennis(1, { með: ["EF"] }).map((færsla) => færsla.beygingarmynd),
-        ).toEqual(["hests", "hestanna", "hestanna"]);
         expect(beygir.beygingarAuðkennis(1, (færsla) => færsla.mark).slice(0, 4)).toEqual([
           "NFET",
           "ÞFET",
@@ -348,7 +344,7 @@ export function keyraOpinberanViðmótssamning(
         const akkúrat = væntaGildi(beygir.sækja(4));
         expect(beygir.beygingar(akkúrat, { mark: "" })).toEqual([]);
         expect(
-          beygir.beygingar(akkúrat, { mark: "OBEYGJANLEGT" }).map((færsla) => færsla.mark),
+          beygir.beygingar(akkúrat, { mark: "OBEYGJANLEGT" }, (færsla) => færsla.mark),
         ).toEqual(["OBEYGJANLEGT"]);
       });
     });
@@ -441,7 +437,7 @@ export function keyraOpinberanViðmótssamning(
     test("fallskipti og sérstakar beygingaraðstæður", async () => {
       await meðViðmóti(opna, grunnfærslur(), (beygir) => {
         const hestanna = væntaGildi(beygir.finnaBeygingarfærslur("hestanna")[0]);
-        expect(beygir.skiptaUmFall(hestanna, "NF").map((færsla) => færsla.beygingarmynd)).toEqual([
+        expect(beygir.skiptaUmFall(hestanna, "NF", (færsla) => færsla.beygingarmynd)).toEqual([
           "hestarnir",
         ]);
         expect(beygir.skiptaUmFall(hestanna, "ÞF", (færsla) => færsla.beygingarmynd)).toEqual([
@@ -449,9 +445,9 @@ export function keyraOpinberanViðmótssamning(
         ]);
 
         const skikkuninni = væntaGildi(beygir.finnaBeygingarfærslur("skikkuninni")[0]);
-        expect(
-          beygir.skiptaUmFall(skikkuninni, "EF").map((færsla) => færsla.beygingarmynd),
-        ).toEqual(["skikkunarinnar"]);
+        expect(beygir.skiptaUmFall(skikkuninni, "EF", (færsla) => færsla.beygingarmynd)).toEqual([
+          "skikkunarinnar",
+        ]);
 
         const akkúrat = væntaGildi(beygir.finnaBeygingarfærslur("akkúrat")[0]);
         expect(beygir.skiptaUmFall(akkúrat, "NF")).toEqual([]);
