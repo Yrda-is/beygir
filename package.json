@@ -1,6 +1,6 @@
 {
   "name": "@yrda/beygir",
-  "version": "0.1.0-next.0",
+  "version": "0.1.0-next.1",
   "description": "Uppflettingasafn í íslenskum beygingum og BÍN-gögnum fyrir Bun og Node.js.",
   "type": "module",
   "license": "MIT AND CC-BY-SA-4.0",
