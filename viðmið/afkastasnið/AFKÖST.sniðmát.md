@@ -67,7 +67,7 @@ eru sértækari leiðir þegar gerð leitarstrengs er afmarkað.
 <!-- tafla: opinbert.beygingar -->
 <!-- /tafla -->
 
-### Auðkennaleið
+### Beygingar eftir auðkenni
 
 `beygingarAuðkennis` sækir beygingarfærslur beint út frá BÍN-auðkenni.
 

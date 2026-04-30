@@ -242,7 +242,7 @@ export interface Beygir {
    * aðeins einstakar beygingarmyndir. Hún jafngildir `sækja(auðkenni)` og
    * `beygingarmyndir(uppflettiorð)`, nema að tómt fylki fæst þegar auðkennið
    * er ekki í kjarnanum. Notaðu {@link Beygir.beygingarAuðkennis} ef þú þarft
-   * fullar formfærslur.
+   * óskertar formfærslur.
    *
    * Tímaflækja: `O(e)`, þar sem `e` er fjöldi einstakra beygingarmynda fyrir
    * gefið auðkenni.
@@ -260,9 +260,8 @@ export interface Beygir {
   /**
    * Skilar geymdum formfærslum auðkennis án þess að smíða `Uppflettiorð`.
    *
-   * Þetta er þægindaleið fyrir kóða sem hefur BÍN-auðkenni þegar til staðar.
-   * Hún jafngildir `sækja(auðkenni)` og `beygingar(uppflettiorð, ...)`, nema
-   * að `[]` fæst þegar auðkennið er ekki í kjarnanum. Notaðu áfram
+   * Þessi aðferð jafngildir `sækja(auðkenni)` og `beygingar(uppflettiorð, ...)`,
+   * nema að `[]` fæst þegar auðkennið er ekki í kjarnanum. Notaðu áfram
    * {@link Beygir.sækja} þegar lesa þarf uppflettiorðið sjálft.
    *
    * Síun og vörpun hegða sér eins og í {@link Beygir.beygingar}.
