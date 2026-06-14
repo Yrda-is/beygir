@@ -1,4 +1,21 @@
 {
-  "entry": ["kóði/**/*.test.ts", "próf/**/*.test.ts", "viðmið/kjarni/köld-opnun-barn.ts"],
-  "project": ["**/*.ts"]
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "dæmi/**/*.ts",
+    "skriftur/*.ts",
+    "kóði/**/*.test.ts",
+    "próf/**/*.test.ts",
+    "typedoc/*.mjs"
+  ],
+  "project": [
+    "dæmi/**/*.ts",
+    "kóði/**/*.ts",
+    "skriftur/**/*.ts",
+    "próf/**/*.ts",
+    "typedoc/**/*.mjs"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "duplicates": "off"
+  }
 }

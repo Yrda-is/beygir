@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "declarationMap": false,
+    "outDir": "dreifing",
+    "rootDir": "."
+  },
+  "include": ["kóði/**/*.ts"],
+  "exclude": ["dreifing", "node_modules", "**/*.test.ts"]
+}

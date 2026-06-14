@@ -1,174 +1,154 @@
 # Beygir
 
-Beygir er TypeScript-forritasafn fyrir
-[Beygingarlýsingu íslensks nútímamáls](https://bin.arnastofnun.is) (BÍN) frá Árnastofnun
-og nýtist í Bun og Node.js. Safnið notar sérhæft tvíundarsnið og flettir upp orðabókarflettum
-og einstökum beygingarmyndum beint úr staðbundinni, þéttri BÍN-tvíundarskrá.
+Beygir er í senn sérsmíðað gagnasnið fyrir [Beygingarlýsingu íslensks nútímamáls](https://bin.arnastofnun.is)
+(BÍN) og TypeScript-forritasafn til að lesa það. Beygir styður Bun, Node.js og vafra, en
+gagnasniðið sjálft er óháð JavaScript og því má lesa það í öðrum umhverfum eða forritunarmálum.
+
+Sniðið er hannað til að vera bæði skilvirkt í lestri og sem allra minnst, en
+aðgerðir taka á bilinu tugi til hundruða nanósekúndna upp í fáeinar
+míkrósekúndur og gagnaskráin er aðeins 13,3 MiB að stærð (3,2 MiB þjöppuð).
+Til samanburðar eru upprunaleg gögn, [KRISTINsnid.csv](https://bin.arnastofnun.is/gogn/mimisbrunnur/),
+í heildina 449,0 MiB afþjöppuð, en Beygir veitir fullan aðgang að því safni,
+rúmlega 7,4 milljónum beygingarfærslna.
+
+Beygir varð til við þróun á [Yrðu](https://yrda.is/) og er þar meðal annars
+notaður til að styðja við leit í orðabók og birta beygingartöflur.
 
 ## Uppsetning
 
 Safnið er gefið út á npm sem [`@yrda/beygir`](https://www.npmjs.com/package/@yrda/beygir).
 
-```bash
+```sh
 bun add @yrda/beygir@next
 ```
 
-## Sýnidæmi
+eða:
+
+```sh
+npm install @yrda/beygir@next
+```
+
+Einnig má prófa [dæmið sem keyrir í vafranum](http://beygir-daemi.yrda.is) (ath.
+að gagnaskráin er sótt og notuð alfarið beint í vafranum, án frekari samskipta
+við bakenda eftir gagnasókn.)
+
+## Einföld dæmi
 
 ```ts
 import beygir from "@yrda/beygir";
 
-beygir.finna("skildi", (uppflettiorð) => uppflettiorð.orð));
-// ["skildi", "skjöldur", "skilinn", "skilja"]
+const finnst = beygir.hefur("hestur");
+// true
+
+const uppflettiorð = beygir.finnaUppflettiorð("hestur")[0]!;
+// { auðkenni: 6179, orð: "hestur", orðflokkur: "kk", ... }
+
+const beygingarmyndir = beygir.beygingarmyndir(uppflettiorð);
+// ["hestur", "hesturinn", "hest", "hestinn", ...]
+
+const greining = beygir.greina("hesthússhestur");
+// { orð: "hesthússhestur", samsett: true, tilgáta: true, hlutar: ["hesthúss", "hestur"], ... }
+
+const leitarniðurstöður = beygir.leita("hund", {
+  svið: "allt",
+  fjöldi: 10,
+});
+// { niðurstöður: ["hund", "Hund", "hunda", "hundaat", ... ], ... }
+
+const færslur = beygir.finnaBeygingarfærslur("hesti", {
+  sía: { mark: "ÞGFET" },
+  velja: (færsla) => ({
+    orð: færsla.orð,
+    mark: færsla.mark,
+  }),
+});
+// [{ orð: "hestur", mark: "ÞGFET" }]
 ```
 
-## Helsta virkni
-
-Með Beygi má:
-
-- Finna uppflettiorð út frá BÍN-auðkenni eða leitarstreng, hvort sem hann er uppflettiorð
-  eða beygingarmynd.
-- Finna beygingarfærslur út frá beygingarmynd og sía þær eftir marki eða öðrum BÍN-reitum.
-- Athuga tilvist texta, auðkenna, uppflettiorða og beygingarfærslna án þess að smíða niðurstöður.
-- Sía og varpa niðurstöðum, t.d. eftir orðflokki, marki eða falli.
-- Sækja beygingar uppflettiorða eða BÍN-auðkenna og skipta um fall á einstökum beygingarfærslum.
-- Ítra yfir uppflettiorð og beygingargögn í geymdri röð.
-
-Beygir var upphaflega hannaður fyrir [Yrðu.is](https://yrda.is) til að tengja beygingargögn
-við skilgreiningar í orðabókinni og birta beygingartöflur. Síðan þá hefur forritasafnið
-m.a. nýst við smíði á sérstakri framendatvíundarskrá fyrir Yrðu sem tengir saman orð sem
-deila beygingarmyndum.
+Sjá einnig [ítarlegri notkunardæmi](#dæmi) útlistuð neðar.
 
 ## Hugtök
 
-Beygir gerir greinarmun á uppflettiorði og beygingarfærslu:
+Beygir gerir greinarmun á
+[uppflettiorði](http://beygir.yrda.is/interfaces/beygir.Uppflettiorð.html) og
+[beygingarfærslu](http://beygir.yrda.is/interfaces/beygir.Færsla.html):
 
-- `Uppflettiorð` er orðabókarfletta með tiltekið BÍN-auðkenni, t.d. `hestur`.
-- `Færsla` er ein greind beygingarmynd uppflettiorðs, t.d. `hestanna` með marki `EFFTgr`.
+- `Uppflettiorð` er fletta með BÍN-auðkenni, t.d. `hestur`.
+- `Færsla` er ein greind beygingarmynd flettu, t.d. `hesti` með marki `ÞGFET`.
 
-Sem dæmi skilar `finna` uppflettiorðum fyrir almenna leit, en `finnaBeygingarfærslur`
-skilar greindum færslum með beygingarmynd og marki. Föll eins og `beygingar` og
-`beygingarmyndir` taka `Uppflettiorð`, því þau vinna með alla beygingu einnar flettu.
-`skiptaUmFall` tekur hins vegar `Færsla`, því það þarf að vita hvaða beygingarmynd
-og mark var fundið.
+`finna` og `finnaUppflettiorð` skila uppflettiorðum. `finnaBeygingarfærslur`
+skilar færslum með uppflettiorði, beygingarmynd og marki. Aðferðir eins og
+`beygingarmyndir` vinna með eina flettu, en `skiptaUmFall` tekur færslu því hún
+þarf bæði beygingarmyndina sem fannst og málfræðimark hennar.
 
-## Forritaskil
+## Handvirk opnun
 
-Eftirfarandi dæmi eru afmörkuð; sjá nánar í
-[kóði/kjarni/viðmót.ts](https://github.com/Yrda-is/beygir/blob/stofn/kóði/kjarni/viðmót.ts).
+Rótarviðmótið er þægilegast fyrir almenna notkun en til að stýra hvaða gagnaskrá
+er notuð eða hvernig gögnin eru lesin má nota handvirka opnun.
 
 ```ts
-import beygir from "@yrda/beygir";
+import { opnaBeygi } from "@yrda/beygir/gagnaskrá";
 
-beygir.hefur("hest");
-// true
-
-beygir.finna("hesti", (uppflettiorð) => ({
-  auðkenni: uppflettiorð.auðkenni,
-  uppflettiorð: uppflettiorð.orð,
-  orðflokkur: uppflettiorð.orðflokkur,
-}));
-// [
-//   { auðkenni: 6179, uppflettiorð: "hestur", orðflokkur: "kk" },
-//   { auðkenni: 420753, uppflettiorð: "hesta", orðflokkur: "so" },
-// ]
-
-beygir.finnaBeygingarfærslur("hesti", { orðflokkur: "kk" }, (færsla) => ({
-  auðkenni: færsla.auðkenni,
-  uppflettiorð: færsla.orð,
-  beygingarmynd: færsla.beygingarmynd,
-  mark: færsla.mark,
-}));
-// [
-//   {
-//     auðkenni: 6179,
-//     uppflettiorð: "hestur",
-//     beygingarmynd: "hesti",
-//     mark: "ÞGFET",
-//   },
-// ]
-
-const hestur = beygir.sækja(6179);
-if (hestur !== null) {
-  // Sía og vörpun eru keyrðar áður en niðurstöður eru smíðaðar og þeim skilað.
-  beygir.beygingar(hestur, { með: ["NF"], án: ["gr"] }, (f) => f.beygingarmynd);
-  // ["hestur", "hestar"]
-}
-
-// Þegar BÍN-auðkennið er til staðar er óþarfi að sækja uppflettiorð fyrst.
-beygir.beygingarAuðkennis(6179, { með: ["NF"], án: ["gr"] }, (f) => f.beygingarmynd);
-// ["hestur", "hestar"]
-
-const [hestanna] = beygir.finnaBeygingarfærslur("hestanna", { orðflokkur: "kk" });
-if (hestanna !== undefined) {
-  beygir.skiptaUmFall(hestanna, "NF", (f) => f.beygingarmynd);
-  // ["hestarnir"]
-}
+using beygir = opnaBeygi({
+  slóð: ".gögn/beygir.bin",
+  afleitt: "skrá-minni",
+  undirbúa: true,
+});
 ```
 
-## Afköst
+Nánar í skjölun um
+[opnaBeygi](http://beygir.yrda.is/functions/gagnaskrá.opnaBeygi.html).
 
-Í viðmiðunarmælingum mælast helstu uppflettingar í tugum eða hundruðum nanósekúndna
-og þær þyngstu í fáeinum míkrósekúndum.
+## Dæmi
 
-Afköstin ráðast af því að Beygir les þétt BÍN-tvíundarsnið beint yfir `ArrayBuffer`
-og notar `mmap` þar sem það er stutt. Safnið forðast óþarfa afrit, heldur sérhæfða
-vísa fyrir auðkenni, uppflettiorð og beygingarmyndir, og afkóðar texta eða smíðar
-JS-hluti aðeins þegar þess er þörf.
+Nokkur almennari notkunardæmi er að finna í [`dæmi/`](dæmi/):
 
-Sjá [AFKÖST.md](https://github.com/Yrda-is/beygir/blob/stofn/AFKÖST.md) fyrir nýjustu
-mælingar.
+```sh
+# Birtir beygingartöflu
+bun run ./dæmi/beygingartafla/beygingartafla.ts hestur
 
-## Gögn, stærð og skyld verkefni
-
-Beygir byggir á [Kristínarsniði](https://bin.arnastofnun.is/gogn/k-snid) og pakkar
-gögnunum í eigið tvíundarsnið. Sniðið varðveitir innihald færslna fyrir uppflettingu,
-ekki hráa CSV-framsetningu frumgagna.
-
-Sniðið varðveitir innihald færslna fyrir uppflettingu, en þó ekki hráa CSV-framsetningu
-frumgagna. Til að mynda eru uppflettiorð geymd í hækkandi röð eftir BÍN-auðkenni og
-beygingarfærslur samliggjandi undir hverri flettu.
-
-Npm-pakkinn inniheldur Brotli-þjappaðan BÍN-kjarna, um 73,6 MiB að stærð. Við
-uppsetningu er hann afþjappaður með `postinstall`-skriftu í tvíundarskrá sem er
-um 232 MiB. Skráin geymir 355.544 uppflettiorð, 7.419.033 beygingarfærslur og
-3.714.052 einstakar leitarorðmyndir.
-
-Sniðið hentar vel fyrir `mmap` og beina notkun í Bun eða Node.js. Það er ekki í
-sjálfu sér bundið við TypeScript, en notkun í öðru forritunarmáli krefst þess að
-lestrarlagið sé útfært fyrir það umhverfi.
-
-Þeim sem nota Python er bent á [BinPackage](https://github.com/mideind/BinPackage),
-öflugt Python-forritasafn sem pakkar BÍN í eigið þjappað tvíundarsnið og notar
-C++/CFFI fyrir hluta af lestrarlaginu.
-
-## Þróun
-
-Fyrst þarf að innsetja þróunarforkröfur.
-
-```bash
-bun install
+# Greinir uppflettiorð í texta
+bun run ./dæmi/lemmari/lemmari.ts Það mælti mín móðir
 ```
 
-Þá má sækja gögnin frá BÍN.
+[`dæmi/vefur/index.html`](dæmi/vefur/index.html) er dæmi um notkun í vafra. Það
+notar `@yrda/beygir/vefur`, sækir tvíundargagnaskrána `.gögn/beygir.bin` með
+`fetch` og leitar í henni beint í vafranum. Vafrar leyfa almennt ekki slíka
+hleðslu úr `file://`, svo keyra þarf einfaldan vefþjón til að veita vafranum
+gagnaskrána:
 
-```bash
-bun run sækja:gögn
+```sh
+bun run smíða:dreifingu
+python3 -m http.server 4173
 ```
 
-Skipunin notar `.gögn/KRISTINsnid.csv` úr skyndiminni ef hún er þegar til og
-fingrafar stemmir. Keyrðu hana með `--endursækja` til að sækja gögnin upp á nýtt.
+Opnaðu síðan `http://localhost:4173/dæmi/vefur/`.
 
-Að lokum er hægt að smíða tvíundarskrána.
+## Afleidd gagnasöfn
 
-```bash
-bun run smíða:kjarna
+Gagnasniðið hentar líka sem grunnur fyrir sérhæfð gagnasöfn sem þurfa sama
+lesara en minna eða afmarkaðra innihald. Dæmið
+[`dæmi/bín-kjarni/smíða.ts`](dæmi/bín-kjarni/smíða.ts) smíðar BÍN-kjarna úr
+venjulegri gagnaskrá með því að halda aðeins eftir færslum þar sem
+`birting === "K"`. Árnastofnun lýsir
+[BÍN-kjarnanum](https://bin.arnastofnun.is/binkjarni/) sem einfölduðu, vísandi
+úrtaki úr BÍN.
+
+```sh
+bun run ./dæmi/bín-kjarni/smíða.ts .gögn/beygir.bin .gögn/beygir-kjarni.bin
 ```
 
-## Leyfi
+Úttakið er áfram venjuleg gagnaskrá sem má opna með `opnaBeygi({ slóð })`. Með
+núverandi gögnum er slíkur kjarni um 3,35 MiB óþjappaður og um 0,72 MiB með
+Brotli, samanborið við um 13,26 MiB / 3,21 MiB fyrir fulla gagnaskrá.
 
-Frumkóði verkefnisins er undir MIT-leyfi. BÍN-gögn, og afleiddar eða umbreyttar
-gagnaskrár byggðar á þeim, eru undir CC BY-SA 4.0.
+## Skjölun
 
-Sjá nánar í
-[GÖGN-OG-LEYFI.md](https://github.com/Yrda-is/beygir/blob/stofn/GÖGN-OG-LEYFI.md).
+Nánari skjölun er á [beygir.yrda.is](http://beygir.yrda.is).
+
+## Leyfi og ásetningur
+
+Frumkóðinn er undir Apache License 2.0; sjá [LICENSE](LICENSE). Ásetningur
+verkefnisins er í [NOTICE](NOTICE). Gagnaskrá pakkans byggir á BÍN og er undir
+leyfi upprunagagnanna, CC BY-SA 4.0. Rétthafatilvísun, uppruni og lýsing á
+breytingum eru í [GÖGN-OG-LEYFI.md](GÖGN-OG-LEYFI.md).

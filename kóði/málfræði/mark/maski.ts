@@ -1,40 +1,57 @@
-import { MARKAÞÆTTIR, type Markaþáttur } from "./málfræði";
+import { MARKAÞÆTTIR, type Markaþáttur } from "./þættir";
 
 declare const MARKAMASKI_TÁKN: unique symbol;
 
-const BITAR_FYRIR_MARKAÞÁTT_LÁGT = new Uint32Array(MARKAÞÆTTIR.length);
-const BITAR_FYRIR_MARKAÞÁTT_HÁTT = new Uint32Array(MARKAÞÆTTIR.length);
-const MARKAÞÁTTUR_Í_VÍSI = new Map<Markaþáttur, number>();
+const MARKÞÁTTAFJÖLDI = MARKAÞÆTTIR.length;
+const BITAR_FYRIR_MARKÞÁTT_LÁGT = new Uint32Array(MARKÞÁTTAFJÖLDI);
+const BITAR_FYRIR_MARKÞÁTT_HÁTT = new Uint32Array(MARKÞÁTTAFJÖLDI);
+const MARKÞÁTTUR_Í_VÍSI = new Map<Markaþáttur, number>();
 
-for (let vísir = 0; vísir < MARKAÞÆTTIR.length; vísir++) {
+for (let vísir = 0; vísir < MARKÞÁTTAFJÖLDI; vísir++) {
   const þáttur = MARKAÞÆTTIR[vísir];
   if (þáttur === undefined) {
-    continue;
+    throw new Error("Óvænt vantar markþátt í markþáttatöflu.");
   }
-  MARKAÞÁTTUR_Í_VÍSI.set(þáttur, vísir);
+
+  MARKÞÁTTUR_Í_VÍSI.set(þáttur, vísir);
   if (vísir < 32) {
-    BITAR_FYRIR_MARKAÞÁTT_LÁGT[vísir] = (2 ** vísir) >>> 0;
+    BITAR_FYRIR_MARKÞÁTT_LÁGT[vísir] = (2 ** vísir) >>> 0;
   } else {
-    BITAR_FYRIR_MARKAÞÁTT_HÁTT[vísir] = (2 ** (vísir - 32)) >>> 0;
+    BITAR_FYRIR_MARKÞÁTT_HÁTT[vísir] = (2 ** (vísir - 32)) >>> 0;
   }
 }
 
-export function sækjaMarkaþáttarvísi(þáttur: string): number | undefined {
-  return MARKAÞÁTTUR_Í_VÍSI.get(þáttur as Markaþáttur);
+export function sækjaMarkþáttarvísi(þáttur: string): number | undefined {
+  return MARKÞÁTTUR_Í_VÍSI.get(þáttur as Markaþáttur);
 }
 
-export function sækjaLágbitaMarkaþáttar(vísir: number): number {
-  return BITAR_FYRIR_MARKAÞÁTT_LÁGT[vísir] ?? 0;
+export function sækjaLágbitaMarkþáttar(vísir: number): number {
+  if (vísir < 0 || vísir >= MARKÞÁTTAFJÖLDI) {
+    throw new Error(`Ógildur markþáttarvísir: ${vísir}`);
+  }
+  return BITAR_FYRIR_MARKÞÁTT_LÁGT[vísir]!;
 }
 
-export function sækjaHábitaMarkaþáttar(vísir: number): number {
-  return BITAR_FYRIR_MARKAÞÁTT_HÁTT[vísir] ?? 0;
+export function sækjaHábitaMarkþáttar(vísir: number): number {
+  if (vísir < 0 || vísir >= MARKÞÁTTAFJÖLDI) {
+    throw new Error(`Ógildur markþáttarvísir: ${vísir}`);
+  }
+  return BITAR_FYRIR_MARKÞÁTT_HÁTT[vísir]!;
 }
 
 export interface Markamaski {
   readonly [MARKAMASKI_TÁKN]: true;
   readonly lágt: number;
   readonly hátt: number;
+}
+
+function sækjaÞekktanMarkþáttarvísi(þáttur: Markaþáttur): number {
+  const vísir = MARKÞÁTTUR_Í_VÍSI.get(þáttur);
+  if (vísir === undefined) {
+    throw new Error(`Óþekktur markþáttur við útreikning markamaska: ${þáttur}`);
+  }
+
+  return vísir;
 }
 
 export function reiknaMarkamaska(þættir: readonly Markaþáttur[]): Markamaski {
@@ -44,17 +61,15 @@ export function reiknaMarkamaska(þættir: readonly Markaþáttur[]): Markamaski
   for (let vísir = 0; vísir < þættir.length; vísir++) {
     const þáttur = þættir[vísir];
     if (þáttur === undefined) {
-      continue;
+      throw new Error("Óvænt vantar markþátt við útreikning markamaska.");
     }
-    const þáttaVísir = MARKAÞÁTTUR_Í_VÍSI.get(þáttur);
-    if (þáttaVísir === undefined) {
-      continue;
-    }
-    lágt = (lágt | (BITAR_FYRIR_MARKAÞÁTT_LÁGT[þáttaVísir] ?? 0)) >>> 0;
-    hátt = (hátt | (BITAR_FYRIR_MARKAÞÁTT_HÁTT[þáttaVísir] ?? 0)) >>> 0;
+
+    const þáttaVísir = sækjaÞekktanMarkþáttarvísi(þáttur);
+    lágt = (lágt | BITAR_FYRIR_MARKÞÁTT_LÁGT[þáttaVísir]!) >>> 0;
+    hátt = (hátt | BITAR_FYRIR_MARKÞÁTT_HÁTT[þáttaVísir]!) >>> 0;
   }
 
-  // Tvískipt í lágt (bitar 0–31) og hátt (32–40) vegna þess að 41 þáttur
+  // Tvískipt í lágt (bitar 0-31) og hátt (32-40) vegna þess að 41 þáttur
   // rúmast ekki í einu 32-bita gildi.
   return { lágt, hátt } as Markamaski;
 }

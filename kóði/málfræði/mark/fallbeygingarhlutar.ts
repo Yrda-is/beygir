@@ -1,4 +1,4 @@
-import type { Markaþáttur } from "./málfræði";
+import type { Markaþáttur } from "./þættir";
 
 const FALLHEITI = ["NF", "ÞF", "ÞGF", "EF"] as const satisfies readonly Markaþáttur[];
 const TÖLUHEITI = ["ET", "FT"] as const satisfies readonly Markaþáttur[];
@@ -10,7 +10,7 @@ export type Fall = (typeof FALLHEITI)[number];
 
 interface Fallbeygingarhluti {
   readonly fall: Fall;
-  readonly fallLengd: 2 | 3;
+  readonly fallStafafjöldi: 2 | 3;
   readonly þættir: readonly Markaþáttur[];
 }
 
@@ -34,7 +34,7 @@ FALLHEITI.forEach((fall) => {
         const texti = `${fall}${tala}${hefurGreini ? "gr" : ""}${afbrigði ?? ""}`;
         FALLBEYGINGARHLUTI_Í_LÝSINGU[texti] = Object.freeze({
           fall,
-          fallLengd: fall.length as 2 | 3,
+          fallStafafjöldi: fall.length as 2 | 3,
           þættir: Object.freeze(þættir),
         });
       });

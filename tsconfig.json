@@ -5,6 +5,11 @@
     "types": ["bun"],
     "module": "Preserve",
     "moduleResolution": "bundler",
+    "paths": {
+      "@yrda/beygir": ["./kóði/beygir/beygir.ts"],
+      "@yrda/beygir/gagnaskrá": ["./kóði/beygir/gagnaskrá.ts"],
+      "@yrda/beygir/vefur": ["./kóði/beygir/vefur.ts"]
+    },
     "moduleDetection": "force",
     "allowJs": true,
     "checkJs": true,
@@ -27,5 +32,5 @@
     "skipLibCheck": true
   },
   "include": ["**/*.ts", "**/*.js", "**/*.mjs"],
-  "exclude": ["dreifing", "skjöl", "próf/node-reykpróf.mjs"]
+  "exclude": ["dreifing", "node_modules", "skjöl/forritaskil", "sýnidæmi"]
 }

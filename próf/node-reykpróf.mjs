@@ -1,68 +1,25 @@
-if (process.env["NODE_REYKPROF"] !== "1") {
-  console.log("Node.js reykprófum sleppt; settu NODE_REYKPROF=1 til að keyra þau.");
-  process.exit(0);
+import assert from "node:assert/strict";
+import beygir, { beygir as nafngreindurBeygir } from "@yrda/beygir";
+import { opnaBeygi, opnaBeygiÓsamstillt, semÍtarlegFærsla } from "@yrda/beygir/gagnaskrá";
+
+assert.equal(beygir, nafngreindurBeygir);
+assert.equal(beygir.snið, "gagnaskrá");
+assert.equal(beygir.hefur("hestur"), true);
+assert.ok(beygir.finnaUppflettiorð("hestur").length > 0);
+assert.ok(beygir.leita("hest", { svið: "allt", fjöldi: 5 }).niðurstöður.length > 0);
+assert.equal(typeof semÍtarlegFærsla, "function");
+
+const handvirkur = opnaBeygi({ undirbúa: true });
+try {
+  assert.equal(handvirkur.staða().undirbúið, true);
+  assert.equal(handvirkur.hefur("hestur"), true);
+} finally {
+  handvirkur.loka();
 }
 
-const kjarniSlóð = process.env["KJARNI_SLOD"];
-if (!kjarniSlóð) {
-  console.error("KJARNI_SLOD umhverfisbreytu vantar.");
-  process.exit(1);
+const ósamstilltur = await opnaBeygiÓsamstillt();
+try {
+  assert.equal(ósamstilltur.hefurUppflettiorð("hestur"), true);
+} finally {
+  ósamstilltur.loka();
 }
-
-import { existsSync } from "node:fs";
-
-if (!existsSync(kjarniSlóð)) {
-  console.error(`Skrá finnst ekki: ${kjarniSlóð}`);
-  process.exit(1);
-}
-
-const [{ default: beygir }, { opnaBeygiÓsamstillt }] = await Promise.all([
-  import("@yrda/beygir"),
-  import("@yrda/beygir/kjarni"),
-]);
-
-if (beygir.snið !== "beygir-v1") {
-  throw new Error(`Rangt snið á sjálfgefna viðmótinu: ${beygir.snið}.`);
-}
-
-if (!beygir.hefur("og")) {
-  throw new Error('Sjálfgefna viðmótið fann ekki orðið "og".');
-}
-
-if (beygir.hefur("asdf")) {
-  throw new Error("Sjálfgefna viðmótið samþykkti orð sem er ekki til.");
-}
-
-console.log('Sjálfgefna viðmótið stóðst uppflettingu á "og".');
-
-console.log(`Opna kjarna frá ${kjarniSlóð}.`);
-const kjarni = await opnaBeygiÓsamstillt({
-  slóð: kjarniSlóð,
-  opnunaraðferð: "lesa",
-});
-
-if (typeof kjarni[Symbol.dispose] !== "function") {
-  throw new Error("opnaBeygiÓsamstillt skilaði ekki Symbol.dispose.");
-}
-
-const snið = kjarni.snið;
-if (snið !== "beygir-v1") {
-  throw new Error(`Rangt snið: ${snið}.`);
-}
-
-const niðurstöður = kjarni.finnaBeygingarfærslur("og");
-if (niðurstöður.length === 0) {
-  throw new Error('finnaBeygingarfærslur("og") skilaði engum niðurstöðum.');
-}
-console.log(`finnaBeygingarfærslur("og") -> ${niðurstöður.length} niðurstöður.`);
-
-if (!kjarni.hefur("og")) {
-  throw new Error('hefur("og") skilaði false.');
-}
-
-if (kjarni.hefur("asdf")) {
-  throw new Error('hefur("asdf") skilaði true.');
-}
-
-kjarni[Symbol.dispose]();
-console.log("Node.js reykpróf stóðust.");

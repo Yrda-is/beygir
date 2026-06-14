@@ -24,21 +24,15 @@ const LAGSKIPTINGARSVÆÐI = [
     message: "kristínarsnið má aðeins nota sjálft sig og málfræði.",
   },
   {
-    target: "./kóði/kjarni",
+    target: "./kóði/snið",
     from: "./kóði",
-    except: ["./kjarni", "./málfræði"],
-    message: "kjarni má aðeins nota sjálft sig og grunnlögin undir sér.",
-  },
-  {
-    target: "./kóði/smiður",
-    from: "./kóði",
-    except: ["./smiður", "./kjarni", "./kristínarsnið", "./málfræði"],
-    message: "smiður má aðeins nota kjarna og grunnlögin undir sér.",
+    except: ["./snið", "./kristínarsnið", "./málfræði"],
+    message: "snið má aðeins nota sjálft sig, kristínarsnið og málfræði.",
   },
 ];
 
 export default tseslint.config({
-  ignores: ["dreifing/**", "skjöl/**"],
+  ignores: ["dreifing/**", "node_modules/**", "skjöl/forritaskil/**", ".gögn/**"],
   files: ["**/*.{ts,tsx}"],
   extends: [tseslint.configs.strictTypeChecked, tseslint.configs.stylisticTypeChecked],
   plugins: {
@@ -58,7 +52,14 @@ export default tseslint.config({
   },
   rules: {
     "@typescript-eslint/explicit-module-boundary-types": "error",
+    "@typescript-eslint/no-confusing-void-expression": [
+      "error",
+      {
+        ignoreArrowShorthand: true,
+      },
+    ],
     "@typescript-eslint/no-import-type-side-effects": "error",
+    "@typescript-eslint/no-non-null-assertion": "off",
     "@typescript-eslint/prefer-for-of": "off",
     "@typescript-eslint/restrict-template-expressions": [
       "error",

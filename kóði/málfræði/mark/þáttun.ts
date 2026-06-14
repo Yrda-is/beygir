@@ -1,34 +1,29 @@
-import {
-  EINFALDIR_MARKHLUTAR,
-  GRUNNAR_MARKHLUTA_MEÐ_AFBRIGÐI,
-  LEYFÐ_AFBRIGÐI_MARKHLUTA,
-  MARKAÞÆTTIR,
-  type Markaþáttur,
-} from "./málfræði";
 import { sækjaFallbeygingarhluta } from "./fallbeygingarhlutar";
-import { reiknaMarkamaska, type Markamaski } from "./maski";
+import {
+  MARKAÞÆTTIR,
+  MARKHLUTAR_EINFALDIR,
+  MARKHLUTAR_GRUNNAR_MEÐ_AFBRIGÐI,
+  MARKHLUTAR_LEYFÐ_AFBRIGÐI,
+  type Markaþáttur,
+} from "./þættir";
 
 const STAFKÓÐI_2 = "2".charCodeAt(0);
 const STAFKÓÐI_3 = "3".charCodeAt(0);
 const STAFKÓÐI_4 = "4".charCodeAt(0);
-const MARKAÞÁTTAR = new Set<string>(MARKAÞÆTTIR);
+const MARKÞÁTTAMENGI = new Set<string>(MARKAÞÆTTIR);
 
 function erMarkaþáttur(texti: string): texti is Markaþáttur {
-  return MARKAÞÁTTAR.has(texti);
+  return MARKÞÁTTAMENGI.has(texti);
 }
 
-function sækjaTöluAfbrigði(afgangur: string): Markaþáttur | null {
-  if (afgangur.length !== 1) {
-    return null;
-  }
-  const afbrigðistafur = afgangur.charCodeAt(0);
-  if (afbrigðistafur === STAFKÓÐI_2) {
+function sækjaTöluafbrigði(stafakóði: number): Markaþáttur | null {
+  if (stafakóði === STAFKÓÐI_2) {
     return "2";
   }
-  if (afbrigðistafur === STAFKÓÐI_3) {
+  if (stafakóði === STAFKÓÐI_3) {
     return "3";
   }
-  if (afbrigðistafur === STAFKÓÐI_4) {
+  if (stafakóði === STAFKÓÐI_4) {
     return "4";
   }
 
@@ -36,18 +31,23 @@ function sækjaTöluAfbrigði(afgangur: string): Markaþáttur | null {
 }
 
 function sækjaEittTöluafbrigði(markhluti: string, staða: number): Markaþáttur | null {
-  if (staða + 1 !== markhluti.length) {
+  if (staða < 0 || staða + 1 !== markhluti.length) {
     return null;
   }
-  return sækjaTöluAfbrigði(markhluti[staða] ?? "");
+
+  return sækjaTöluafbrigði(markhluti.charCodeAt(staða));
 }
 
-function áLeyftAfbrigði(vísir: number, afbrigði: Markaþáttur): boolean {
-  const leyfðAfbrigði = LEYFÐ_AFBRIGÐI_MARKHLUTA[vísir];
+function sækjaLeyfðAfbrigðiMarkhluta(vísir: number): readonly Markaþáttur[] {
+  const leyfðAfbrigði = MARKHLUTAR_LEYFÐ_AFBRIGÐI[vísir];
   if (leyfðAfbrigði === undefined) {
-    return false;
+    throw new Error("Ósamræmd afbrigðagögn markhluta.");
   }
 
+  return leyfðAfbrigði;
+}
+
+function áLeyftAfbrigði(leyfðAfbrigði: readonly Markaþáttur[], afbrigði: Markaþáttur): boolean {
   for (let afbrigðavísir = 0; afbrigðavísir < leyfðAfbrigði.length; afbrigðavísir++) {
     if (leyfðAfbrigði[afbrigðavísir] === afbrigði) {
       return true;
@@ -62,9 +62,13 @@ function þáttaFallbeygingarhluta(markhluti: string): readonly Markaþáttur[] 
 }
 
 function þáttaMarkhlutaMeðAfbrigði(markhluti: string): readonly Markaþáttur[] | null {
-  for (let vísir = 0; vísir < GRUNNAR_MARKHLUTA_MEÐ_AFBRIGÐI.length; vísir++) {
-    const grunnur = GRUNNAR_MARKHLUTA_MEÐ_AFBRIGÐI[vísir];
-    if (grunnur === undefined || !markhluti.startsWith(grunnur)) {
+  for (let vísir = 0; vísir < MARKHLUTAR_GRUNNAR_MEÐ_AFBRIGÐI.length; vísir++) {
+    const grunnur = MARKHLUTAR_GRUNNAR_MEÐ_AFBRIGÐI[vísir];
+    if (grunnur === undefined) {
+      throw new Error("Ósamræmd grunngögn markhluta.");
+    }
+
+    if (!markhluti.startsWith(grunnur)) {
       continue;
     }
 
@@ -73,7 +77,7 @@ function þáttaMarkhlutaMeðAfbrigði(markhluti: string): readonly Markaþáttu
     }
 
     const afbrigði = sækjaEittTöluafbrigði(markhluti, grunnur.length);
-    if (afbrigði !== null && áLeyftAfbrigði(vísir, afbrigði)) {
+    if (afbrigði !== null && áLeyftAfbrigði(sækjaLeyfðAfbrigðiMarkhluta(vísir), afbrigði)) {
       return [grunnur, afbrigði];
     }
 
@@ -88,7 +92,7 @@ function þáttaMarkhluta(markhluti: string): readonly Markaþáttur[] | null {
     return null;
   }
 
-  if (EINFALDIR_MARKHLUTAR.has(markhluti as Markaþáttur)) {
+  if (MARKHLUTAR_EINFALDIR.has(markhluti as Markaþáttur)) {
     return [markhluti as Markaþáttur];
   }
 
@@ -100,7 +104,7 @@ function þáttaMarkhluta(markhluti: string): readonly Markaþáttur[] | null {
   return þáttaMarkhlutaMeðAfbrigði(markhluti);
 }
 
-type MeðhöndlunMarkhluta = (hlutatexti: string, þáttaðir: readonly Markaþáttur[]) => void;
+type MeðhöndlunMarkhluta = (þættir: readonly Markaþáttur[]) => void;
 
 function ítrekaMarkhluta(texti: string, meðhöndlun: MeðhöndlunMarkhluta): boolean {
   let byrjun = 0;
@@ -108,13 +112,12 @@ function ítrekaMarkhluta(texti: string, meðhöndlun: MeðhöndlunMarkhluta): b
   while (byrjun <= texti.length) {
     const næstaBandstrik = texti.indexOf("-", byrjun);
     const endir = næstaBandstrik === -1 ? texti.length : næstaBandstrik;
-    const hlutatexti = texti.slice(byrjun, endir);
-    const þáttaðir = þáttaMarkhluta(hlutatexti);
+    const þáttaðir = þáttaMarkhluta(texti.slice(byrjun, endir));
     if (þáttaðir === null) {
       return false;
     }
 
-    meðhöndlun(hlutatexti, þáttaðir);
+    meðhöndlun(þáttaðir);
 
     if (næstaBandstrik === -1) {
       return true;
@@ -139,17 +142,18 @@ function geraEkkert(): void {
   return;
 }
 
-function þáttaMarkeiningar(texti: string): readonly Markaþáttur[] | null {
+export function þáttaMark(texti: string): readonly Markaþáttur[] | null {
   if (texti === "") {
     return [];
   }
+
   if (erMarkaþáttur(texti)) {
     return [texti];
   }
 
   const þættir: Markaþáttur[] = [];
   if (
-    !ítrekaMarkhluta(texti, (_hlutatexti, þáttaðir) => {
+    !ítrekaMarkhluta(texti, (þáttaðir) => {
       bætaViðÞáttum(þættir, þáttaðir);
     })
   ) {
@@ -157,15 +161,6 @@ function þáttaMarkeiningar(texti: string): readonly Markaþáttur[] | null {
   }
 
   return þættir;
-}
-
-export function reiknaMarkamaskaÚrTexta(texti: string): Markamaski | null {
-  const þættir = þáttaMarkeiningar(texti);
-  if (þættir === null) {
-    return null;
-  }
-
-  return reiknaMarkamaska(þættir);
 }
 
 export function staðfestaMark(texti: string): boolean {

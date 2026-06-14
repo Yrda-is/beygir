@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Útgáfan sem á að setja í package.json, t.d. 0.1.0-next.1
+        description: Útgáfan sem á að setja í package.json, t.d. 0.2.0-next.1
         required: true
         type: string
       npm_merki:
@@ -63,56 +63,46 @@ jobs:
       - name: Staðfesta útgáfubeiðni
         run: bun run ./skriftur/gefa-út.ts undirbúa "${{ inputs.version }}" "${{ inputs.npm_merki }}"
 
-      - name: Búa til gagnamöppu
-        run: mkdir -p .gögn
+      - name: Sækja nýjasta Kristínarsnið
+        run: bun run ./skriftur/sækja-kristínarsnið.ts .gögn --endursækja
 
-      - name: Sækja Kristínarsnið úr skyndiminni
-        id: kristinarsnid-skyndiminni
-        uses: actions/cache/restore@v5
-        with:
-          path: |
-            .gögn/KRISTINsnid.csv.br
-            .gögn/KRISTINsnid.csv.sha256sum
-          key: ${{ runner.os }}-kristinarsnid-br-sha-
-          restore-keys: ${{ runner.os }}-kristinarsnid-br-sha-
+      - name: Smíða og þjappa gagnaskrá
+        run: bun run smíða:gagnaskrá --þjappa
 
-      - name: Sækja Kristínarsnið úr föstu gagnasafni
-        if: steps.kristinarsnid-skyndiminni.outputs.cache-matched-key == ''
+      - name: Staðfesta fulla gagnaskrá
         env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          if ! gh release download gagnaskyndiminni \
-            --repo "$GITHUB_REPOSITORY" \
-            --clobber \
-            --pattern 'KRISTINsnid.csv.br' \
-            --pattern 'KRISTINsnid.csv.sha256sum' \
-            --dir .gögn; then
-            echo "::warning::Fasta gagnasafnið fannst ekki; sæki KRISTINsnid.csv frá BÍN."
-          fi
-
-      - name: Undirbúa Kristínarsnið
-        run: bun run sækja:gögn
+          BEYGIR_FULL_PARITY_CSV: .gögn/KRISTINsnid.csv
+        run: bun test próf/samþætting/gagnaskrá-sha.test.ts
 
       - name: Keyra gæðapróf
         run: bun run kemba:skoða
 
-      - name: Keyra próf
-        run: bun test
+      - name: Keyra Node.js reykpróf
+        env:
+          GAGNASKRA_SLOD: .gögn/beygir.bin
+        run: bun run node:reykpróf
 
-      - name: Smíða og þjappa kjarna
-        run: bun run smíða:kjarna:þjappa
+      - name: Skrá útgáfuupplýsingar gagnaskrár
+        run: |
+          bun -e 'import { opnaBeygi } from "./kóði/beygir/gagnaskrá.ts"; using beygir = opnaBeygi({ slóð: ".gögn/beygir.bin" }); await Bun.write(".gögn/uppruni.json", `${JSON.stringify(beygir.staða().uppruni, null, 2)}\n`);'
+          cat .gögn/uppruni.json
+          cat .gögn/beygir.bin.sha256
 
-      - name: Smíða skjöl
-        run: bun run skjöl
+      - name: Pakka útgáfugögnum
+        run: |
+          mkdir -p .gögn/útgáfa
+          cp .gögn/beygir.bin .gögn/útgáfa/beygir.bin
+          cp .gögn/beygir.bin.br .gögn/útgáfa/beygir.bin.br
+          cp .gögn/beygir.bin.sha256 .gögn/útgáfa/beygir.bin.sha256
+          cp .gögn/uppruni.json .gögn/útgáfa/uppruni.json
+          cp LICENSE .gögn/útgáfa/LICENSE
+          cp NOTICE .gögn/útgáfa/NOTICE
+          cp README.md .gögn/útgáfa/README.md
+          cp GÖGN-OG-LEYFI.md .gögn/útgáfa/GÖGN-OG-LEYFI.md
+          tar -czf ".gögn/beygir-gögn-${{ inputs.version }}.tar.gz" -C .gögn/útgáfa .
 
       - name: Skoða npm-pakka
         run: npm pack --dry-run
-
-      - name: Keyra Node.js reykpróf
-        env:
-          NODE_REYKPROF: "1"
-          KJARNI_SLOD: .gögn/beygir.bin
-        run: node próf/node-reykpróf.mjs
 
       - name: Festa útgáfu í git
         if: ${{ !inputs.dry_run }}
@@ -124,8 +114,31 @@ jobs:
 
       - name: Birta á npm
         if: ${{ !inputs.dry_run }}
-        run: npm publish --tag "${{ inputs.npm_merki }}" --access public
+        run: npm publish --tag "${{ inputs.npm_merki }}" --access public --provenance
 
       - name: Birta git-merki
         if: ${{ !inputs.dry_run }}
         run: bun run ./skriftur/gefa-út.ts birta-merki "${{ inputs.version }}"
+
+      - name: Búa til GitHub-útgáfu
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "v${{ inputs.version }}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "v${{ inputs.version }}" \
+            --notes "Beygir ${{ inputs.version }}. npm-merki: ${{ inputs.npm_merki }}."
+
+      - name: Birta gagnaskrár og leyfisskjöl
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "v${{ inputs.version }}" \
+            ".gögn/beygir-gögn-${{ inputs.version }}.tar.gz" \
+            .gögn/beygir.bin \
+            .gögn/beygir.bin.br \
+            .gögn/beygir.bin.sha256 \
+            .gögn/uppruni.json \
+            --repo "$GITHUB_REPOSITORY"
