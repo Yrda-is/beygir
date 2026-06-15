@@ -16,7 +16,7 @@ const LÁGMARK_LIÐS = 2;
 
 export interface Samsetningarþáttun {
   readonly hlutar: string[];
-  readonly höfuðByrjun: number;
+  readonly upphafHöfuðs: number;
 }
 
 export class Samsetningarþáttari {
@@ -68,9 +68,9 @@ export class Samsetningarþáttari {
       }
     }
 
-    let höfuðByrjun = -1;
-    let höfuðKostnaður = Infinity;
-    let höfuðLiðafjöldi = 0;
+    let upphafHöfuðs = -1;
+    let kostnaðurHöfuðs = Infinity;
+    let liðafjöldiHöfuðs = 0;
 
     for (let byrjun = 0; byrjun < lengd; byrjun++) {
       if (kostnaður[byrjun] === Infinity) {
@@ -89,12 +89,12 @@ export class Samsetningarþáttari {
           if (liðafjöldi[byrjun]! >= 1) {
             const nýrKostnaður = kostnaður[byrjun]! + 1;
             if (
-              nýrKostnaður < höfuðKostnaður ||
-              (nýrKostnaður === höfuðKostnaður && byrjun < höfuðByrjun)
+              nýrKostnaður < kostnaðurHöfuðs ||
+              (nýrKostnaður === kostnaðurHöfuðs && byrjun < upphafHöfuðs)
             ) {
-              höfuðKostnaður = nýrKostnaður;
-              höfuðByrjun = byrjun;
-              höfuðLiðafjöldi = liðafjöldi[byrjun]! + 1;
+              kostnaðurHöfuðs = nýrKostnaður;
+              upphafHöfuðs = byrjun;
+              liðafjöldiHöfuðs = liðafjöldi[byrjun]! + 1;
             }
           }
           continue;
@@ -128,20 +128,20 @@ export class Samsetningarþáttari {
       }
     }
 
-    if (höfuðByrjun < 0 || höfuðLiðafjöldi < 2) {
+    if (upphafHöfuðs < 0 || liðafjöldiHöfuðs < 2) {
       return null;
     }
 
     // Latin-1+ kóðar hvern studdan textastaf í eitt bæti, svo þessar
     // bætahliðranir eru jafnframt strengjavísar í upprunalega orðinu.
-    const hlutar = [orð.slice(höfuðByrjun, lengd)];
-    let núverandi = höfuðByrjun;
+    const hlutar = [orð.slice(upphafHöfuðs, lengd)];
+    let núverandi = upphafHöfuðs;
     while (núverandi > 0) {
       const fyrri = fyrriByrjun[núverandi]!;
       hlutar.push(orð.slice(fyrri, núverandi));
       núverandi = fyrri;
     }
     hlutar.reverse();
-    return { hlutar, höfuðByrjun };
+    return { hlutar, upphafHöfuðs };
   }
 }

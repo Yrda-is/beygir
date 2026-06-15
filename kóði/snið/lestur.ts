@@ -1032,7 +1032,7 @@ export class Lesari {
     return this.fyrirspurnÓbreytt ? texti : afkóðaTextasýn(this.fyrirspurnartextasýn, 0, lengd);
   }
 
-  private þáttaSamsetningu(orð: string): { hlutar: string[]; höfuðByrjun: number } | null {
+  private þáttaSamsetningu(orð: string): { hlutar: string[]; upphafHöfuðs: number } | null {
     const lengd = this.kóðaFyrirspurn(orð);
     if (lengd === FYRIRSPURN_EKKI_TIL) {
       return null;
@@ -2075,10 +2075,10 @@ export class Lesari {
       return null;
     }
 
-    // Latin-1+ kóðar hvern studdan textastaf í eitt bæti, svo höfuðByrjun er
+    // Latin-1+ kóðar hvern studdan textastaf í eitt bæti, svo upphafHöfuðs er
     // bæði bætahliðrun úr samsetningarleit og strengjavísir hér.
-    const forliður = orð.slice(0, þáttun.höfuðByrjun);
-    const höfuðliður = orð.slice(þáttun.höfuðByrjun);
+    const forliður = orð.slice(0, þáttun.upphafHöfuðs);
+    const höfuðliður = orð.slice(þáttun.upphafHöfuðs);
     const höfuðUppflettiorð = this.finnaUppflettiorðAfBeygingarmynd(höfuðliður, {
       hástafanæmt: false,
     });
