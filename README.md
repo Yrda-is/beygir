@@ -145,6 +145,22 @@ python3 -m http.server 4173
 
 Opnaðu síðan `http://localhost:4173/dæmi/vefur/`.
 
+## Viðmið og prófílar
+
+Einföld afkastaviðmið eru í [`skriftur/viðmið.ts`](skriftur/viðmið.ts) og
+samanburðargrunnur í [`.viðmið/grunnlína.json`](.viðmið/grunnlína.json).
+
+```sh
+bun run viðmið
+bun run viðmið -- --grunnlína
+```
+
+Sömu skriftu má nota sem mark fyrir CPU-prófíl Bun, t.d.:
+
+```sh
+bun --cpu-prof --cpu-prof-md ./skriftur/viðmið.ts --prófíll=beygingarmyndir
+```
+
 ## Afleidd gagnasöfn
 
 Gagnasniðið hentar líka sem grunnur fyrir sérhæfð gagnasöfn sem þurfa sama

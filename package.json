@@ -78,6 +78,7 @@
     "smíða:gagnaskrá": "bun run ./skriftur/smíða-gagnaskrá.ts",
     "smíða:skráarsnið": "bun run ./skriftur/smíða-skráarsnið.ts",
     "smíða:skráarsnið:athuga": "bun run ./skriftur/smíða-skráarsnið.ts --athuga",
+    "viðmið": "bun run ./skriftur/viðmið.ts",
     "sækja:gögn": "bun run ./skriftur/sækja-kristínarsnið.ts .gögn",
     "test": "bun test",
     "tsc": "bunx --bun tsc --noEmit",
@@ -94,10 +95,11 @@
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import": "2.32.0",
     "knip": "6.3.0",
+    "mitata": "^1.0.34",
     "prettier": "3.8.1",
+    "typedoc": "0.28.19",
     "typescript": "6.0.2",
     "typescript-eslint": "8.58.0",
-    "typedoc": "0.28.19",
     "zod": "4.3.6"
   }
 }
