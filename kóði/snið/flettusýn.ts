@@ -11,115 +11,8 @@ interface Flettugöngugögn {
   readonly lyklarUtanFormmengis: readonly Uint8Array[];
 }
 
-function fjöldiMinniEn(raðir: Uint32Array, röð: number): number {
-  let neðri = 0;
-  let efri = raðir.length;
-  while (neðri < efri) {
-    const miðja = (neðri + efri) >>> 1;
-    if (raðir[miðja]! < röð) {
-      neðri = miðja + 1;
-    } else {
-      efri = miðja;
-    }
-  }
-  return neðri;
-}
-
-function fjöldiMinniEðaJafn(raðir: Uint32Array, röð: number): number {
-  let neðri = 0;
-  let efri = raðir.length;
-  while (neðri < efri) {
-    const miðja = (neðri + efri) >>> 1;
-    if (raðir[miðja]! <= röð) {
-      neðri = miðja + 1;
-    } else {
-      efri = miðja;
-    }
-  }
-  return neðri;
-}
-
-function merkturVísirRaðar(raðirUtanFormmengis: Uint32Array, röð: number): number {
-  const fjöldiUtanFyrirFraman = fjöldiMinniEn(raðirUtanFormmengis, röð);
-  if (raðirUtanFormmengis[fjöldiUtanFyrirFraman] === röð) {
-    return -1;
-  }
-  return röð - fjöldiUtanFyrirFraman;
-}
-
-function beraLykilViðBæti(
-  lykill: Uint8Array,
-  bæti: Uint8Array,
-  frá: number,
-  lengd: number,
-): number {
-  const samanburðarlengd = Math.min(lykill.length, lengd);
-  for (let bætavísir = 0; bætavísir < samanburðarlengd; bætavísir++) {
-    const mismunur = lykill[bætavísir]! - bæti[frá + bætavísir]!;
-    if (mismunur !== 0) {
-      return mismunur < 0 ? -1 : 1;
-    }
-  }
-  if (lykill.length === lengd) {
-    return 0;
-  }
-  return lykill.length < lengd ? -1 : 1;
-}
-
-function beraLykilViðForskeyti(
-  lykill: Uint8Array,
-  bæti: Uint8Array,
-  frá: number,
-  lengd: number,
-): number {
-  const samanburðarlengd = Math.min(lykill.length, lengd);
-  for (let bætavísir = 0; bætavísir < samanburðarlengd; bætavísir++) {
-    const mismunur = lykill[bætavísir]! - bæti[frá + bætavísir]!;
-    if (mismunur !== 0) {
-      return mismunur < 0 ? -1 : 1;
-    }
-  }
-  return lykill.length >= lengd ? 0 : -1;
-}
-
-function fyrstiLykillEkkiMinniEn(
-  lyklar: readonly Uint8Array[],
-  bæti: Uint8Array,
-  frá: number,
-  lengd: number,
-): number {
-  let neðri = 0;
-  let efri = lyklar.length;
-  while (neðri < efri) {
-    const miðja = (neðri + efri) >>> 1;
-    if (beraLykilViðBæti(lyklar[miðja]!, bæti, frá, lengd) < 0) {
-      neðri = miðja + 1;
-    } else {
-      efri = miðja;
-    }
-  }
-  return neðri;
-}
-
-function fyrstiLykillEftirForskeyti(
-  lyklar: readonly Uint8Array[],
-  bæti: Uint8Array,
-  frá: number,
-  lengd: number,
-  byrjun: number,
-): number {
-  let neðri = byrjun;
-  let efri = lyklar.length;
-  while (neðri < efri) {
-    const miðja = (neðri + efri) >>> 1;
-    if (beraLykilViðForskeyti(lyklar[miðja]!, bæti, frá, lengd) <= 0) {
-      neðri = miðja + 1;
-    } else {
-      efri = miðja;
-    }
-  }
-  return neðri;
-}
+// Í venjulegri gagnaskrá eru lyklar utan formmengis örfáir. Raðganga yfir k er
+// því hraðari en tvíleit hér og heldur vörpun milli formraða og fletturaða einfaldri.
 
 // Bætaminnið er hluti af stöðu flettugöngunnar: formlyklar geta endurnýtt
 // fyrra forskeyti og bókstaflegir lyklar utan formmengis skrifast í sömu sýn.
@@ -139,12 +32,28 @@ export class Flettuganga {
   }
 
   private merkturVísir(röð: number): number {
-    return merkturVísirRaðar(this.gögn.raðirUtanFormmengis, röð);
+    const raðirUtanFormmengis = this.gögn.raðirUtanFormmengis;
+    for (let vísir = raðirUtanFormmengis.length - 1; vísir >= 0; vísir--) {
+      const utanröð = raðirUtanFormmengis[vísir]!;
+      if (utanröð === röð) {
+        return -1;
+      }
+      if (utanröð < röð) {
+        return röð - (vísir + 1);
+      }
+    }
+    return röð;
   }
 
   færaAðRöð(röð: number): this {
     const gögn = this.gögn;
-    const lykillUtanFormmengis = fjöldiMinniEðaJafn(gögn.raðirUtanFormmengis, röð);
+    let lykillUtanFormmengis = 0;
+    while (
+      lykillUtanFormmengis < gögn.raðirUtanFormmengis.length &&
+      gögn.raðirUtanFormmengis[lykillUtanFormmengis]! <= röð
+    ) {
+      lykillUtanFormmengis++;
+    }
 
     if (lykillUtanFormmengis > 0 && gögn.raðirUtanFormmengis[lykillUtanFormmengis - 1] === röð) {
       const lykill = gögn.lyklarUtanFormmengis[lykillUtanFormmengis - 1]!;
@@ -325,22 +234,28 @@ export class Flettusýn {
   }
 
   private fletturöðAfMerktum(merkturVísir: number): number {
-    let neðri = 0;
-    let efri = this.fjöldi;
-    while (neðri < efri) {
-      const miðja = (neðri + efri) >>> 1;
-      const merktirTilOgMeð = miðja + 1 - fjöldiMinniEðaJafn(this.raðirUtanFormmengis, miðja);
-      if (merktirTilOgMeð > merkturVísir) {
-        efri = miðja;
+    let röð = merkturVísir;
+    for (let vísir = 0; vísir < this.raðirUtanFormmengis.length; vísir++) {
+      if (this.raðirUtanFormmengis[vísir]! <= röð) {
+        röð++;
       } else {
-        neðri = miðja + 1;
+        break;
       }
     }
-    return neðri;
+    return röð;
   }
 
   merkturVísir(röð: number): number {
-    return merkturVísirRaðar(this.raðirUtanFormmengis, röð);
+    for (let vísir = this.raðirUtanFormmengis.length - 1; vísir >= 0; vísir--) {
+      const utanröð = this.raðirUtanFormmengis[vísir]!;
+      if (utanröð === röð) {
+        return -1;
+      }
+      if (utanröð < röð) {
+        return röð - (vísir + 1);
+      }
+    }
+    return röð;
   }
 
   röðMeðFormröð(formröð: number, bæti: Uint8Array, frá: number, lengd: number): number {
@@ -351,11 +266,25 @@ export class Flettusýn {
       return this.fletturöðAfMerktum(this.merktirFyrirFraman(formröð));
     }
 
-    const vísir = fyrstiLykillEkkiMinniEn(this.lyklarUtanFormmengis, bæti, frá, lengd);
-    return vísir < this.lyklarUtanFormmengis.length &&
-      beraLykilViðBæti(this.lyklarUtanFormmengis[vísir]!, bæti, frá, lengd) === 0
-      ? this.raðirUtanFormmengis[vísir]!
-      : -1;
+    for (let vísir = 0; vísir < this.lyklarUtanFormmengis.length; vísir++) {
+      const lykill = this.lyklarUtanFormmengis[vísir];
+      if (lykill?.length !== lengd) {
+        continue;
+      }
+
+      let sami = true;
+      for (let bætavísir = 0; bætavísir < lengd; bætavísir++) {
+        if (lykill[bætavísir] !== bæti[frá + bætavísir]) {
+          sami = false;
+          break;
+        }
+      }
+      if (sami) {
+        return this.raðirUtanFormmengis[vísir]!;
+      }
+    }
+
+    return -1;
   }
 
   röð(bæti: Uint8Array, frá: number, lengd: number): number {
@@ -381,14 +310,32 @@ export class Flettusýn {
   }
 
   lykillÚrRöð(röð: number, út: Uint8Array): number {
-    const utanvísir = fjöldiMinniEn(this.raðirUtanFormmengis, röð);
-    if (this.raðirUtanFormmengis[utanvísir] === röð) {
-      const lykill = this.lyklarUtanFormmengis[utanvísir]!;
-      út.set(lykill);
-      return lykill.length;
+    for (let vísir = 0; vísir < this.raðirUtanFormmengis.length; vísir++) {
+      if (this.raðirUtanFormmengis[vísir] === röð) {
+        const lykill = this.lyklarUtanFormmengis[vísir]!;
+        út.set(lykill);
+        return lykill.length;
+      }
     }
 
     return this.formlyklar.lykillÚrRöð(this.tryggjaMerktarFormraðir()[this.merkturVísir(röð)]!, út);
+  }
+
+  private beraLykilUtanFormmengisViðForskeyti(
+    vísir: number,
+    bæti: Uint8Array,
+    frá: number,
+    lengd: number,
+  ): number {
+    const lykill = this.lyklarUtanFormmengis[vísir]!;
+    const samanburðarlengd = Math.min(lykill.length, lengd);
+    for (let bætavísir = 0; bætavísir < samanburðarlengd; bætavísir++) {
+      const mismunur = lykill[bætavísir]! - bæti[frá + bætavísir]!;
+      if (mismunur !== 0) {
+        return mismunur < 0 ? -1 : 1;
+      }
+    }
+    return lykill.length >= lengd ? 0 : -1;
   }
 
   forskeytiStaða(
@@ -396,13 +343,20 @@ export class Flettusýn {
     frá: number,
     lengd: number,
   ): { grunnröð: number; fjöldi: number } | null {
-    const fyrstiÍBlokk = fyrstiLykillEkkiMinniEn(this.lyklarUtanFormmengis, bæti, frá, lengd);
-    const íBlokk =
-      fyrstiÍBlokk < this.lyklarUtanFormmengis.length &&
-      beraLykilViðForskeyti(this.lyklarUtanFormmengis[fyrstiÍBlokk]!, bæti, frá, lengd) === 0
-        ? fyrstiLykillEftirForskeyti(this.lyklarUtanFormmengis, bæti, frá, lengd, fyrstiÍBlokk) -
-          fyrstiÍBlokk
-        : 0;
+    let fyrirFraman = 0;
+    let íBlokk = 0;
+    let fyrstiÍBlokk = -1;
+    for (let vísir = 0; vísir < this.lyklarUtanFormmengis.length; vísir++) {
+      const samanburður = this.beraLykilUtanFormmengisViðForskeyti(vísir, bæti, frá, lengd);
+      if (samanburður < 0) {
+        fyrirFraman++;
+      } else if (samanburður === 0) {
+        íBlokk++;
+        if (fyrstiÍBlokk < 0) {
+          fyrstiÍBlokk = vísir;
+        }
+      }
+    }
 
     const staða = this.formlyklar.forskeytiStaða(bæti, frá, lengd);
     if (staða === null || staða.fjöldi === 0) {
@@ -414,6 +368,6 @@ export class Flettusýn {
 
     const neðri = this.merktirFyrirFraman(staða.grunnröð);
     const efri = this.merktirFyrirFraman(staða.grunnröð + staða.fjöldi);
-    return { grunnröð: neðri + fyrstiÍBlokk, fjöldi: efri - neðri + íBlokk };
+    return { grunnröð: neðri + fyrirFraman, fjöldi: efri - neðri + íBlokk };
   }
 }

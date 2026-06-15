@@ -231,7 +231,7 @@ const FYRIRSPURN_EKKI_TIL = -1;
 const MASKI_EINKUNNAR_ORÐS = 0b111;
 const BREIDD_MÁLSNIÐS_ORÐS = 4;
 const MASKI_MÁLSNIÐS_ORÐS = 0b1111;
-const ÞRÖSKULDUR_TVÍTEKNINGASETTS = 16;
+const ÞRÖSKULDUR_TVÍTEKNINGAMENGIS = 32;
 // SNID geymir hvern beygingarkóða sem u24:
 // bitar 0-9 mark, 10-12 einkunn, 13-15 málsnið, 16-19 gildi.
 const BREIDD_MARKVÍSIS = 10;
@@ -248,15 +248,15 @@ const MASKI_EINKUNNAR_BEYGINGARMYNDAR = 0b111;
 function bætaÓséðuVið<T>(
   gildi: T,
   gildiFylki: T[],
-  gildiSett: Set<T> | undefined,
+  gildiMengi: Set<T> | undefined,
 ): Set<T> | false | undefined {
-  if (gildiSett !== undefined) {
-    if (gildiSett.has(gildi)) {
+  if (gildiMengi !== undefined) {
+    if (gildiMengi.has(gildi)) {
       return false;
     }
-    gildiSett.add(gildi);
+    gildiMengi.add(gildi);
     gildiFylki.push(gildi);
-    return gildiSett;
+    return gildiMengi;
   }
 
   for (let vísir = 0; vísir < gildiFylki.length; vísir++) {
@@ -265,11 +265,11 @@ function bætaÓséðuVið<T>(
     }
   }
 
-  if (gildiFylki.length >= ÞRÖSKULDUR_TVÍTEKNINGASETTS) {
-    const næstaSett = new Set(gildiFylki);
-    næstaSett.add(gildi);
+  if (gildiFylki.length >= ÞRÖSKULDUR_TVÍTEKNINGAMENGIS) {
+    const næstaMengi = new Set(gildiFylki);
+    næstaMengi.add(gildi);
     gildiFylki.push(gildi);
-    return næstaSett;
+    return næstaMengi;
   }
 
   gildiFylki.push(gildi);
@@ -1957,35 +1957,35 @@ export class Lesari {
     const notaRaðarminni = this.stafmynsturStofns(stofnsæti) !== STAFMYNSTUR_UNDANTEKNING;
     const formraðir: number[] = [];
     const formmyndir: string[] = [];
-    let formraðasett: Set<number> | undefined;
-    let formmyndasett: Set<string> | undefined;
+    let formraðamengi: Set<number> | undefined;
+    let formmyndamengi: Set<string> | undefined;
 
     for (let sniðliður = 0; sniðliður < fjöldi; sniðliður++) {
       const orðmyndasæti = byrjun + sniðliður;
       const formröð = tilvikaformraðir[orðmyndasæti]!;
 
       if (notaRaðarminni) {
-        const næstaSett: Set<number> | false | undefined = bætaÓséðuVið(
+        const næstaMengi: Set<number> | false | undefined = bætaÓséðuVið(
           formröð,
           formraðir,
-          formraðasett,
+          formraðamengi,
         );
-        if (næstaSett === false) {
+        if (næstaMengi === false) {
           continue;
         }
-        formraðasett = næstaSett;
+        formraðamengi = næstaMengi;
         formmyndir.push(this.formtexti(stofnsæti, orðmyndasæti, formröð));
         continue;
       }
 
       const beygingarmynd = this.formtexti(stofnsæti, orðmyndasæti, formröð);
-      const næstaSett: Set<string> | false | undefined = bætaÓséðuVið(
+      const næstaMengi: Set<string> | false | undefined = bætaÓséðuVið(
         beygingarmynd,
         formmyndir,
-        formmyndasett,
+        formmyndamengi,
       );
-      if (næstaSett !== false) {
-        formmyndasett = næstaSett;
+      if (næstaMengi !== false) {
+        formmyndamengi = næstaMengi;
       }
     }
 
@@ -2916,8 +2916,8 @@ export class Lesari {
     const tilvikaformraðir = this.tryggjaTilvikaformraðir();
     const formraðir: number[] = [];
     const formmyndir: string[] = [];
-    let formraðasett: Set<number> | undefined;
-    let formmyndasett: Set<string> | undefined;
+    let formraðamengi: Set<number> | undefined;
+    let formmyndamengi: Set<string> | undefined;
 
     for (let stofnsæti = 0; stofnsæti < this.gögn.stofnar.fjöldiStofna; stofnsæti++) {
       const auðkenni = this.auðkenniStofns(stofnsæti);
@@ -2926,8 +2926,8 @@ export class Lesari {
       const notaRaðarminni = this.stafmynsturStofns(stofnsæti) !== STAFMYNSTUR_UNDANTEKNING;
       formraðir.length = 0;
       formmyndir.length = 0;
-      formraðasett = undefined;
-      formmyndasett = undefined;
+      formraðamengi = undefined;
+      formmyndamengi = undefined;
 
       for (let sniðliður = 0; sniðliður < fjöldi; sniðliður++) {
         const orðmyndasæti = byrjun + sniðliður;
@@ -2935,27 +2935,27 @@ export class Lesari {
         let beygingarmynd: string;
 
         if (notaRaðarminni) {
-          const næstaSett: Set<number> | false | undefined = bætaÓséðuVið(
+          const næstaMengi: Set<number> | false | undefined = bætaÓséðuVið(
             formröð,
             formraðir,
-            formraðasett,
+            formraðamengi,
           );
-          if (næstaSett === false) {
+          if (næstaMengi === false) {
             continue;
           }
-          formraðasett = næstaSett;
+          formraðamengi = næstaMengi;
           beygingarmynd = this.formtexti(stofnsæti, orðmyndasæti, formröð);
         } else {
           beygingarmynd = this.formtexti(stofnsæti, orðmyndasæti, formröð);
-          const næstaSett: Set<string> | false | undefined = bætaÓséðuVið(
+          const næstaMengi: Set<string> | false | undefined = bætaÓséðuVið(
             beygingarmynd,
             formmyndir,
-            formmyndasett,
+            formmyndamengi,
           );
-          if (næstaSett === false) {
+          if (næstaMengi === false) {
             continue;
           }
-          formmyndasett = næstaSett;
+          formmyndamengi = næstaMengi;
         }
 
         if (vinna(auðkenni, beygingarmynd) === false) {

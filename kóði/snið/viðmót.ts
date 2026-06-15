@@ -659,8 +659,9 @@ export interface Beygir {
    * forskeyti og sama sviði til að sækja næstu síðu. Bendillinn er ógegnsær
    * framhaldslykill; einstaka reitir hans eru innri staða leitarinnar.
    *
-   * Tímaflækja: `O(l + log k + n log k)` fyrir hverja síðu í uppflettiorðum, þar
-   * sem `n` er fjöldi strengja sem þarf að heimsækja til að fylla síðuna. Fyrir
+   * Tímaflækja: `O(l + k + n * k)` fyrir hverja síðu í uppflettiorðum, þar sem
+   * `n` er fjöldi strengja sem þarf að heimsækja til að fylla síðuna. Í venjulegri
+   * gagnaskrá er `k` mjög lítið og leit hagar sér því eins og `O(l + n)`. Fyrir
    * `svið: "beygingarmyndir"` er tíminn `O(l + n)`. Með `svið: "allt"` gildir
    * kostnaður dýrara sviðsins fyrir hverja heimsótta röð.
    *
