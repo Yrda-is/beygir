@@ -1,5 +1,5 @@
 import type { Kristínarsnið } from "./skema";
-import { þáttaKristínarsniðslínur } from "./þátta-línur";
+import { þáttaKristínarsniðslínu } from "./þáttun";
 
 async function* lesaTextalínur(slóð: string): AsyncGenerator<string> {
   const textastraumur = Bun.file(slóð).stream().pipeThrough(new TextDecoderStream());
@@ -30,9 +30,13 @@ async function* lesaTextalínur(slóð: string): AsyncGenerator<string> {
   }
 }
 
-export function lesaKristínarsniðslínur(
+export async function* lesaKristínarsniðslínur(
   slóð: string,
   staðfesta = true,
-): AsyncIterable<Kristínarsnið> {
-  return þáttaKristínarsniðslínur(lesaTextalínur(slóð), staðfesta);
+): AsyncGenerator<Kristínarsnið> {
+  let línunúmer = 0;
+  for await (const lína of lesaTextalínur(slóð)) {
+    línunúmer += 1;
+    yield þáttaKristínarsniðslínu(lína.normalize("NFC"), línunúmer, staðfesta);
+  }
 }

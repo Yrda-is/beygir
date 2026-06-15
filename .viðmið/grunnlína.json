@@ -1,0 +1,139 @@
+{
+  "útgáfa": 1,
+  "gagnaskrá": {
+    "heiti": "beygir.bin",
+    "bæti": 13896072,
+    "sha256": "f0eefe7a38666e4ca2281b3084f47ede8e0727f1f6142402ce32acd645591dfb"
+  },
+  "síur": {
+    "köld": false,
+    "sía": null
+  },
+  "keyrsla": {
+    "runtime": "bun",
+    "arch": "arm64-darwin",
+    "cpu": "Apple M1 Max"
+  },
+  "niðurstöður": [
+    {
+      "heiti": "beygingar",
+      "p50_ns": 1751.169921875,
+      "p99_ns": 1862.1826171875
+    },
+    {
+      "heiti": "beygingarAuðkennis",
+      "p50_ns": 1717.081787109375,
+      "p99_ns": 1764.862060546875
+    },
+    {
+      "heiti": "beygingarmyndir",
+      "p50_ns": 1448.384521484375,
+      "p99_ns": 1511.332275390625
+    },
+    {
+      "heiti": "beygingarmyndirAuðkennis",
+      "p50_ns": 1409.077880859375,
+      "p99_ns": 1449.3916015625
+    },
+    {
+      "heiti": "finna",
+      "p50_ns": 256.77490234375,
+      "p99_ns": 372.355224609375
+    },
+    {
+      "heiti": "finnaBeygingarfærslur",
+      "p50_ns": 134.755615234375,
+      "p99_ns": 169.921875
+    },
+    {
+      "heiti": "finnaUppflettiorð",
+      "p50_ns": 136.433837890625,
+      "p99_ns": 174.692626953125
+    },
+    {
+      "heiti": "finnaUppflettiorðAfBeygingarmynd",
+      "p50_ns": 178.019287109375,
+      "p99_ns": 295.7255859375
+    },
+    {
+      "heiti": "greina",
+      "p50_ns": 2743.306396484375,
+      "p99_ns": 2977.2236328125
+    },
+    {
+      "heiti": "hefur",
+      "p50_ns": 67.647216796875,
+      "p99_ns": 77.982666015625
+    },
+    {
+      "heiti": "hefurAuðkenni",
+      "p50_ns": 8.137939453125,
+      "p99_ns": 9.297607421875
+    },
+    {
+      "heiti": "hefurBeygingarfærslu",
+      "p50_ns": 68.349365234375,
+      "p99_ns": 88.409423828125
+    },
+    {
+      "heiti": "hefurUppflettiorð",
+      "p50_ns": 67.423583984375,
+      "p99_ns": 84.26904296875
+    },
+    {
+      "heiti": "leita",
+      "p50_ns": 2833,
+      "p99_ns": 10292
+    },
+    {
+      "heiti": "leitarniðurstöður.100",
+      "p50_ns": 16832.122802734375,
+      "p99_ns": 17392.39501953125
+    },
+    {
+      "heiti": "leitarsíður.5x20",
+      "p50_ns": 14699.1474609375,
+      "p99_ns": 15446.054931640625
+    },
+    {
+      "heiti": "lesaBeygingarfærslur.fyrstu-1000",
+      "p50_ns": 86458,
+      "p99_ns": 116916
+    },
+    {
+      "heiti": "lesaBeygingarmyndir.fyrstu-1000",
+      "p50_ns": 118417,
+      "p99_ns": 324125
+    },
+    {
+      "heiti": "lesaUppflettiorð.fyrstu-1000",
+      "p50_ns": 14500,
+      "p99_ns": 18000
+    },
+    {
+      "heiti": "samsetning",
+      "p50_ns": 453.5625,
+      "p99_ns": 666.63623046875
+    },
+    {
+      "heiti": "skiptaUmFall",
+      "p50_ns": 463.287353515625,
+      "p99_ns": 622.843505859375
+    },
+    {
+      "heiti": "staða",
+      "p50_ns": 8.382080078125,
+      "p99_ns": 14.739990234375
+    },
+    {
+      "heiti": "sækja",
+      "p50_ns": 32.65380859375,
+      "p99_ns": 50.466064453125
+    },
+    {
+      "heiti": "undirbúa.heitt",
+      "p50_ns": 14.129638671875,
+      "p99_ns": 22.216796875
+    }
+  ]
+}

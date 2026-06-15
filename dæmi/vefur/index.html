@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="is">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Beygir í vafra</title>
+    <link rel="icon" href="data:," />
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap");
+
+      :root {
+        --letur-sans: "IBM Plex Sans", system-ui, sans-serif;
+        --letur-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+        --sandur-50: #f6efe6;
+        --sandur-100: #ede5d9;
+        --sandur-200: #ddd6ca;
+        --sandur-500: #a89e92;
+        --sandur-775: #4a4038;
+        --sandur-850: #3a342d;
+        --sandur-900: #2e2822;
+        --sandur-950: #242019;
+        --grár-600: #555555;
+        --grár-950: #111111;
+        --hvítur: #ffffff;
+        --blár-50: #ebf0f8;
+        --blár-500: #5b8fd4;
+        --blár-900: #1f5fa8;
+        --rauður-400: #e06070;
+        --rauður-500: #ec4141;
+        --bakgrunnur: var(--sandur-50);
+        --flötur: var(--hvítur);
+        --flötur-annar: var(--sandur-100);
+        --rammi: var(--sandur-200);
+        --texti: var(--grár-950);
+        --aukatexti: var(--grár-600);
+        --hlekkur: var(--blár-900);
+        --áhersla: var(--rauður-500);
+        --kóðabakgrunnur: var(--hvítur);
+        --kóði-hlutur: #b12f38;
+        --kóði-aðferð: #1f5fa8;
+        --kóði-gildi: #6d5c00;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bakgrunnur: #1c1916;
+          --flötur: var(--sandur-950);
+          --flötur-annar: var(--sandur-900);
+          --rammi: var(--sandur-775);
+          --texti: #e8e0d6;
+          --aukatexti: var(--sandur-500);
+          --hlekkur: var(--blár-500);
+          --áhersla: var(--rauður-400);
+          --kóðabakgrunnur: var(--sandur-850);
+          --kóði-hlutur: #ff8a8f;
+          --kóði-aðferð: #8bbdff;
+          --kóði-gildi: #ffd36c;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        background: var(--bakgrunnur);
+        color: var(--texti);
+        font-family: var(--letur-sans);
+        line-height: 1.5;
+        margin: 0;
+      }
+
+      main {
+        margin: 0 auto;
+        max-width: 900px;
+        padding: 1.25rem 1.25rem 2rem;
+      }
+
+      header {
+        margin-bottom: 0.75rem;
+      }
+
+      h1 {
+        color: var(--áhersla);
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1;
+        margin: 0 0 0.35rem;
+      }
+
+      h2 {
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0;
+        margin: 0 0 0.45rem;
+      }
+
+      p {
+        color: var(--aukatexti);
+        font-size: 0.95rem;
+        margin: 0;
+      }
+
+      header p {
+        max-width: none;
+      }
+
+      a {
+        color: var(--hlekkur);
+        text-decoration-color: color-mix(in srgb, currentColor 45%, transparent);
+        text-underline-offset: 0.15em;
+      }
+
+      a:hover {
+        text-decoration-color: currentColor;
+      }
+
+      .yrða {
+        color: var(--áhersla);
+        font-weight: 500;
+      }
+
+      .uppruni {
+        margin-top: 0.5rem;
+      }
+
+      code,
+      pre,
+      input {
+        font-family: var(--letur-mono);
+      }
+
+      code {
+        color: var(--texti);
+      }
+
+      pre {
+        background: var(--kóðabakgrunnur);
+        border: 1px solid var(--rammi);
+        border-radius: 4px;
+        font-size: 0.86rem;
+        line-height: 1.5;
+        margin: 0;
+        overflow: auto;
+        padding: 0.75rem;
+        white-space: pre-wrap;
+      }
+
+      .kóði-hlutur {
+        color: var(--kóði-hlutur);
+      }
+
+      .kóði-aðferð {
+        color: var(--kóði-aðferð);
+      }
+
+      .kóði-gildi {
+        color: var(--kóði-gildi);
+      }
+
+      .leitarsvæði,
+      .spjald {
+        background: var(--flötur);
+        border: 1px solid var(--rammi);
+        border-radius: 6px;
+        padding: 0.75rem;
+      }
+
+      .leitarsvæði {
+        background: color-mix(in srgb, var(--blár-50) 58%, var(--flötur));
+        border-color: color-mix(in srgb, var(--hlekkur) 35%, var(--rammi));
+        display: grid;
+        gap: 0.45rem 0.75rem;
+        grid-template-columns: minmax(8.5rem, 12rem) minmax(0, 1fr);
+        align-items: end;
+        margin-bottom: 0.75rem;
+        padding: 0.6rem 0.75rem;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .leitarsvæði {
+          background: color-mix(in srgb, var(--blár-500) 12%, var(--flötur));
+        }
+      }
+
+      .orðreitur {
+        min-width: 0;
+      }
+
+      label {
+        color: var(--aukatexti);
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+      }
+
+      #ord {
+        background: var(--flötur);
+        border: 1px solid var(--rammi);
+        border-radius: 4px;
+        color: var(--texti);
+        font-size: 0.9rem;
+        width: 100%;
+        padding: 0.42rem 0.55rem;
+      }
+
+      #ord:focus {
+        border-color: var(--hlekkur);
+        outline: 3px solid color-mix(in srgb, var(--hlekkur) 25%, transparent);
+      }
+
+      fieldset {
+        border: 0;
+        margin: 0;
+        min-width: 0;
+        padding: 0;
+      }
+
+      legend {
+        color: var(--aukatexti);
+        font-size: 0.78rem;
+        font-weight: 500;
+        margin-bottom: 0.3rem;
+        padding: 0;
+      }
+
+      .kallaval {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+      }
+
+      .kallaval label {
+        align-items: center;
+        background: color-mix(in srgb, var(--flötur) 72%, var(--blár-50));
+        border: 1px solid var(--rammi);
+        border-radius: 999px;
+        color: var(--texti);
+        cursor: pointer;
+        display: inline-flex;
+        font-family: var(--letur-mono);
+        font-size: 0.72rem;
+        font-weight: 400;
+        gap: 0.3rem;
+        margin: 0;
+        padding: 0.26rem 0.42rem;
+      }
+
+      .kallaval label:has(input:checked) {
+        background: color-mix(in srgb, var(--blár-50) 78%, var(--flötur));
+        border-color: var(--hlekkur);
+        box-shadow: inset 0 0 0 1px var(--hlekkur);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .kallaval label:has(input:checked) {
+          background: color-mix(in srgb, var(--sandur-900) 72%, var(--sandur-775));
+          border-color: var(--blár-500);
+          box-shadow: inset 0 0 0 1px var(--blár-500);
+        }
+      }
+
+      .kallaval input {
+        accent-color: var(--hlekkur);
+        margin: 0;
+      }
+
+      .úttak {
+        gap: 0.75rem;
+        display: grid;
+      }
+
+      .útstöð {
+        color: var(--aukatexti);
+        font-size: 0.88rem;
+      }
+
+      .spjald {
+        min-width: 0;
+      }
+
+      .spjald--niðurstaða {
+        background: var(--flötur-annar);
+      }
+
+      .spjald--niðurstaða pre {
+        max-height: min(40vh, 24rem);
+      }
+
+      .villa #kall,
+      .villa #nidurstada {
+        border-color: color-mix(in srgb, var(--áhersla) 45%, var(--rammi));
+      }
+
+      @media (max-width: 720px) {
+        main {
+          padding-block: 1rem 1.5rem;
+        }
+
+        .leitarsvæði {
+          grid-template-columns: 1fr;
+        }
+
+        .kallaval {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .spjald + .spjald {
+          margin-top: 1rem;
+        }
+      }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+          "@yrda/beygir/vefur": "../../dreifing/kóði/beygir/vefur.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Beygir í vafra</h1>
+        <p>
+          Þetta vafradæmi sýnir notkun á vefútgáfu Beygis. Gagnaskráin er sótt sem tvíundargagnaskrá
+          og alfarið lesin beint í vafranum með sama biðlara og notaður er í Bun og Node.js. Hún er
+          um 13,3 MiB óþjöppuð og um 3,2 MiB með Brotli.
+        </p>
+        <p class="uppruni">
+          Beygir varð til við þróun á
+          <a class="yrða" href="https://yrda.is/">Yrðu</a>. Sjá
+          <a href="https://github.com/Yrda-is/beygir">GitHub-hirslu</a> eða
+          <a href="http://beygir.yrda.is/">skjölun</a>.
+        </p>
+      </header>
+
+      <form id="leit" class="leitarsvæði">
+        <div class="orðreitur">
+          <label for="ord">Orð</label>
+          <input id="ord" name="ord" value="lund" autocomplete="off" />
+        </div>
+        <fieldset>
+          <legend>Kall</legend>
+          <div class="kallaval">
+            <label>
+              <input type="radio" name="kall" value="leita" checked />
+              leita
+            </label>
+            <label>
+              <input type="radio" name="kall" value="finna" />
+              finna
+            </label>
+            <label>
+              <input type="radio" name="kall" value="beygingarmyndir" />
+              beygingarmyndir
+            </label>
+            <label>
+              <input type="radio" name="kall" value="finnaBeygingarfærslur" />
+              finnaBeygingarfærslur
+            </label>
+            <label>
+              <input type="radio" name="kall" value="greina" />
+              greina
+            </label>
+            <label>
+              <input type="radio" name="kall" value="hefur" />
+              hefur
+            </label>
+          </div>
+        </fieldset>
+      </form>
+
+      <div class="úttak">
+        <p class="útstöð">
+          Kóðann má einnig afrita og líma í vafraútstöðina í þróunartólum vafrans. Þetta dæmi setur
+          <code>beygir</code> á <code>window</code> til þess að leyfa slíkt, en það er ekki innbyggt
+          í safnið.
+        </p>
+        <section class="spjald" aria-labelledby="kall-yfirskrift">
+          <h2 id="kall-yfirskrift">Kall</h2>
+          <pre id="kall">Hleð gagnaskrá...</pre>
+        </section>
+        <section class="spjald spjald--niðurstaða" aria-labelledby="nidurstada-yfirskrift">
+          <h2 id="nidurstada-yfirskrift">Niðurstaða</h2>
+          <pre id="nidurstada"></pre>
+        </section>
+      </div>
+    </main>
+
+    <template id="kóðasnið-leita">
+      <span data-lina
+        ><span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð">leita</span>(</span
+      >
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
+      <span data-lina class="inndráttur-1"
+        ><span class="kóði-gildi">{ svið: "allt", fjöldi: 8 }</span>,</span
+      >
+      <span data-lina>);</span>
+    </template>
+
+    <template id="kóðasnið-finna">
+      <span data-lina
+        ><span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð">finna</span>(</span
+      >
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi">{</span></span>
+      <span data-lina class="inndráttur-2">
+        <span class="kóði-gildi">velja: ({ auðkenni, orð, orðflokkur }) => ({</span></span
+      >
+      <span data-lina class="inndráttur-3"><span class="kóði-gildi">auðkenni,</span></span>
+      <span data-lina class="inndráttur-3"><span class="kóði-gildi">orð,</span></span>
+      <span data-lina class="inndráttur-3"><span class="kóði-gildi">orðflokkur,</span></span>
+      <span data-lina class="inndráttur-2"><span class="kóði-gildi">}),</span></span>
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi">},</span></span>
+      <span data-lina>);</span>
+    </template>
+
+    <template id="kóðasnið-beygingarmyndir">
+      <span data-lina
+        ><span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð">beygingarmyndir</span
+        >(</span
+      >
+      <span data-lina class="inndráttur-1">
+        <span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð">finnaUppflettiorð</span
+        >(</span
+      >
+      <span data-lina class="inndráttur-2"><span class="kóði-gildi" data-ord></span>,</span>
+      <span data-lina class="inndráttur-1">)[0],</span>
+      <span data-lina>);</span>
+    </template>
+
+    <template id="kóðasnið-finnaBeygingarfærslur">
+      <span data-lina
+        ><span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð"
+          >finnaBeygingarfærslur</span
+        >(</span
+      >
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi">{</span></span>
+      <span data-lina class="inndráttur-2"
+        ><span class="kóði-gildi">velja: (færsla) => [</span></span
+      >
+      <span data-lina class="inndráttur-3"><span class="kóði-gildi">færsla.orð,</span></span>
+      <span data-lina class="inndráttur-3"
+        ><span class="kóði-gildi">færsla.beygingarmynd,</span></span
+      >
+      <span data-lina class="inndráttur-3"><span class="kóði-gildi">færsla.mark,</span></span>
+      <span data-lina class="inndráttur-2"><span class="kóði-gildi">],</span></span>
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi">},</span></span>
+      <span data-lina>);</span>
+    </template>
+
+    <template id="kóðasnið-greina">
+      <span data-lina
+        ><span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð">greina</span>(</span
+      >
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
+      <span data-lina>);</span>
+    </template>
+
+    <template id="kóðasnið-hefur">
+      <span data-lina
+        ><span class="kóði-hlutur">beygir</span>.<span class="kóði-aðferð">hefur</span>(</span
+      >
+      <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
+      <span data-lina>);</span>
+    </template>
+
+    <script type="module">
+      const eyðublað = document.getElementById("leit");
+      const orðareitur = document.getElementById("ord");
+      const kallkóði = document.getElementById("kall");
+      const niðurstöður = document.getElementById("nidurstada");
+      const kallaval = [...document.querySelectorAll('input[name="kall"]')];
+
+      function sækjaInndrátt(lína) {
+        if (lína.classList.contains("inndráttur-3")) {
+          return "      ";
+        }
+        if (lína.classList.contains("inndráttur-2")) {
+          return "    ";
+        }
+        return lína.classList.contains("inndráttur-1") ? "  " : "";
+      }
+
+      function erSniðbil(barn) {
+        return barn.nodeType === Node.TEXT_NODE && barn.textContent.trim() === "";
+      }
+
+      function sýnaKall(heiti, orð) {
+        const snið = document.getElementById(`kóðasnið-${heiti}`);
+        const línur = snið.content.querySelectorAll("[data-lina]");
+        kallkóði.replaceChildren();
+        for (const [vísir, lína] of línur.entries()) {
+          const afrit = lína.cloneNode(true);
+          for (const reitur of afrit.querySelectorAll("[data-ord]")) {
+            reitur.textContent = JSON.stringify(orð);
+          }
+          kallkóði.append(sækjaInndrátt(afrit));
+          for (const barn of [...afrit.childNodes]) {
+            if (!erSniðbil(barn)) {
+              kallkóði.append(barn);
+            }
+          }
+          if (vísir < línur.length - 1) {
+            kallkóði.append("\n");
+          }
+        }
+      }
+
+      function sýnaVillu(villa) {
+        document.body.classList.add("villa");
+        kallkóði.textContent = "Ekki tókst að hlaða dæminu.";
+        niðurstöður.textContent = [
+          villa instanceof Error ? villa.message : String(villa),
+          "",
+          "Opnaðu síðuna í gegnum vefþjón, ekki beint sem file://.",
+          "",
+          "bun run smíða:dreifingu",
+          "python3 -m http.server 4173",
+          "",
+          "http://localhost:4173/dæmi/vefur/",
+        ].join("\n");
+      }
+
+      function veljaUppflettiorð({ auðkenni, orð, orðflokkur }) {
+        return { auðkenni, orð, orðflokkur };
+      }
+
+      function veljaBeygingarfærslu(færsla) {
+        return [færsla.orð, færsla.beygingarmynd, færsla.mark];
+      }
+
+      function mótaLeitarsamhengi(beygir, texti) {
+        return {
+          texti,
+          uppflettiorð: beygir.finna(texti, { velja: veljaUppflettiorð }),
+          beygingarfærslur: beygir.finnaBeygingarfærslur(texti, {
+            velja: veljaBeygingarfærslu,
+          }),
+        };
+      }
+
+      function mótaLeitarsíðu(beygir, síða) {
+        return {
+          niðurstöður: síða.niðurstöður,
+          fleiriNiðurstöður: !síða.lokið,
+          samhengi: síða.niðurstöður.map((texti) => mótaLeitarsamhengi(beygir, texti)),
+        };
+      }
+
+      const kallastillingar = {
+        leita: {
+          dæmi: "lund",
+          sækja: (beygir, orð) =>
+            mótaLeitarsíðu(beygir, beygir.leita(orð, { svið: "allt", fjöldi: 8 })),
+        },
+        finna: {
+          dæmi: "hesti",
+          sækja: (beygir, orð) => beygir.finna(orð, { velja: veljaUppflettiorð }),
+        },
+        beygingarmyndir: {
+          dæmi: "hestur",
+          sækja(beygir, orð) {
+            const uppflettiorð = beygir.finnaUppflettiorð(orð)[0];
+            return uppflettiorð === undefined ? [] : beygir.beygingarmyndir(uppflettiorð);
+          },
+        },
+        finnaBeygingarfærslur: {
+          dæmi: "maður",
+          sækja: (beygir, orð) =>
+            beygir.finnaBeygingarfærslur(orð, {
+              velja: veljaBeygingarfærslu,
+            }),
+        },
+        greina: {
+          dæmi: "hesthús",
+          sækja: (beygir, orð) => beygir.greina(orð),
+        },
+        hefur: {
+          dæmi: "Reykjavík",
+          sækja: (beygir, orð) => beygir.hefur(orð),
+        },
+      };
+
+      function sækjaValiðKall() {
+        return kallaval.find((valkostur) => valkostur.checked)?.value ?? "leita";
+      }
+
+      function sækjaKallastillingu(heiti = sækjaValiðKall()) {
+        return kallastillingar[heiti] ?? kallastillingar.leita;
+      }
+
+      function setjaDæmisorð(heiti) {
+        orðareitur.value = sækjaKallastillingu(heiti).dæmi;
+      }
+
+      try {
+        if (location.protocol === "file:") {
+          throw new Error("Síðan var opnuð sem file:// og getur því ekki sótt gagnaskrána.");
+        }
+
+        const { sækjaBeygi } = await import("@yrda/beygir/vefur");
+        const beygir = await sækjaBeygi("../../.gögn/beygir.bin", { undirbúa: true });
+        window.beygir = beygir;
+
+        function leita() {
+          const orð = orðareitur.value.trim();
+          const valiðKall = sækjaValiðKall();
+          const stilling = sækjaKallastillingu(valiðKall);
+          sýnaKall(valiðKall, orð);
+          niðurstöður.textContent = JSON.stringify(stilling.sækja(beygir, orð), null, 2);
+        }
+
+        eyðublað.addEventListener("submit", (atburður) => {
+          atburður.preventDefault();
+          leita();
+        });
+        orðareitur.addEventListener("input", leita);
+        kallaval.forEach((valkostur) =>
+          valkostur.addEventListener("change", () => {
+            setjaDæmisorð(valkostur.value);
+            leita();
+          }),
+        );
+        setjaDæmisorð(sækjaValiðKall());
+        leita();
+      } catch (villa) {
+        sýnaVillu(villa);
+      }
+    </script>
+  </body>
+</html>

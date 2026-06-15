@@ -38,7 +38,11 @@ export function load(forrit) {
   });
 }
 
-/** @param {Application} forrit @param {ProjectReflection} verkefni @param {NavigationElement[]} leiðarkerfi */
+/**
+ * @param {Application} forrit
+ * @param {ProjectReflection} verkefni
+ * @param {NavigationElement[]} leiðarkerfi
+ */
 function bætaMeðlimumÍLeiðarkerfi(forrit, verkefni, leiðarkerfi) {
   /** @type {Map<string, NavigationElement[]>} */
   const leiðaratriðiEftirSlóð = new Map();
@@ -66,7 +70,10 @@ function bætaMeðlimumÍLeiðarkerfi(forrit, verkefni, leiðarkerfi) {
   }
 }
 
-/** @param {NavigationElement[]} leiðarkerfi @param {Map<string, NavigationElement[]>} leiðaratriðiEftirSlóð */
+/**
+ * @param {NavigationElement[]} leiðarkerfi
+ * @param {Map<string, NavigationElement[]>} leiðaratriðiEftirSlóð
+ */
 function safnaLeiðaratriðum(leiðarkerfi, leiðaratriðiEftirSlóð) {
   for (const atriði of leiðarkerfi) {
     if (atriði.path) {
@@ -81,7 +88,11 @@ function safnaLeiðaratriðum(leiðarkerfi, leiðaratriðiEftirSlóð) {
   }
 }
 
-/** @param {Map<string, NavigationElement[]>} leiðaratriðiEftirSlóð @param {string | undefined} slóð @param {NavigationElement[]} börn */
+/**
+ * @param {Map<string, NavigationElement[]>} leiðaratriðiEftirSlóð
+ * @param {string | undefined} slóð
+ * @param {NavigationElement[]} börn
+ */
 function bætaBörnumViðLeiðaratriði(leiðaratriðiEftirSlóð, slóð, börn) {
   if (!slóð || börn.length === 0) {
     return;

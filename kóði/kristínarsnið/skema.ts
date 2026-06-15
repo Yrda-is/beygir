@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { staðfestaMark } from "../málfræði/mark/þáttun";
 
+const HÁMARK_U32 = 0xffff_ffff;
+
 /**
  * Hér eru útlistuð leyfileg gildi fyrir þá Kristínarsniðsdálka sem hafa
  * lokað gildismengi.
@@ -88,7 +90,7 @@ const HlutiSkema = z.string().superRefine((hluti, samhengi) => {
   if (skammstafanir.length === 0 || skammstafanir.some((stak) => stak === "")) {
     samhengi.addIssue({
       code: "custom",
-      message: "hluti er tómt eða ógilt",
+      message: "hluti er tómur eða ógildur",
     });
     return;
   }
@@ -111,15 +113,33 @@ const EinkunnBeygingarmyndarSkema = z.number().int().min(0).max(4);
 
 const BirtingSkammstöfunSkema = z.enum(["K", "V"]);
 
-export const KristínarsniðSkema = z.object({
+export interface Kristínarsnið {
+  readonly orð: string;
+  readonly auðkenni: number;
+  readonly orðflokkur: string;
+  readonly hluti: string;
+  readonly einkunnOrðs: number;
+  readonly málsniðOrðs: string;
+  readonly málfræði: string;
+  readonly millivísun: number | null;
+  readonly birting: "K" | "V";
+  readonly beygingarmynd: string;
+  readonly mark: string;
+  readonly einkunnBeygingarmyndar: number;
+  readonly málsniðBeygingarmyndar: string;
+  readonly gildiBeygingarmyndar: string;
+  readonly aukafletta: string;
+}
+
+export const KristínarsniðSkema: z.ZodType<Kristínarsnið> = z.object({
   orð: z.string(),
-  auðkenni: z.number().int().positive(),
+  auðkenni: z.number().int().positive().max(HÁMARK_U32),
   orðflokkur: OrðflokkurSkammstöfunSkema,
   hluti: HlutiSkema,
   einkunnOrðs: EinkunnOrðsSkema,
   málsniðOrðs: z.string(),
   málfræði: z.string(),
-  millivísun: z.number().int().nonnegative(),
+  millivísun: z.number().int().positive().nullable(),
   birting: BirtingSkammstöfunSkema,
   beygingarmynd: z.string(),
   mark: z.string().refine(staðfestaMark, {
@@ -130,5 +150,3 @@ export const KristínarsniðSkema = z.object({
   gildiBeygingarmyndar: z.string(),
   aukafletta: z.string(),
 });
-
-export type Kristínarsnið = Readonly<z.infer<typeof KristínarsniðSkema>>;

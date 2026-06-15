@@ -4,13 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { brotliCompressSync } from "node:zlib";
 import type { Kristínarsnið } from "../kóði/kristínarsnið/skema";
-import type { ÍtarlegFærsla } from "../kóði/kjarni/viðmót";
-import { smíðaKjarnaOgSkrifa } from "../kóði/smiður/smiður";
-
-// Eins konar brú á milli eininga; aðeins fyrir próf.
-export { smíðaKjarnaOgSkrifa };
-
-export type Smíðifærsla = Omit<ÍtarlegFærsla, "millivísun"> & { readonly millivísun: number };
 
 const SJÁLFGEFIN_PRÓFFÆRSLA = {
   orð: "hestur",
@@ -20,7 +13,7 @@ const SJÁLFGEFIN_PRÓFFÆRSLA = {
   einkunnOrðs: 1,
   málsniðOrðs: "mals",
   málfræði: "malf",
-  millivísun: 0,
+  millivísun: null,
   birting: "K",
   beygingarmynd: "hestur",
   mark: "NFET",
@@ -28,7 +21,7 @@ const SJÁLFGEFIN_PRÓFFÆRSLA = {
   málsniðBeygingarmyndar: "bmals",
   gildiBeygingarmyndar: "bgildi",
   aukafletta: "aukaf",
-} satisfies Kristínarsnið & Smíðifærsla;
+} as const satisfies Kristínarsnið;
 
 export function kristínarsniðsfærsla(yfirskrif: Partial<Kristínarsnið> = {}): Kristínarsnið {
   return {
@@ -37,11 +30,16 @@ export function kristínarsniðsfærsla(yfirskrif: Partial<Kristínarsnið> = {}
   };
 }
 
-export function smíðifærsla(yfirskrif: Partial<Smíðifærsla> = {}): Smíðifærsla {
-  return {
-    ...SJÁLFGEFIN_PRÓFFÆRSLA,
+/** Lágmarksfærsla prófanna: valkvæðu strengjareitirnir tómir nema annað sé gefið. */
+export function lágmarkslína(yfirskrif: Partial<Kristínarsnið> = {}): Kristínarsnið {
+  return kristínarsniðsfærsla({
+    málsniðOrðs: "",
+    málfræði: "",
+    málsniðBeygingarmyndar: "",
+    gildiBeygingarmyndar: "",
+    aukafletta: "",
     ...yfirskrif,
-  };
+  });
 }
 
 export function búaTilBráðabirgðamöppu(bráðabirgðamöppur: string[], forskeyti: string): string {
@@ -51,34 +49,30 @@ export function búaTilBráðabirgðamöppu(bráðabirgðamöppur: string[], for
 }
 
 export function hreinsaBráðabirgðamöppur(bráðabirgðamöppur: string[]): void {
-  for (const mappa of bráðabirgðamöppur.splice(0)) {
-    rmSync(mappa, { recursive: true, force: true });
+  for (let vísir = 0; vísir < bráðabirgðamöppur.length; vísir++) {
+    const mappa = bráðabirgðamöppur[vísir];
+    if (mappa !== undefined) {
+      rmSync(mappa, { recursive: true, force: true });
+    }
   }
+  bráðabirgðamöppur.length = 0;
 }
 
-export async function smíðaPrófkjarna(
-  færslur: Iterable<Kristínarsnið> | AsyncIterable<Kristínarsnið>,
-  bráðabirgðamöppur: string[],
-  forskeyti: string,
-): Promise<string> {
-  const mappa = búaTilBráðabirgðamöppu(bráðabirgðamöppur, forskeyti);
-  const slóð = join(mappa, "beygir.bin");
-  await smíðaKjarnaOgSkrifa(færslur, slóð);
-  return slóð;
-}
-
-export function geymaAðeinsBrotliKjarna(slóð: string): string {
+export function geymaAðeinsBrotliGagnaskrá(slóð: string): string {
   const brotliSlóð = `${slóð}.br`;
   writeFileSync(brotliSlóð, brotliCompressSync(readFileSync(slóð)));
   rmSync(slóð);
   return brotliSlóð;
 }
 
-export function væntaGildi<T>(gildi: T | null | undefined, skilaboð = "Vantaði gildi í prófi."): T {
-  expect(gildi).toBeDefined();
-  expect(gildi).not.toBeNull();
+export function væntaGildis<T>(
+  gildi: T | null | undefined,
+  skilaboð = "Vantaði gildi í prófi.",
+): T {
   if (gildi === null || gildi === undefined) {
     throw new Error(skilaboð);
   }
+  expect(gildi).toBeDefined();
+  expect(gildi).not.toBeNull();
   return gildi;
 }

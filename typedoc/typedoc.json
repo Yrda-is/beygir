@@ -86,7 +86,7 @@
       "theme_inherited_from": "Erft frá",
       "theme_overrides": "Yfirskrifar",
       "theme_returns": "Skilar",
-      "theme_generated_using_typedoc": "Búið til með TypeDoc",
+      "theme_generated_using_typedoc": "Útbúið með TypeDoc",
       "theme_preparing_search_index": "Leitarvísir undirbúinn...",
       "theme_loading": "Hleður...",
       "theme_settings": "Stillingar",
@@ -111,18 +111,22 @@
     }
   },
   "plugin": ["./meðlima-leiðarkerfi.mjs"],
-  "entryPoints": ["../kóði/beygir/beygir.ts", "../kóði/beygir/kjarni.ts"],
+  "entryPoints": [
+    "../kóði/beygir/beygir.ts",
+    "../kóði/beygir/gagnaskrá.ts",
+    "../kóði/beygir/vefur.ts"
+  ],
   "entryPointStrategy": "resolve",
-  "tsconfig": "../tsconfig.node.json",
+  "tsconfig": "../tsconfig.dreifing.json",
   "out": "../skjöl/forritaskil",
   "cleanOutputDir": true,
   "customCss": "typedoc.css",
   "excludeInternal": true,
   "hostedBaseUrl": "https://beygir.yrda.is/",
   "includeVersion": true,
-  "intentionallyNotExported": ["FALLHEITI", "GAGNASNIÐ_HEITI", "MARKAÞÆTTIR"],
+  "intentionallyNotExported": ["FALLHEITI", "MARKAÞÆTTIR"],
   "navigationLinks": {
-    "Aðferðir": "https://beygir.yrda.is/interfaces/beygir.Beygir.html#beygingar",
+    "NPM": "https://www.npmjs.com/package/@yrda/beygir",
     "GitHub": "https://github.com/Yrda-is/beygir"
   }
 }

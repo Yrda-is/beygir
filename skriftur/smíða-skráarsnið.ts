@@ -1,12 +1,10 @@
-import { resolve } from "node:path";
-import { smíðaSkráarsnið } from "../kóði/kjarni/skráarsnið/smíði";
+#!/usr/bin/env bun
 
-const úrelt = await smíðaSkráarsnið({
-  rót: resolve(import.meta.dir, ".."),
-  athuga: Bun.argv.includes("--athuga"),
-});
+import { smíðaSkráarsnið } from "../kóði/snið/skráarsnið/smíði";
+
+const athuga = process.argv.includes("--athuga");
+const úrelt = await smíðaSkráarsnið({ rót: process.cwd(), athuga });
 
 if (úrelt) {
-  console.error("Keyrðu `bun run smíða:skráarsnið`.");
   process.exitCode = 1;
 }

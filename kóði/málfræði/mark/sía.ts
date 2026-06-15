@@ -1,17 +1,13 @@
-/**
- * Beygingarsían vinnur á atómískum markþáttum.
- */
+import { sækjaHábitaMarkþáttar, sækjaLágbitaMarkþáttar, sækjaMarkþáttarvísi } from "./maski";
 
-import { sækjaHábitaMarkaþáttar, sækjaLágbitaMarkaþáttar, sækjaMarkaþáttarvísi } from "./maski";
-
-export interface Beygingarþáttasía {
+export interface Markaþáttasía {
   readonly þættir: readonly string[];
   readonly heildarmaskiLág: number;
   readonly heildarmaskiHá: number;
   readonly óþekktirÞættir: readonly string[];
 }
 
-export function undirbúaBeygingarsíu(inntak: readonly string[]): Beygingarþáttasía {
+export function undirbúaMarkaþáttasíu(inntak: readonly string[]): Markaþáttasía {
   const þættir: string[] = [];
   const óþekktirÞættir: string[] = [];
   const séðirÞættir = new Set<string>();
@@ -27,10 +23,10 @@ export function undirbúaBeygingarsíu(inntak: readonly string[]): Beygingarþá
     þættir.push(þáttur);
     séðirÞættir.add(þáttur);
 
-    const þáttaVísir = sækjaMarkaþáttarvísi(þáttur);
-    if (þáttaVísir !== undefined) {
-      heildarmaskiLág = (heildarmaskiLág | sækjaLágbitaMarkaþáttar(þáttaVísir)) >>> 0;
-      heildarmaskiHá = (heildarmaskiHá | sækjaHábitaMarkaþáttar(þáttaVísir)) >>> 0;
+    const þáttarvísir = sækjaMarkþáttarvísi(þáttur);
+    if (þáttarvísir !== undefined) {
+      heildarmaskiLág = (heildarmaskiLág | sækjaLágbitaMarkþáttar(þáttarvísir)) >>> 0;
+      heildarmaskiHá = (heildarmaskiHá | sækjaHábitaMarkþáttar(þáttarvísir)) >>> 0;
       continue;
     }
 

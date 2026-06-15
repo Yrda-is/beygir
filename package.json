@@ -1,9 +1,9 @@
 {
   "name": "@yrda/beygir",
-  "version": "0.1.0-next.1",
+  "version": "0.2.0-next.1",
   "description": "Uppflettingasafn í íslenskum beygingum og BÍN-gögnum fyrir Bun og Node.js.",
+  "license": "Apache-2.0 AND CC-BY-SA-4.0",
   "type": "module",
-  "license": "MIT AND CC-BY-SA-4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Yrda-is/beygir.git"
@@ -25,17 +25,26 @@
     "beygingarmyndir"
   ],
   "files": [
-    "kóði/beygir/**",
-    "kóði/kjarni/**",
-    "kóði/málfræði/**",
+    "kóði/",
     "!kóði/**/*.test.ts",
-    "dreifing/**",
+    "!kóði/kristínarsnið/",
+    "!kóði/snið/dafsa-röðun.ts",
+    "!kóði/snið/dafsa-smíði.ts",
+    "!kóði/snið/skráarsnið/",
+    "!kóði/snið/smiður/",
+    "!kóði/snið/smíði.ts",
+    "dreifing/",
+    "!dreifing/kóði/kristínarsnið/",
+    "!dreifing/kóði/snið/dafsa-röðun.d.ts",
+    "!dreifing/kóði/snið/dafsa-smíði.d.ts",
+    "!dreifing/kóði/snið/skráarsnið/",
+    "!dreifing/kóði/snið/smiður/",
+    "!dreifing/kóði/snið/smíði.d.ts",
     ".gögn/beygir.bin.br",
     ".gögn/beygir.bin.sha256",
-    "skriftur/afþjappa-pakkaðan-kjarna.mjs",
     "README.md",
-    "AFKÖST.md",
     "LICENSE",
+    "NOTICE",
     "GÖGN-OG-LEYFI.md"
   ],
   "exports": {
@@ -44,10 +53,15 @@
       "bun": "./kóði/beygir/beygir.ts",
       "default": "./dreifing/kóði/beygir/beygir.js"
     },
-    "./kjarni": {
-      "types": "./dreifing/kóði/beygir/kjarni.d.ts",
-      "bun": "./kóði/beygir/kjarni.ts",
-      "default": "./dreifing/kóði/beygir/kjarni.js"
+    "./gagnaskrá": {
+      "types": "./dreifing/kóði/beygir/gagnaskrá.d.ts",
+      "bun": "./kóði/beygir/gagnaskrá.ts",
+      "default": "./dreifing/kóði/beygir/gagnaskrá.js"
+    },
+    "./vefur": {
+      "types": "./dreifing/kóði/beygir/vefur.d.ts",
+      "browser": "./dreifing/kóði/beygir/vefur.js",
+      "default": "./dreifing/kóði/beygir/vefur.js"
     }
   },
   "publishConfig": {
@@ -55,42 +69,33 @@
     "tag": "next"
   },
   "scripts": {
-    "prepack": "bun run ./skriftur/undirbúa-pökkun.mjs",
-    "postinstall": "bun run ./skriftur/afþjappa-pakkaðan-kjarna.mjs || node ./skriftur/afþjappa-pakkaðan-kjarna.mjs",
-    "smíða:skráarsnið": "bun run ./skriftur/smíða-skráarsnið.ts",
-    "afþjappa:kjarna": "bun run ./skriftur/afþjappa-pakkaðan-kjarna.mjs",
-    "þjappa:kjarna": "bun run ./skriftur/þjappa-pakkaðan-kjarna.mjs",
+    "prepack": "bun run ./skriftur/undirbúa-pökkun.ts",
+    "gefa:út": "bun run ./skriftur/gefa-út.ts",
     "próf": "bun test",
-    "viðmið": "bun run ./viðmið/keyra.ts",
-    "viðmið:aðhvarfsgreining": "bun run ./viðmið/aðhvarfsgreining.ts",
-    "afköst": "bun run ./viðmið/smíða-afköst.ts",
-    "mæla:kjarnagagnalestur": "bun run ./skriftur/mæla-kjarnagagnalestur.ts",
+    "node:reykpróf": "node próf/node-reykpróf.mjs",
     "skjöl": "bunx --bun typedoc --options typedoc/typedoc.json",
+    "smíða:dreifingu": "bun run ./skriftur/smíða-dreifingu.ts",
+    "smíða:gagnaskrá": "bun run ./skriftur/smíða-gagnaskrá.ts",
+    "smíða:skráarsnið": "bun run ./skriftur/smíða-skráarsnið.ts",
+    "smíða:skráarsnið:athuga": "bun run ./skriftur/smíða-skráarsnið.ts --athuga",
+    "viðmið": "bun run ./skriftur/viðmið.ts",
+    "sækja:gögn": "bun run ./skriftur/sækja-kristínarsnið.ts .gögn",
+    "test": "bun test",
     "tsc": "bunx --bun tsc --noEmit",
     "eslint": "bunx --bun eslint .",
     "prettier:athuga": "bunx --bun prettier --check .",
     "prettier:laga": "bunx --bun prettier --write .",
     "dauður-kóði": "bunx --bun knip",
-    "kemba": "bun run prettier:laga && bun run smíða:skráarsnið --athuga && bun run eslint && bun run tsc && bun run dauður-kóði",
-    "kemba:skoða": "bun run smíða:skráarsnið --athuga && bun run prettier:athuga && bun run eslint && bun run tsc && bun run dauður-kóði",
-    "sækja:gögn": "bun run ./skriftur/sækja-kristínarsnið.ts .gögn",
-    "uppfæra:gagnaskyndiminni": "./skriftur/uppfæra-kristínarsnið-gagnaskyndiminni.sh",
-    "smíða:kjarna": "bun run ./skriftur/smíða-kjarna.ts .gögn",
-    "smíða:kjarna:þjappa": "bun run ./skriftur/smíða-kjarna.ts .gögn --þjappa",
-    "smíða:node": "bun run ./skriftur/smíða-node-dreifingu.ts",
-    "smíða:uppflettisett": "bun run ./viðmið/gögn/smíða-föst-uppflettisett.ts",
-    "docker:próf": "docker compose run --build --rm yrda-beygir bun test",
-    "docker:viðmið": "docker compose run --build --rm yrda-beygir bun run viðmið",
-    "docker:smíða:kjarna": "docker compose run --build --rm yrda-beygir bun run ./skriftur/smíða-kjarna.ts /gögn",
-    "docker:node-reykpróf": "docker compose run --build --rm node-reykprof"
+    "kemba": "bun run smíða:skráarsnið && bun run prettier:laga && bun run eslint && bun run tsc && bun run dauður-kóði && bun run smíða:dreifingu && bun test",
+    "kemba:skoða": "bun run smíða:skráarsnið:athuga && bun run prettier:athuga && bun run eslint && bun run tsc && bun run dauður-kóði && bun run smíða:dreifingu && bun test"
   },
   "devDependencies": {
     "@types/bun": "1.3.11",
-    "eslint": "10.2.0",
+    "eslint": "9.39.1",
     "eslint-import-resolver-typescript": "4.4.4",
     "eslint-plugin-import": "2.32.0",
     "knip": "6.3.0",
-    "mitata": "1.0.34",
+    "mitata": "^1.0.34",
     "prettier": "3.8.1",
     "typedoc": "0.28.19",
     "typescript": "6.0.2",
