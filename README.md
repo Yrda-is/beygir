@@ -86,15 +86,36 @@ skilar færslum með uppflettiorði, beygingarmynd og marki. Aðferðir eins og
 Rótarviðmótið er þægilegast fyrir almenna notkun en til að stýra hvaða gagnaskrá
 er notuð eða hvernig gögnin eru lesin má nota handvirka opnun.
 
-```ts
-import { opnaBeygi } from "@yrda/beygir/gagnaskrá";
+Sjálfgefni innflutningurinn `import beygir from "@yrda/beygir"` opnar
+pakkagagnaskrána samstillt þegar einingin hleðst. Notaðu `opnaBeygi()` þegar þú
+vilt stjórna hvenær opnun fer fram; notaðu `opnaBeygiÓsamstillt()` þegar opnunin
+á ekki að gerast samstillt, til dæmis í kaldræsingu.
 
-using beygir = opnaBeygi({
+```ts
+import { opnaBeygiÓsamstillt } from "@yrda/beygir/gagnaskrá";
+
+await using beygir = await opnaBeygiÓsamstillt({
   slóð: ".gögn/beygir.bin",
   afleitt: "skrá-minni",
   undirbúa: true,
 });
 ```
+
+Ef pakkagagnaskráin er aðeins til þjöppuð reynir Beygir að afþjappa henni og
+varðveita `.bin`-skrána við hlið pakkans. Í skrifvörðum umhverfum getur hann
+ekki varðveitt úttakið og afþjappar þá í minni við opnun. Með `slóð` eða
+`GAGNASKRA_SLOD` má vísa beint á tilbúna gagnaskrá.
+
+Afleiddir vísar eru byggðir í leti. `undirbúa: true` framkvæmir þann
+undirbúning við opnun. `afleitt: "skrá-minni"` og `afleitt: "skrá-mmap"` reyna
+að endurnýta `.afleitt` hliðarskrá milli ferla; `skrá-mmap` er aðeins tiltækt í
+Bun. Ef hliðarskrá vantar eða passar ekki við gagnaskrána er hún leidd út aftur.
+
+### Umhverfisbreytur
+
+- `GAGNASKRA_SLOD` velur gagnaskrá þegar `slóð` er ekki gefin.
+- `BEYGIR_AFLEITT` velur afleiðsluham: `reikna`, `skrá-minni` eða `skrá-mmap`.
+- `BEYGIR_UNDIRBUA=1` undirbýr letivísa strax við opnun.
 
 Nánar í skjölun um
 [opnaBeygi](http://beygir.yrda.is/functions/gagnaskrá.opnaBeygi.html).

@@ -1,9 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import { lágmarkslína, væntaGildis } from "../../próf/smíðihjálp";
-import { LENGD_SHA256_FINGRAFARS } from "./fastar";
+import { jafna4 } from "./bitar";
+import {
+  LENGD_SHA256_FINGRAFARS,
+  STÆRÐ_SNIÐHAUSS,
+  STÆRÐ_STOFNHAUSS,
+  STÆRÐ_TEXTAAUKAHAUSS,
+} from "./fastar";
 import { opnaBútasafn, skrifaÍlát } from "./ilát";
 import { Lesari, semÍtarlegFærsla, type Leitarvalkostir } from "./lestur";
 import { smíðaÚrKristínarsniði } from "./smíði";
+import { VarintLesari } from "./varint";
 
 // U+1F642 er utan Latin-1+ og á því að skila tómri leitarniðurstöðu.
 const ÓKÓÐANLEGUR_LEITARTEXTI = "\u{1f642}";
@@ -34,6 +41,52 @@ async function smíðaPrófunarskrá(): Promise<Uint8Array> {
     { uppruni: { bæti: 12345, sha256 } },
   );
   return skrifaÍlát(niðurstaða.bútar);
+}
+
+async function smíðaPrófunarskráMeðAukaflettu(): Promise<Uint8Array> {
+  const niðurstaða = await smíðaÚrKristínarsniði([
+    lágmarkslína({ auðkenni: 1, orð: "hestur", beygingarmynd: "hestur", mark: "NFET" }),
+    lágmarkslína({
+      auðkenni: 1,
+      orð: "hestur",
+      beygingarmynd: "hests",
+      mark: "EFET",
+      aukafletta: "hross",
+    }),
+  ]);
+  return skrifaÍlát(niðurstaða.bútar);
+}
+
+function spillaBút(
+  skrá: Uint8Array,
+  merki: string,
+  spilla: (bæti: Uint8Array) => void,
+): Uint8Array {
+  const út = skrá.slice();
+  spilla(opnaBútasafn(út).sýn(merki));
+  return út;
+}
+
+function væntaSkemmdrarAfleiðslu(
+  skrá: Uint8Array,
+  afleitt: ReadonlyMap<string, Uint32Array>,
+  heiti: string,
+  spilla: (gildi: Uint32Array) => void,
+  mynstur: RegExp,
+): void {
+  const skemmt = new Map(afleitt);
+  const gildi = afleitt.get(heiti)?.slice();
+  if (gildi === undefined) {
+    throw new Error(`Afleitt gildi vantaði í prófi: ${heiti}.`);
+  }
+  spilla(gildi);
+  skemmt.set(heiti, gildi);
+  const lesari = new Lesari(skrá, {
+    afleitt: {
+      sækja: (sóttHeiti) => skemmt.get(sóttHeiti),
+    },
+  });
+  expect(() => lesari.undirbúa()).toThrow(mynstur);
 }
 
 function safnaLeit(lesari: Lesari, forskeyti: string, valkostir: Leitarvalkostir): string[] {
@@ -69,6 +122,45 @@ describe("snið lestur", () => {
     expect(lesari.fjöldiOrðmynda).toBe(6);
   });
 
+  test("hafnar SNID-vísum sem vísa út fyrir tengdar töflur við opnun", async () => {
+    const spillt = spillaBút(await smíðaPrófunarskrá(), "SNID", (bæti) => {
+      const hliðrun = STÆRÐ_SNIÐHAUSS + 1;
+      const markvísir = 1023;
+      bæti[hliðrun] = markvísir & 0xff;
+      bæti[hliðrun + 1] = (bæti[hliðrun + 1]! & 0xfc) | (markvísir >>> 8);
+    });
+
+    expect(() => new Lesari(spillt)).toThrow(/SNID\[0:0\]\.markvísir/);
+  });
+
+  test("hafnar STOF-vísum sem vísa út fyrir tengdar töflur við opnun", async () => {
+    const spillt = spillaBút(await smíðaPrófunarskrá(), "STOF", (bæti) => {
+      const fjöldiStofna = new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength).getUint32(
+        0,
+        true,
+      );
+      const u8Svæði = jafna4(fjöldiStofna);
+      const orðflokkahliðrun =
+        STÆRÐ_STOFNHAUSS +
+        u8Svæði +
+        jafna4(Math.ceil(fjöldiStofna / 8)) +
+        jafna4(Math.ceil(fjöldiStofna / 2));
+      bæti[orðflokkahliðrun] = 200;
+    });
+
+    expect(() => new Lesari(spillt)).toThrow(/STOF\[0\]\.orðflokkur/);
+  });
+
+  test("hafnar TAUK-aukaflettuvísum sem vísa út fyrir AUKA-töflu við opnun", async () => {
+    const spillt = spillaBút(await smíðaPrófunarskráMeðAukaflettu(), "TAUK", (bæti) => {
+      const lesari = new VarintLesari(bæti, STÆRÐ_TEXTAAUKAHAUSS, "TAUK próf");
+      lesari.lesa();
+      bæti[lesari.staða] = 7;
+    });
+
+    expect(() => new Lesari(spillt)).toThrow(/TAUK\[0\]\.aukaflettuvísir/);
+  });
+
   test("undirbýr og losar afleidda vísa", async () => {
     const lesari = new Lesari(await smíðaPrófunarskrá());
 
@@ -76,6 +168,39 @@ describe("snið lestur", () => {
     expect(lesari.losa()).toBe(lesari);
     expect(lesari.undirbúa()).toBe(lesari);
     expect(lesari.fjöldiOrðmynda).toBe(6);
+  });
+
+  test("hafnar afleiddum hliðarskrárvísum sem eru utan marka", async () => {
+    const skrá = await smíðaPrófunarskrá();
+    const afleitt = new Lesari(skrá).flytjaAfleitt();
+
+    væntaSkemmdrarAfleiðslu(
+      skrá,
+      afleitt,
+      "stofnAuðkenni",
+      (gildi) => {
+        gildi[0] = 0xdead_beef;
+      },
+      /stofnAuðkenni/,
+    );
+    væntaSkemmdrarAfleiðslu(
+      skrá,
+      afleitt,
+      "flettur.merktarFormraðir",
+      (gildi) => {
+        gildi[0] = 0xffff_ffff;
+      },
+      /merktarFormraðir/,
+    );
+    væntaSkemmdrarAfleiðslu(
+      skrá,
+      afleitt,
+      "formVísanir",
+      (gildi) => {
+        gildi[0] = 0xffff_ffff;
+      },
+      /formVísanir/,
+    );
   });
 
   test("sækir uppflettiorð eftir auðkenni", async () => {

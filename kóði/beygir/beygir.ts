@@ -11,8 +11,13 @@
  * beygir.finnaBeygingarfærslur("hesti");
  * ```
  *
+ * Innflutningurinn opnar gagnaskrána samstillt þegar einingin hleðst. Fyrsta
+ * hleðsla getur því falið í sér skráarlestur og afþjöppun pakkagagnaskrárinnar,
+ * og innflutningurinn skilar villu ef engin gagnaskrá finnst.
+ *
  * Notaðu `@yrda/beygir/gagnaskrá` þegar þú þarft að velja aðra gagnaskrá,
- * stjórna líftíma eintaksins eða stilla afleiddar vísitölur.
+ * stjórna hvenær opnun fer fram, stjórna líftíma eintaksins eða stilla
+ * afleiddar vísitölur.
  * Notaðu `@yrda/beygir/vefur` í vafra eða öðrum umhverfum þar sem gagnaskráin
  * er sótt með `fetch` og opnuð úr `ArrayBuffer`.
  *

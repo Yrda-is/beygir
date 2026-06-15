@@ -170,9 +170,10 @@ export interface Beygisstaða {
  * Textalyklar eru þjappaðir í DAFSA-vísum og mörk eru síuð með bitmöskum þegar
  * hægt er. Í tímaflækjulýsingum textaleitar táknar `l` lengd inntaks eftir
  * textakóðun, yfirleitt stutt orð eða forskeyti, `u` fjölda uppflettiorða sem
- * þarf að heimsækja og `f` fjölda formraða eða formvísana. DAFSA-ganga eftir
- * sjálfum lyklinum er línuleg í `l`; í venjulegri notkun ræður fjöldi heimsóttra
- * niðurstöðuraða mestu um kostnaðinn.
+ * þarf að heimsækja, `f` fjölda formraða eða formvísana, `k` fjölda
+ * uppflettilykla utan formmengis og `m` lengd texta sem þarf að smíða í
+ * niðurstöðu. DAFSA-ganga eftir sjálfum lyklinum er línuleg í `l`; í venjulegri
+ * notkun ræður fjöldi heimsóttra niðurstöðuraða mestu um kostnaðinn.
  */
 export interface Beygir {
   /**
@@ -213,7 +214,8 @@ export interface Beygir {
    * Þetta er Boole-fall sem skilar sama svari og `sækja(auðkenni) !== null`,
    * án þess að smíða `Uppflettiorð`.
    *
-   * Tímaflækja: `O(1)`.
+   * Tímaflækja: `O(m)` þegar uppflettiorðið er smíðað í fyrsta sinn. Endurtekin
+   * sókn sama stofns notar vistaðan grunn og er `O(1)`.
    *
    * @param auðkenni BÍN-auðkennið sem á að athuga.
    * @returns `true` ef auðkennið er til.
@@ -602,7 +604,8 @@ export interface Beygir {
    * beygingarmynd því hún smíðar hvorki `Uppflettiorð`, `Færsla` né fylki fyrir
    * hvert auðkenni. Ef `vinna` skilar `false` er lestri hætt strax.
    *
-   * Tímaflækja: `O(e)`, þar sem `e` er fjöldi heimsóttra sérstakra beygingarmynda.
+   * Tímaflækja: `O(f)`, þar sem `f` er fjöldi heimsóttra formraða. Stefjan er
+   * aðeins kölluð fyrir sérstakar beygingarmyndir.
    *
    * @param vinna Fall sem keyrt er fyrir hverja sérstaka beygingarmynd.
    *
@@ -656,8 +659,10 @@ export interface Beygir {
    * forskeyti og sama sviði til að sækja næstu síðu. Bendillinn er ógegnsær
    * framhaldslykill; einstaka reitir hans eru innri staða leitarinnar.
    *
-   * Tímaflækja: `O(l + n)` fyrir hverja síðu, þar sem `n` er fjöldi strengja
-   * sem þarf að heimsækja til að fylla síðuna.
+   * Tímaflækja: `O(l + log k + n log k)` fyrir hverja síðu í uppflettiorðum, þar
+   * sem `n` er fjöldi strengja sem þarf að heimsækja til að fylla síðuna. Fyrir
+   * `svið: "beygingarmyndir"` er tíminn `O(l + n)`. Með `svið: "allt"` gildir
+   * kostnaður dýrara sviðsins fyrir hverja heimsótta röð.
    *
    * @param forskeyti Forskeytið sem á að leita að.
    * @param valkostir Svið, niðurstöðufjöldi og valfrjáls framhaldsbendill.
@@ -680,6 +685,8 @@ export interface Beygir {
    * senda bendil handvirkt. Aðferðin tekur sömu valkosti og `leita` nema
    * `bendill`.
    *
+   * Tímaflækja hverrar síðu er sú sama og hjá {@link Beygir.leita}.
+   *
    * @param forskeyti Forskeytið sem á að leita að.
    * @param valkostir Svið og niðurstöðufjöldi á síðu.
    * @returns Ítrari sem skilar `Leitarsíða` þar til `lokið` verður `true`.
@@ -699,6 +706,8 @@ export interface Beygir {
    * Þetta er einfölduð útgáfa af {@link Beygir.leitarsíður}; hún skilar aðeins
    * strengjunum og felur síður og framhaldsstöðu.
    *
+   * Tímaflækja hverrar innri síðu er sú sama og hjá {@link Beygir.leita}.
+   *
    * @param forskeyti Forskeytið sem á að leita að.
    * @param valkostir Svið og niðurstöðufjöldi á innri síðu.
    * @returns Ítrari sem skilar niðurstöðustrengjum.
@@ -716,6 +725,8 @@ export interface Beygir {
    * Þáttunin byggir á brjóstvitsnálgun með þekktum orðmyndum og tengihljóðum.
    * Hún er gagnleg til að sýna líklega liði, en er ekki málfræðileg staðfesting
    * á því að orðið sé viðtekið eða skráð í BÍN.
+   *
+   * Tímaflækja: `O(l^2)` í versta falli.
    *
    * @param orð Orðið sem á að þátta.
    * @returns Líklegir liðir orðsins, eða `null` ef þáttun fannst ekki.
@@ -737,6 +748,9 @@ export interface Beygir {
    * {@link Færsla}-niðurstöðum, en eru tilgátur sem eru leiddar af
    * beygingum höfuðliðarins.
    *
+   * Tímaflækja: `O(l^2 + f)` í versta falli, þar sem `f` er fjöldi formraða
+   * höfuðliðarins sem greiningin byggir á.
+   *
    * @param orð Orðið sem á að greina.
    * @returns Tilgátugreining samsetts orðs, eða `null`.
    *
@@ -751,7 +765,7 @@ export interface Beygir {
   greina(orð: string): Greining | null;
 
   /**
-   * Leiðir út alla leti-vísa lesarans fyrirfram.
+   * Leiðir út alla letivísa lesarans fyrirfram.
    *
    * Þetta getur flýtt fyrstu uppflettingum í langlífu ferli og er einnig notað
    * til að skrifa afleidda hliðarskrá þegar sá hamur er virkur. Aðferðin er

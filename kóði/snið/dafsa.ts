@@ -5,6 +5,7 @@ import { lesaDafsahaus } from "./færslur";
 import { VarintLesari } from "./varint";
 
 const KÓÐI_KEÐJA = 2;
+const HÁMARK_U32 = 0xffff_ffff;
 
 /**
  * Bætasniðslýsing fyrir DAFB, sem geymir DAFSA-net yfir lágstafaða formlykla
@@ -177,6 +178,36 @@ function erLokastaða(lokabitar: Uint8Array, hnútur: number): boolean {
   return (lokabitar[hnútur >> 3]! & (1 << (hnútur & 7))) !== 0;
 }
 
+function staðfestaTalningu(talning: Uint32Array, rót: number, lyklafjöldi: number): void {
+  if (talning[rót] !== lyklafjöldi) {
+    throw new Error("DFSA lyklafjöldi stemmir ekki við talningu netsins.");
+  }
+  for (let hnútur = 0; hnútur < talning.length; hnútur++) {
+    if (talning[hnútur]! > lyklafjöldi) {
+      throw new Error("DFSA-talning inniheldur gildi yfir lyklafjölda.");
+    }
+  }
+}
+
+function staðfestaViðbót(
+  viðbót: Uint32Array,
+  leggjamörk: Uint32Array,
+  lokabitar: Uint8Array,
+  talning: Uint32Array,
+  mark: Uint32Array,
+  hnútafjöldi: number,
+): void {
+  for (let hnútur = 0; hnútur < hnútafjöldi; hnútur++) {
+    let vænt = erLokastaða(lokabitar, hnútur) ? 1 : 0;
+    for (let leggur = leggjamörk[hnútur]!; leggur < leggjamörk[hnútur + 1]!; leggur++) {
+      if (viðbót[leggur] !== vænt) {
+        throw new Error("DFSA-viðbót stemmir ekki við talningu netsins.");
+      }
+      vænt += talning[mark[leggur]!]!;
+    }
+  }
+}
+
 function finnaLegg(
   leggjamörk: Uint32Array,
   merkingar: Uint8Array,
@@ -340,6 +371,7 @@ export class DafsaLesari {
 
     const sótt = sækjaAfleiðslu(this.afleiðslur, "dafb.talning", this.hnútafjöldi);
     if (sótt !== undefined) {
+      staðfestaTalningu(sótt, this.rót, this.lyklafjöldi);
       this.talning = sótt;
       return sótt;
     }
@@ -372,6 +404,9 @@ export class DafsaLesari {
           const mark = markfylki[leggur]!;
           if (ástand[mark] === 2) {
             summa += talning[mark]!;
+            if (summa > HÁMARK_U32) {
+              throw new Error("DFSA-talning fer yfir u32 mörk.");
+            }
             continue;
           }
           if (ástand[mark] === 1) {
@@ -389,6 +424,7 @@ export class DafsaLesari {
       }
     }
 
+    staðfestaTalningu(talning, this.rót, this.lyklafjöldi);
     this.talning = talning;
     return talning;
   }
@@ -400,6 +436,14 @@ export class DafsaLesari {
 
     const sótt = sækjaAfleiðslu(this.afleiðslur, "dafb.viðbót", this.leggjafjöldi);
     if (sótt !== undefined) {
+      staðfestaViðbót(
+        sótt,
+        this.leggjamörk,
+        this.lokabitar,
+        this.tryggjaTalningu(),
+        this.mark,
+        this.hnútafjöldi,
+      );
       this.viðbót = sótt;
       return sótt;
     }

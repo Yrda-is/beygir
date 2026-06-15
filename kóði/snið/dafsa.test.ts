@@ -118,11 +118,12 @@ describe("snið DAFSA", () => {
   });
 
   test("notar afleiðslur þegar þær passa", () => {
-    const fyrri = nýrLesari();
+    const bútur = raðaDafsa(LYKLAR.map(ascii));
+    const fyrri = new DafsaLesari(bútur);
     const safn = new Map<string, Uint32Array>();
     fyrri.safnaAfleiðslum(safn);
 
-    const seinni = new DafsaLesari(raðaDafsa(LYKLAR.map(ascii)), {
+    const seinni = new DafsaLesari(bútur, {
       sækja(heiti: string): Uint32Array | undefined {
         return safn.get(heiti);
       },
@@ -136,6 +137,17 @@ describe("snið DAFSA", () => {
         },
       }).undirbúa(),
     ).toThrow(/afleiðsla/);
+
+    const rót = new DataView(bútur.buffer, bútur.byteOffset, bútur.byteLength).getUint32(12, true);
+    const skemmdTalning = safn.get("dafb.talning")!.slice();
+    skemmdTalning[rót] = 0;
+    expect(() =>
+      new DafsaLesari(bútur, {
+        sækja(heiti: string): Uint32Array | undefined {
+          return heiti === "dafb.talning" ? skemmdTalning : safn.get(heiti);
+        },
+      }).undirbúa(),
+    ).toThrow(/lyklafjöldi/);
   });
 
   test("hafnar gölluðum DFSA-bútum", () => {
@@ -161,5 +173,9 @@ describe("snið DAFSA", () => {
       afgangsbæti: 0,
     });
     expect(() => new DafsaLesari(ofMargirHnútar)).toThrow(/hnútafjöldi/);
+
+    const rangurLyklafjöldi = new Uint8Array(bútur);
+    new DataView(rangurLyklafjöldi.buffer).setUint32(16, LYKLAR.length + 1, true);
+    expect(() => new DafsaLesari(rangurLyklafjöldi).undirbúa()).toThrow(/lyklafjöldi/);
   });
 });

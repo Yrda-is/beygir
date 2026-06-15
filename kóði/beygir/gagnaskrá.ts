@@ -22,6 +22,12 @@
  * smíða minni BÍN-kjarna úr pakkagagnaskránni og opna úttakið með
  * `opnaBeygi({ slóð })`.
  *
+ * Pakkagagnaskráin getur fylgt þjöppuð sem Brotli-skrá. Ef óþjöppuð `.bin`-skrá
+ * vantar reynir opnarinn að afþjappa henni og varðveita við hlið pakkans. Í
+ * skrifvörðum umhverfum, til dæmis sumum keyrslu- eða dreifingarumhverfum, er
+ * þjappaða skráin notuð áfram og afþjöppuð í minni við opnun. Til að stýra þessu
+ * sjálf má vísa á tilbúna `.bin`-skrá með `slóð` eða `GAGNASKRA_SLOD`.
+ *
  * Fyrir venjulega notkun þar sem pakkagagnaskráin nægir er `@yrda/beygir`
  * einfaldari leið. Fyrir vafra skaltu nota `@yrda/beygir/vefur`.
  *
@@ -50,8 +56,27 @@ let búiðAðVaraViðAfleittVistun = false;
 let búiðAðVaraViðUmhverfisham = false;
 
 export interface OpnaBeygiValkostir {
+  /**
+   * Slóð að gagnaskrá.
+   *
+   * Ef henni er sleppt er pakkagagnaskráin notuð, nema `GAGNASKRA_SLOD` sé sett.
+   */
   readonly slóð?: string;
+  /**
+   * Hvernig afleiddir vísar eru sóttir eða geymdir.
+   *
+   * Sjálfgefið er að leiða vísana út í minni eftir þörfum. Með `skrá-minni` eða
+   * `skrá-mmap` er reynt að endurnýta `.afleitt` hliðarskrá milli ferla;
+   * `skrá-mmap` er aðeins tiltækt í Bun. Ef gildi vantar er
+   * `BEYGIR_AFLEITT` lesið, eða `reikna` notað.
+   */
   readonly afleitt?: Afleiðsluhamur;
+  /**
+   * Leiðir út letivísa strax við opnun.
+   *
+   * Þetta hentar þegar fyrri uppflettingar eiga ekki að greiða undirbúninginn.
+   * Ef valkostinum er sleppt virkjar `BEYGIR_UNDIRBUA=1` sömu hegðun.
+   */
   readonly undirbúa?: boolean;
 }
 
