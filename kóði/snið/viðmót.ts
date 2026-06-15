@@ -168,12 +168,13 @@ export interface Beygisstaða {
  * skila villu.
  *
  * Textalyklar eru þjappaðir í DAFSA-vísum og mörk eru síuð með bitmöskum þegar
- * hægt er. Í tímaflækjulýsingum textaleitar táknar `l` lengd inntaks eftir
- * textakóðun, yfirleitt stutt orð eða forskeyti, `u` fjölda uppflettiorða sem
- * þarf að heimsækja, `f` fjölda formraða eða formvísana, `k` fjölda
- * uppflettilykla utan formmengis og `m` lengd texta sem þarf að smíða í
- * niðurstöðu. DAFSA-ganga eftir sjálfum lyklinum er línuleg í `l`; í venjulegri
- * notkun ræður fjöldi heimsóttra niðurstöðuraða mestu um kostnaðinn.
+ * hægt er. Í tímaflækjulýsingum táknar `l` lengd inntaks eftir textakóðun, `r`
+ * fjölda geymdra raða sem þarf að heimsækja til að skila niðurstöðum, `f` fjölda
+ * formraða sem unnið er með, `u` fjölda uppflettiorða í heildarlestri og `m`
+ * lengd staks texta sem þarf að smíða. Strengsmíði fyrir hverja heimsótta röð er
+ * innifalin í `r` eða `f`; `m` er aðeins sýnt þegar stök strengsmíði er
+ * aðalkostnaður. DAFSA-ganga eftir sjálfum lyklinum er línuleg í `l`; í
+ * venjulegri notkun ræður fjöldi heimsóttra niðurstöðuraða mestu um kostnaðinn.
  */
 export interface Beygir {
   /**
@@ -192,9 +193,9 @@ export interface Beygir {
    * {@link Beygir.hefurUppflettiorð} eða {@link Beygir.hefurBeygingarfærslu}.
    * Notaðu {@link Beygir.hefurAuðkenni} ef BÍN-auðkennið er til staðar.
    *
-   * Tímaflækja: `O(l + u + f)` í versta falli, þar sem `l` er lengd textans og
-   * `u`/`f` eru aðeins heimsóttar raðir sem þarf að staðfesta vegna síu eða
-   * hástafanæmis. Aðferðin smíðar ekki niðurstöðufylki.
+   * Tímaflækja: `O(l)`. Hástafanæm leit getur prófað þær fáu raðir sem passa
+   * textann, en sá fjöldi er bundinn í gagnaskránni. Aðferðin smíðar ekki
+   * niðurstöðufylki.
    *
    * @param texti Texti sem á að athuga.
    * @param valkostir Hástafanæmi fyrir textasamsvörun.
@@ -214,8 +215,7 @@ export interface Beygir {
    * Þetta er Boole-fall sem skilar sama svari og `sækja(auðkenni) !== null`,
    * án þess að smíða `Uppflettiorð`.
    *
-   * Tímaflækja: `O(m)` þegar uppflettiorðið er smíðað í fyrsta sinn. Endurtekin
-   * sókn sama stofns notar vistaðan grunn og er `O(1)`.
+   * Tímaflækja: `O(1)`.
    *
    * @param auðkenni BÍN-auðkennið sem á að athuga.
    * @returns `true` ef auðkennið er til.
@@ -236,8 +236,8 @@ export interface Beygir {
    * `finnaUppflettiorð(orð, valkostir).length > 0`, án þess að smíða
    * niðurstöðufylki.
    *
-   * Tímaflækja: `O(l + u)`, þar sem `l` er lengd uppflettiorðsins og `u` er
-   * fjöldi uppflettiorða sem þarf að prófa gegn `sía` eða hástafanæmi.
+   * Tímaflækja: `O(l)`. Hástafanæm eða síuð leit getur prófað þær fáu raðir sem
+   * passa textann, en sá fjöldi er bundinn í gagnaskránni.
    *
    * @param orð Uppflettiorðið sem á að leita að.
    * @param valkostir Valfrjáls sía og hástafanæmi.
@@ -258,8 +258,8 @@ export interface Beygir {
    * `finnaBeygingarfærslur(beygingarmynd, valkostir).length > 0`, án þess að
    * smíða niðurstöðufylki.
    *
-   * Tímaflækja: `O(l + f)`, þar sem `f` er fjöldi formfærslna sem þarf að
-   * prófa gegn `sía` eða hástafanæmi.
+   * Tímaflækja: `O(l)`. Hástafanæm eða síuð leit getur prófað þær fáu raðir sem
+   * passa textann, en sá fjöldi er bundinn í gagnaskránni.
    *
    * @param beygingarmynd Beygingarmyndin sem á að leita að.
    * @param valkostir Valfrjáls sía og hástafanæmi.
@@ -281,7 +281,8 @@ export interface Beygir {
    * viðfang í aðgerðir eins og {@link Beygir.beygingar} og
    * {@link Beygir.beygingarmyndir}.
    *
-   * Tímaflækja: `O(1)`.
+   * Tímaflækja: `O(m)` þegar uppflettiorðið er smíðað í fyrsta sinn. Endurtekin
+   * sókn sama stofns notar vistaðan grunn og er `O(1)`.
    *
    * @param auðkenni BÍN-auðkennið sem á að sækja.
    * @returns `Uppflettiorð` ef auðkennið er í gagnaskránni, annars `null`.
@@ -308,8 +309,8 @@ export interface Beygir {
    * `auðkenni`, þannig að sama uppflettiorð kemur aðeins einu sinni fyrir þótt
    * textinn passi í báðum sviðum.
    *
-   * Tímaflækja: `O(l + u + f)`, þar sem `l` er lengd textans, `u` fjöldi
-   * uppflettiorða sem passa beint og `f` fjöldi formvísana sem textinn vísar á.
+   * Tímaflækja: `O(l + r)`, þar sem `r` er fjöldi raða sem þarf að heimsækja til
+   * að finna og sameina niðurstöður.
    *
    * @param texti Texti sem á að túlka sem uppflettiorð eða beygingarmynd.
    * @param valkostir Valfrjáls sía, vörpun og hástafanæmi.
@@ -338,8 +339,8 @@ export interface Beygir {
    * {@link Beygir.finnaUppflettiorðAfBeygingarmynd} þegar inntakið er
    * beygingarmynd.
    *
-   * Tímaflækja: `O(l + u)`, þar sem `l` er lengd uppflettiorðsins og `u` er
-   * fjöldi uppflettiorða sem passa við `orð` og þarf að sía eða varpa.
+   * Tímaflækja: `O(l + r)`, þar sem `r` er fjöldi uppflettiorðaraða sem passa
+   * við `orð` og þarf að sía eða varpa.
    *
    * @param orð Uppflettiorð, ekki almenn beygingarmynd.
    * @param valkostir Valfrjáls sía, vörpun og hástafanæmi.
@@ -373,9 +374,8 @@ export interface Beygir {
    * Skilar `[]` þegar myndin er ekki í uppflettivísinum eða sían útilokar allar
    * niðurstöður.
    *
-   * Tímaflækja: `O(l + f + u)`, þar sem `l` er lengd beygingarmyndarinnar,
-   * `f` fjöldi formvísana fyrir hana og `u` fjöldi sérstakra uppflettiorða eftir
-   * sameiningu.
+   * Tímaflækja: `O(l + r)`, þar sem `r` er fjöldi raða sem þarf að heimsækja til
+   * að finna og sameina niðurstöður.
    *
    * @param beygingarmynd Geymd beygingarmynd.
    * @param valkostir Valfrjáls sía, vörpun og hástafanæmi.
@@ -405,8 +405,8 @@ export interface Beygir {
    * `Færsla.beygingarmynd`. Sama beygingarmynd getur átt margar formraðir og
    * fleiri en eitt `auðkenni`.
    *
-   * Tímaflækja: `O(l + f)`, þar sem `l` er lengd beygingarmyndarinnar og `f` er
-   * fjöldi formvísana sem þarf að heimsækja og, ef `sía` er gefin, prófa.
+   * Tímaflækja: `O(l + r)`, þar sem `r` er fjöldi formraða sem þarf að heimsækja
+   * og, ef `sía` er gefin, prófa.
    *
    * @param beygingarmynd Beygingarmyndin sem á að greina.
    * @param valkostir Valfrjáls sía, vörpun og hástafanæmi.
@@ -479,7 +479,7 @@ export interface Beygir {
    * `beygingar(uppflettiorð, ...)`, nema að `[]` fæst þegar auðkennið er ekki í
    * gagnaskránni. Síun og vörpun hegða sér eins og í {@link Beygir.beygingar}.
    *
-   * Tímaflækja: `O(1 + f)`, þar sem `f` er fjöldi formraða fyrir auðkennið.
+   * Tímaflækja: `O(f)`, þar sem `f` er fjöldi formraða fyrir auðkennið.
    *
    * @param auðkenni BÍN-auðkenni.
    * @param valkostir Valfrjáls marksía og vörpun.
@@ -524,7 +524,7 @@ export interface Beygir {
    * `beygingarmyndir(uppflettiorð)`, nema að tómt fylki fæst þegar auðkennið er
    * ekki í gagnaskránni.
    *
-   * Tímaflækja: `O(1 + f)`, þar sem `f` er fjöldi formraða fyrir auðkennið.
+   * Tímaflækja: `O(f)`, þar sem `f` er fjöldi formraða fyrir auðkennið.
    *
    * @param auðkenni BÍN-auðkenni.
    * @returns Sérstakar geymdar beygingarmyndir í gagnaskrár-röð, eða `[]`.
@@ -659,11 +659,8 @@ export interface Beygir {
    * forskeyti og sama sviði til að sækja næstu síðu. Bendillinn er ógegnsær
    * framhaldslykill; einstaka reitir hans eru innri staða leitarinnar.
    *
-   * Tímaflækja: `O(l + k + n * k)` fyrir hverja síðu í uppflettiorðum, þar sem
-   * `n` er fjöldi strengja sem þarf að heimsækja til að fylla síðuna. Í venjulegri
-   * gagnaskrá er `k` mjög lítið og leit hagar sér því eins og `O(l + n)`. Fyrir
-   * `svið: "beygingarmyndir"` er tíminn `O(l + n)`. Með `svið: "allt"` gildir
-   * kostnaður dýrara sviðsins fyrir hverja heimsótta röð.
+   * Tímaflækja: `O(l + n)` fyrir hverja síðu, þar sem `n` er fjöldi strengja sem
+   * þarf að heimsækja til að fylla síðuna.
    *
    * @param forskeyti Forskeytið sem á að leita að.
    * @param valkostir Svið, niðurstöðufjöldi og valfrjáls framhaldsbendill.
@@ -686,7 +683,8 @@ export interface Beygir {
    * senda bendil handvirkt. Aðferðin tekur sömu valkosti og `leita` nema
    * `bendill`.
    *
-   * Tímaflækja hverrar síðu er sú sama og hjá {@link Beygir.leita}.
+   * Tímaflækja fyrstu síðu er `O(l + n)`, þar sem `n` er fjöldi strengja sem þarf
+   * að heimsækja til að fylla síðuna. Síðari síður sama ítrara eru `O(n)`.
    *
    * @param forskeyti Forskeytið sem á að leita að.
    * @param valkostir Svið og niðurstöðufjöldi á síðu.
@@ -707,7 +705,9 @@ export interface Beygir {
    * Þetta er einfölduð útgáfa af {@link Beygir.leitarsíður}; hún skilar aðeins
    * strengjunum og felur síður og framhaldsstöðu.
    *
-   * Tímaflækja hverrar innri síðu er sú sama og hjá {@link Beygir.leita}.
+   * Tímaflækja fyrstu innri síðu er `O(l + n)`, þar sem `n` er fjöldi strengja
+   * sem þarf að heimsækja til að fylla síðuna. Síðari síður sama ítrara eru
+   * `O(n)`.
    *
    * @param forskeyti Forskeytið sem á að leita að.
    * @param valkostir Svið og niðurstöðufjöldi á innri síðu.

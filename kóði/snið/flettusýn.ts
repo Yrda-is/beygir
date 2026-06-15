@@ -11,8 +11,8 @@ interface Flettugöngugögn {
   readonly lyklarUtanFormmengis: readonly Uint8Array[];
 }
 
-// Í venjulegri gagnaskrá eru lyklar utan formmengis örfáir. Raðganga yfir k er
-// því hraðari en tvíleit hér og heldur vörpun milli formraða og fletturaða einfaldri.
+// Í venjulegri gagnaskrá eru lyklar utan formmengis örfáir. Handahófsstökk skanna
+// þá einu sinni, en raðganga heldur vísinum áfram og reiknar merkta formvísinn beint.
 
 // Bætaminnið er hluti af stöðu flettugöngunnar: formlyklar geta endurnýtt
 // fyrra forskeyti og bókstaflegir lyklar utan formmengis skrifast í sömu sýn.
@@ -29,20 +29,6 @@ export class Flettuganga {
     this.gögn = gögn;
     this.bæti = bæti;
     this.færaAðRöð(röð);
-  }
-
-  private merkturVísir(röð: number): number {
-    const raðirUtanFormmengis = this.gögn.raðirUtanFormmengis;
-    for (let vísir = raðirUtanFormmengis.length - 1; vísir >= 0; vísir--) {
-      const utanröð = raðirUtanFormmengis[vísir]!;
-      if (utanröð === röð) {
-        return -1;
-      }
-      if (utanröð < röð) {
-        return röð - (vísir + 1);
-      }
-    }
-    return röð;
   }
 
   færaAðRöð(röð: number): this {
@@ -65,7 +51,7 @@ export class Flettuganga {
       return this;
     }
 
-    const merkturVísir = this.merkturVísir(röð);
+    const merkturVísir = röð - lykillUtanFormmengis;
     const formröð = gögn.merktarFormraðir[merkturVísir]!;
     if (this.formganga === null) {
       this.formganga = gögn.formlyklar.gangaMeðMinni(formröð, this.bæti);
@@ -99,7 +85,7 @@ export class Flettuganga {
       return true;
     }
 
-    const merkturVísir = this.merkturVísir(næstaRöð);
+    const merkturVísir = næstaRöð - this.lykillUtanFormmengis;
     const formröð = gögn.merktarFormraðir[merkturVísir]!;
     if (this.formganga === null) {
       this.formganga = gögn.formlyklar.gangaMeðMinni(formröð, this.bæti);
