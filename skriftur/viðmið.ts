@@ -9,7 +9,7 @@ import { bench, do_not_optimize, run } from "mitata";
 import { opnaBeygi, opnaBeygiÓsamstillt, type OpnaBeygiValkostir } from "../kóði/beygir/gagnaskrá";
 import type { LokanlegurBeygir, Uppflettiorð } from "../kóði/snið/viðmót";
 
-type Tilvik = Record<string, () => Promise<unknown> | unknown>;
+type Tilvik = Record<string, () => unknown>;
 
 const rök = process.argv.slice(2);
 const meðKöldu = rök.includes("--kalt");
@@ -52,7 +52,7 @@ async function opnaÓsamstillt(undirbúa: boolean): Promise<LokanlegurBeygir> {
   return await opnaBeygiÓsamstillt(valkostir);
 }
 
-function mæla(keyrsla: () => Promise<unknown> | unknown): Promise<void> | void {
+function mæla(keyrsla: () => unknown): Promise<void> | void {
   const gildi = keyrsla();
   if (gildi instanceof Promise) {
     return gildi.then(do_not_optimize);
