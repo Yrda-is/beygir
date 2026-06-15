@@ -2075,6 +2075,8 @@ export class Lesari {
       return null;
     }
 
+    // Latin-1+ kóðar hvern studdan textastaf í eitt bæti, svo höfuðByrjun er
+    // bæði bætahliðrun úr samsetningarleit og strengjavísir hér.
     const forliður = orð.slice(0, þáttun.höfuðByrjun);
     const höfuðliður = orð.slice(þáttun.höfuðByrjun);
     const höfuðUppflettiorð = this.finnaUppflettiorðAfBeygingarmynd(höfuðliður, {
