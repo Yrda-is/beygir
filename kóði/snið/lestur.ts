@@ -1681,7 +1681,12 @@ export class Lesari {
   }
 
   hefurAuðkenni(auðkenni: number): boolean {
-    return this.stofnsætiAfAuðkenni(auðkenni) !== TÓMT_U32;
+    return (
+      Number.isInteger(auðkenni) &&
+      auðkenni >= 0 &&
+      auðkenni < this.gögn.auðkenni.fjöldi &&
+      (this.gögn.auðkenni.bitar[auðkenni >> 3]! & (1 << (auðkenni & 7))) !== 0
+    );
   }
 
   hefurUppflettiorð(orð: string, valkostir?: HefurUppflettiorðavalkostir): boolean {
