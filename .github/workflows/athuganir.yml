@@ -93,10 +93,10 @@ jobs:
         env:
           BEYGIR_FULL_PARITY_CSV: .gögn/KRISTINsnid.csv
         run: bun test próf/samþætting/gagnaskrá-sha.test.ts
-      - name: Keyra próf
-        run: bun test
       - name: Smíða Node.js dreifingu
         run: bun run smíða:dreifingu
+      - name: Keyra próf
+        run: bun test
       - name: Keyra Node.js reykpróf
         env:
           GAGNASKRA_SLOD: .gögn/beygir.bin
