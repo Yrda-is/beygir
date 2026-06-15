@@ -9,6 +9,12 @@ import { VarintLesari, afSikksakk } from "./varint";
 
 export { ORÐMYND_BITAR, ORÐMYND_SÆTISMASKI };
 
+function staðfestaVísitölu(heiti: string, vísir: number, efriMörk: number): void {
+  if (!Number.isSafeInteger(vísir) || vísir < 0 || vísir >= efriMörk) {
+    throw new Error(`${heiti} ${vísir} er utan marka 0..${efriMörk - 1}.`);
+  }
+}
+
 /** Auðkenni stofna í stofnsætisröð: settu bitarnir í IDBS-menginu. */
 export function leiðaStofnAuðkenni(
   bitar: Uint8Array,
@@ -61,6 +67,7 @@ export interface Tilvikaformraðainntak {
   readonly akkeraraðir: Uint32Array;
   readonly dálkar: Uint8Array;
   readonly fjöldiStofna: number;
+  readonly fjöldiForma: number;
   readonly fjöldiOrðmynda: number;
 }
 
@@ -83,12 +90,16 @@ export function afkóðaTilvikaformraðir(inntak: Tilvikaformraðainntak): Uint3
     }
     const merkturVísir = flettur.merkturVísir(uppflettiraðir[stofnsæti]!);
     if (merkturVísir >= 0) {
-      formraðir[stofnByrjun[stofnsæti]!] = merktarFormraðir[merkturVísir]!;
+      const formröð = merktarFormraðir[merkturVísir]!;
+      staðfestaVísitölu("TILB-merkt formröð", formröð, inntak.fjöldiForma);
+      formraðir[stofnByrjun[stofnsæti]!] = formröð;
     }
   }
 
   for (let vísir = 0; vísir < inntak.akkerastofnar.length; vísir++) {
-    formraðir[stofnByrjun[inntak.akkerastofnar[vísir]!]!] = inntak.akkeraraðir[vísir]!;
+    const formröð = inntak.akkeraraðir[vísir]!;
+    staðfestaVísitölu("TILB-akkeraformröð", formröð, inntak.fjöldiForma);
+    formraðir[stofnByrjun[inntak.akkerastofnar[vísir]!]!] = formröð;
   }
 
   const hópbyrjanir = new Uint32Array(fjöldiSniða + 1);
@@ -120,7 +131,9 @@ export function afkóðaTilvikaformraðir(inntak: Tilvikaformraðainntak): Uint3
         mismunur += afSikksakk(lesari.lesa());
         const stofnsæti = hópstofnar[hópsæti]!;
         const byrjun = stofnByrjun[stofnsæti]!;
-        formraðir[byrjun + sniðliður] = (formraðir[byrjun]! + mismunur) >>> 0;
+        const formröð = formraðir[byrjun]! + mismunur;
+        staðfestaVísitölu("TILB-dálkformröð", formröð, inntak.fjöldiForma);
+        formraðir[byrjun + sniðliður] = formröð;
       }
     }
   }
@@ -144,7 +157,9 @@ export function leiðaFormVísanir(
 ): Vísanasvið {
   const hliðrun = new Uint32Array(fjöldiForma + 1);
   for (let orðmyndasæti = 0; orðmyndasæti < fjöldiOrðmynda; orðmyndasæti++) {
-    hliðrun[tilvikaformraðir[orðmyndasæti]! + 1]!++;
+    const formröð = tilvikaformraðir[orðmyndasæti]!;
+    staðfestaVísitölu("Formröð", formröð, fjöldiForma);
+    hliðrun[formröð + 1]!++;
   }
   for (let formröð = 0; formröð < fjöldiForma; formröð++) {
     hliðrun[formröð + 1]! += hliðrun[formröð]!;
@@ -171,7 +186,9 @@ export function leiðaFlettuVísanir(
 ): Vísanasvið {
   const hliðrun = new Uint32Array(fjöldiFletta + 1);
   for (let stofnsæti = 0; stofnsæti < fjöldiStofna; stofnsæti++) {
-    hliðrun[uppflettiraðir[stofnsæti]! + 1]!++;
+    const fletturöð = uppflettiraðir[stofnsæti]!;
+    staðfestaVísitölu("Fletturöð", fletturöð, fjöldiFletta);
+    hliðrun[fletturöð + 1]!++;
   }
   for (let fletturöð = 0; fletturöð < fjöldiFletta; fletturöð++) {
     hliðrun[fletturöð + 1]! += hliðrun[fletturöð]!;

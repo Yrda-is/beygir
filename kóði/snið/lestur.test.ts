@@ -285,6 +285,7 @@ describe("snið lestur", () => {
     const lesari = new Lesari(await smíðaPrófunarskrá());
 
     expect(lesari.samsetning("hesthestur")).toEqual(["hest", "hestur"]);
+    expect(lesari.samsetning("hestHestur")).toEqual(["hest", "Hestur"]);
     expect(lesari.samsetning("hest")).toBeNull();
 
     const greining = lesari.greina("hesthestur");
@@ -312,6 +313,12 @@ describe("snið lestur", () => {
       "hesthest",
       "hesthests",
     ]);
+    expect(lesari.greina("hestHestur")).toMatchObject({
+      orð: "hestHestur",
+      höfuðliður: "Hestur",
+      höfuðUppflettiorð: "hestur",
+      uppflettiorð: "hesthestur",
+    });
     expect(lesari.greina("hest")).toBeNull();
   });
 

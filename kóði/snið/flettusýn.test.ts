@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { DafsaLesari, raðaDafsa } from "./dafsa";
+import { DafsaLesari } from "./dafsa";
+import { raðaDafsa } from "./dafsa-röðun";
 import { Flettusýn } from "./flettusýn";
 import { lesaLemmubitasvið } from "./gagnalestur";
 import { afkóðaTexta, kóðaTexta } from "./textakóðun";

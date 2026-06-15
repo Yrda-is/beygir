@@ -71,7 +71,7 @@ import {
 } from "./textakóðun";
 import { afkóðaTextasýn, textasýn, type Textasýn } from "./textasýn";
 import { ORÐMYND_BITAR, ORÐMYND_SÆTISMASKI, STÆRÐ_MARKAMASKAFÆRSLU } from "./fastar";
-import { HÁMARK_LYKILBÆTA } from "./smiður/smíði/lyklaraðir";
+import { HÁMARK_LYKILBÆTA } from "./lyklafastar";
 import { lesaSmástrengjatöflu, type Smástrengjatafla } from "./smástrengjatöflur";
 import { lýsaGildi } from "./villur";
 
@@ -855,6 +855,7 @@ export class Lesari {
       akkeraraðir: this.gögn.tilvik.akkeraraðir,
       dálkar: this.gögn.tilvik.dálkar,
       fjöldiStofna: this.gögn.stofnar.fjöldiStofna,
+      fjöldiForma: this.gögn.formlyklar.lyklafjöldi,
       fjöldiOrðmynda: this.gögn.fjöldiOrðmynda,
     });
     this.tilvikaformraðir = formraðir;
@@ -2076,7 +2077,9 @@ export class Lesari {
 
     const forliður = orð.slice(0, þáttun.höfuðByrjun);
     const höfuðliður = orð.slice(þáttun.höfuðByrjun);
-    const höfuðUppflettiorð = this.finnaUppflettiorðAfBeygingarmynd(höfuðliður);
+    const höfuðUppflettiorð = this.finnaUppflettiorðAfBeygingarmynd(höfuðliður, {
+      hástafanæmt: false,
+    });
     let uppflettiorð: Uppflettiorð | undefined;
     for (let vísir = 0; vísir < höfuðUppflettiorð.length; vísir++) {
       const gildi = höfuðUppflettiorð[vísir]!;

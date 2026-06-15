@@ -76,4 +76,14 @@ describe("snið textakóðun", () => {
     expect(reynaAðKóðaLeitartexta("\u{1f642}")).toBeNull();
     expect(() => kóðaTexta("\u{1f642}")).toThrow(/Latin-1\+/);
   });
+
+  test("hafnar hráum U+0080 svo sérbæti Latin-1+ verði ótvírætt", () => {
+    const úttak = new Uint8Array(64);
+
+    expect(() => kóðaTexta("\u0080")).toThrow(/U\+0080/);
+    expect(() => reynaAðKóðaTextaÍBætafylki("\u0080", úttak)).toThrow(/U\+0080/);
+    expect(reynaAðKóðaLeitartexta("\u0080")).toBeNull();
+    expect(reynaAðKóðaLeitartextaÍBætafylki("\u0080", úttak)).toBe(TEXTI_EKKI_KÓÐANLEGUR);
+    expect(() => lágstafaLatin1Plús("\u0080")).toThrow(/U\+0080/);
+  });
 });

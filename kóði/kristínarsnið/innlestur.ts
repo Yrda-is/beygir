@@ -37,6 +37,6 @@ export async function* lesaKristínarsniðslínur(
   let línunúmer = 0;
   for await (const lína of lesaTextalínur(slóð)) {
     línunúmer += 1;
-    yield þáttaKristínarsniðslínu(lína, línunúmer, staðfesta);
+    yield þáttaKristínarsniðslínu(lína.normalize("NFC"), línunúmer, staðfesta);
   }
 }

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { staðfestaMark } from "../málfræði/mark/þáttun";
 
+const HÁMARK_U32 = 0xffff_ffff;
+
 /**
  * Hér eru útlistuð leyfileg gildi fyrir þá Kristínarsniðsdálka sem hafa
  * lokað gildismengi.
@@ -131,7 +133,7 @@ export interface Kristínarsnið {
 
 export const KristínarsniðSkema: z.ZodType<Kristínarsnið> = z.object({
   orð: z.string(),
-  auðkenni: z.number().int().positive(),
+  auðkenni: z.number().int().positive().max(HÁMARK_U32),
   orðflokkur: OrðflokkurSkammstöfunSkema,
   hluti: HlutiSkema,
   einkunnOrðs: EinkunnOrðsSkema,

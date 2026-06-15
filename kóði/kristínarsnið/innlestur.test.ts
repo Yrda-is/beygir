@@ -27,4 +27,22 @@ describe("Kristínarsnið innlestur", () => {
       await rm(mappa, { recursive: true, force: true });
     }
   });
+
+  test("staðlar texta í NFC fyrir þáttun", async () => {
+    const mappa = await mkdtemp(join(tmpdir(), "beygir-kristinsnid-"));
+    const slóð = join(mappa, "kristinsnid.csv");
+    await Bun.write(slóð, "jo\u0301n;1;kk;alm;0;;;;K;jo\u0301n;NFET;0;;;");
+
+    try {
+      const línur = [];
+      for await (const lína of lesaKristínarsniðslínur(slóð, true)) {
+        línur.push(lína);
+      }
+
+      expect(línur[0]?.orð).toBe("jón");
+      expect(línur[0]?.beygingarmynd).toBe("jón");
+    } finally {
+      await rm(mappa, { recursive: true, force: true });
+    }
+  });
 });

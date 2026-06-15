@@ -41,7 +41,7 @@ function villaÓstuddurLatin1PlúsStafur(kóði: number): Error {
 }
 
 function staðfestaLatin1PlúsKóða(kóði: number): void {
-  if (kóði > 0xff && kóði !== LATIN1_PLÚS_AUKASTAFSKÓÐI) {
+  if ((kóði > 0xff && kóði !== LATIN1_PLÚS_AUKASTAFSKÓÐI) || kóði === LATIN1_PLÚS_AUKABÆTI) {
     throw villaÓstuddurLatin1PlúsStafur(kóði);
   }
 }
@@ -135,7 +135,7 @@ export function kóðaTexta(texti: string): Uint8Array {
   for (let vísir = 0; vísir < texti.length; vísir++) {
     const kóði = texti.charCodeAt(vísir);
 
-    if (kóði <= 0xff) {
+    if (kóði <= 0xff && kóði !== LATIN1_PLÚS_AUKABÆTI) {
       bæti[vísir] = kóði;
       continue;
     }
@@ -157,7 +157,7 @@ export function reynaAðKóðaLeitartexta(texti: string): Uint8Array | null {
   for (let vísir = 0; vísir < texti.length; vísir++) {
     const kóði = texti.charCodeAt(vísir);
 
-    if (kóði <= 0xff) {
+    if (kóði <= 0xff && kóði !== LATIN1_PLÚS_AUKABÆTI) {
       bæti[vísir] = kóði;
       continue;
     }
@@ -181,7 +181,7 @@ export function reynaAðKóðaTextaÍBætafylki(texti: string, úttak: Uint8Arra
   for (let vísir = 0; vísir < texti.length; vísir++) {
     const kóði = texti.charCodeAt(vísir);
 
-    if (kóði <= 0xff) {
+    if (kóði <= 0xff && kóði !== LATIN1_PLÚS_AUKABÆTI) {
       úttak[vísir] = kóði;
       continue;
     }
@@ -205,7 +205,7 @@ export function reynaAðKóðaLeitartextaÍBætafylki(texti: string, úttak: Uin
   for (let vísir = 0; vísir < texti.length; vísir++) {
     const kóði = texti.charCodeAt(vísir);
 
-    if (kóði <= 0xff) {
+    if (kóði <= 0xff && kóði !== LATIN1_PLÚS_AUKABÆTI) {
       úttak[vísir] = kóði;
       continue;
     }

@@ -254,7 +254,7 @@ function smíðaBútamerki(): string {
     "    (merki.charCodeAt(1) << 8) |",
     "    (merki.charCodeAt(2) << 16) |",
     "    (merki.charCodeAt(3) << 24)",
-    "  );",
+    "  ) >>> 0;",
     "}",
     "",
   ];
@@ -375,7 +375,7 @@ function skrifaTöfrastreng(sýn: DataView, hliðrun: number, töfrastrengur: Ui
         "",
         `export function ${færsla.lesaFall}(sýn: DataView, hliðrun: number): ${færsla.gerðarheiti} {`,
         ...staðfestingar,
-        staðfestingar.length === 0 ? "" : "",
+        "",
         "  return {",
         ...skil,
         "  };",

@@ -56,6 +56,7 @@ async function smíðaDreifingu(): Promise<void> {
     outdir: `${DREIFINGARMAPPA}/kóði/beygir`,
     target: "browser",
     format: "esm",
+    minify: true,
     splitting: false,
     plugins: [textasýnVefsmíði],
   });

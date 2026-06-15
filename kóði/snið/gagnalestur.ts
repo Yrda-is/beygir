@@ -44,6 +44,12 @@ function staðfestaLengd(heiti: string, fengin: number, vænt: number): void {
   }
 }
 
+function staðfestaHámarksfjölda(heiti: string, fjöldi: number, hámark: number): void {
+  if (fjöldi > hámark) {
+    throw new Error(`${heiti} hefur ómögulegan fjölda ${fjöldi}; mest ${hámark} rúmast í bútnum.`);
+  }
+}
+
 export function staðfestaMeta(sýn: DataView): void {
   staðfestaLengd("META-bútur", sýn.byteLength, STÆRÐ_GAGNASKRÁRMETA);
   const meta = lesaGagnaskrármeta(sýn, 0);
@@ -107,15 +113,20 @@ export function lesaLemmubitasvið(bæti: Uint8Array, fjöldiForma: number): Lem
   if (STÆRÐ_LEMMUBITAHAUSS + bitalengd > bæti.byteLength) {
     throw new Error("LBIT-bútur er stýfður í bitamengi.");
   }
+  const lyklahliðrun = STÆRÐ_LEMMUBITAHAUSS + jafna4(bitalengd);
+  if (lyklahliðrun > bæti.byteLength) {
+    throw new Error("LBIT-bútur er stýfður í jöfnun bitamengis.");
+  }
+  staðfestaHámarksfjölda(
+    "LBIT-lyklar utan formmengis",
+    haus.fjöldiLyklaUtanFormmengis,
+    Math.floor((bæti.byteLength - lyklahliðrun) / 2),
+  );
 
   const bitar = bæti.subarray(STÆRÐ_LEMMUBITAHAUSS, STÆRÐ_LEMMUBITAHAUSS + bitalengd);
   const raðirUtanFormmengis = new Uint32Array(haus.fjöldiLyklaUtanFormmengis);
   const lyklarUtanFormmengis = new Array<Uint8Array>(haus.fjöldiLyklaUtanFormmengis);
-  const lesari = new VarintLesari(
-    bæti,
-    STÆRÐ_LEMMUBITAHAUSS + jafna4(bitalengd),
-    "LBIT lyklar utan formmengis",
-  );
+  const lesari = new VarintLesari(bæti, lyklahliðrun, "LBIT lyklar utan formmengis");
 
   for (let vísir = 0; vísir < haus.fjöldiLyklaUtanFormmengis; vísir++) {
     const röð = lesari.lesa();
@@ -158,6 +169,7 @@ export function lesaSniðsvið(bæti: Uint8Array): Sniðsvið {
   }
 
   const haus = lesaSniðhaus(new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength), 0);
+  staðfestaHámarksfjölda("SNID-bútur", haus.fjöldi, bæti.byteLength - STÆRÐ_SNIÐHAUSS);
   const sniðhliðranir = new Uint32Array(haus.fjöldi);
   const fjöldiSniðliða = new Uint8Array(haus.fjöldi);
   let hliðrun = STÆRÐ_SNIÐHAUSS;
@@ -337,6 +349,11 @@ export function lesaTilvikasvið(
   }
 
   const haus = lesaTilvikahaus(new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength), 0);
+  staðfestaHámarksfjölda(
+    "TILB-bútur",
+    haus.fjöldiAkkera,
+    Math.floor((bæti.byteLength - STÆRÐ_TILVIKAHAUSS) / 2),
+  );
   const akkerastofnar = new Uint32Array(haus.fjöldiAkkera);
   const akkeraraðir = new Uint32Array(haus.fjöldiAkkera);
   const lesari = new VarintLesari(bæti, STÆRÐ_TILVIKAHAUSS, "TILB akkeri");
@@ -369,6 +386,11 @@ export function lesaTextaaukasvið(bæti: Uint8Array): Textaaukasvið {
   }
 
   const haus = lesaTextaaukahaus(new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength), 0);
+  staðfestaHámarksfjölda(
+    "TAUK-bútur",
+    haus.fjöldi,
+    Math.floor((bæti.byteLength - STÆRÐ_TEXTAAUKAHAUSS) / 2),
+  );
   const orðmyndasæti = new Uint32Array(haus.fjöldi);
   const aukaflettuvísar = new Uint16Array(haus.fjöldi);
   const lesari = new VarintLesari(bæti, STÆRÐ_TEXTAAUKAHAUSS, "TAUK");

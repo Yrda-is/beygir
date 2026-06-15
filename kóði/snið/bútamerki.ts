@@ -6,10 +6,11 @@
 
 function merkiSemU32(merki: string): number {
   return (
-    merki.charCodeAt(0) |
-    (merki.charCodeAt(1) << 8) |
-    (merki.charCodeAt(2) << 16) |
-    (merki.charCodeAt(3) << 24)
+    (merki.charCodeAt(0) |
+      (merki.charCodeAt(1) << 8) |
+      (merki.charCodeAt(2) << 16) |
+      (merki.charCodeAt(3) << 24)) >>>
+    0
   );
 }
 

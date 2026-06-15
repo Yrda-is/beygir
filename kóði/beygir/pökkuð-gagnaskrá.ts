@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdirSync, readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { dirname, sep } from "node:path";
@@ -51,6 +52,61 @@ function lýsaVillu(villa: unknown): string {
   return villa instanceof Error ? villa.message : String(villa);
 }
 
+function erSkráVantar(villa: unknown): boolean {
+  return (
+    villa instanceof Error &&
+    "code" in villa &&
+    (villa as { readonly code?: unknown }).code === "ENOENT"
+  );
+}
+
+function þáttaSha256Hliðarskrá(efni: string, slóð: string): string {
+  const samsvörun = /[0-9a-fA-F]{64}/.exec(efni);
+  if (samsvörun === null) {
+    throw new Error(`${slóð} inniheldur ekki gilt SHA-256 fingrafar.`);
+  }
+  return samsvörun[0].toLowerCase();
+}
+
+function sha256Hex(bæti: Uint8Array): string {
+  return createHash("sha256").update(bæti).digest("hex");
+}
+
+function staðfestaSha256(bæti: Uint8Array, vænt: string | null): void {
+  if (vænt === null) {
+    return;
+  }
+
+  const fengið = sha256Hex(bæti);
+  if (fengið !== vænt) {
+    throw new Error(`Afþjöppuð gagnaskrá stenst ekki SHA-256: fékk ${fengið}, vænti ${vænt}.`);
+  }
+}
+
+function lesaSha256Samstillt(gagnaskrárslóð: string): string | null {
+  const slóð = `${gagnaskrárslóð}.sha256`;
+  try {
+    return þáttaSha256Hliðarskrá(readFileSync(slóð, "utf8"), slóð);
+  } catch (villa) {
+    if (erSkráVantar(villa)) {
+      return null;
+    }
+    throw villa;
+  }
+}
+
+async function lesaSha256(gagnaskrárslóð: string): Promise<string | null> {
+  const slóð = `${gagnaskrárslóð}.sha256`;
+  try {
+    return þáttaSha256Hliðarskrá(await readFile(slóð, "utf8"), slóð);
+  } catch (villa) {
+    if (erSkráVantar(villa)) {
+      return null;
+    }
+    throw villa;
+  }
+}
+
 function varaViðÓvarðveittriGagnaskrá(
   gagnaskrárslóð: string,
   brotliSlóð: string,
@@ -82,7 +138,9 @@ export function afþjappaGagnaskráSamstilltEfÞarf(
   }
 
   mkdirSync(dirname(gagnaskrárslóð), { recursive: true });
-  skrifaAtómísktSamstillt(gagnaskrárslóð, brotliDecompressSync(readFileSync(brotliSlóð)));
+  const afþjappað = brotliDecompressSync(readFileSync(brotliSlóð));
+  staðfestaSha256(afþjappað, lesaSha256Samstillt(gagnaskrárslóð));
+  skrifaAtómísktSamstillt(gagnaskrárslóð, afþjappað);
   return { staða: "afþjappað", gagnaskrárslóð, brotliSlóð };
 }
 
@@ -100,7 +158,9 @@ export async function afþjappaGagnaskráEfÞarf(
 
   mkdirSync(dirname(gagnaskrárslóð), { recursive: true });
   const brotliBæti = await readFile(brotliSlóð);
-  await skrifaAtómísktÓsamstillt(gagnaskrárslóð, await afþjappaBrotliÓsamstillt(brotliBæti));
+  const afþjappað = await afþjappaBrotliÓsamstillt(brotliBæti);
+  staðfestaSha256(afþjappað, await lesaSha256(gagnaskrárslóð));
+  await skrifaAtómísktÓsamstillt(gagnaskrárslóð, afþjappað);
   return { staða: "afþjappað", gagnaskrárslóð, brotliSlóð };
 }
 

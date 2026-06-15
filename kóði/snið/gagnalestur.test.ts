@@ -5,9 +5,18 @@ import {
   GAGNASKRÁRÚTGÁFA,
   LENGD_SHA256_FINGRAFARS,
   STÆRÐ_GAGNASKRÁRMETA,
+  STÆRÐ_SNIÐHAUSS,
+  STÆRÐ_TEXTAAUKAHAUSS,
+  STÆRÐ_TILVIKAHAUSS,
   STÆRÐ_UPPRUNAHAUSS,
 } from "./fastar";
-import { skrifaGagnaskrármeta, skrifaUpprunahaus } from "./færslur";
+import {
+  skrifaGagnaskrármeta,
+  skrifaSniðhaus,
+  skrifaTextaaukahaus,
+  skrifaTilvikahaus,
+  skrifaUpprunahaus,
+} from "./færslur";
 import {
   lesaAuðkennasvið,
   lesaLemmubitasvið,
@@ -37,6 +46,16 @@ function sha256Bæti(): Uint8Array {
 function metaBæti(útgáfa: number = GAGNASKRÁRÚTGÁFA, frátekið = 0): Uint8Array {
   const bæti = new Uint8Array(STÆRÐ_GAGNASKRÁRMETA);
   skrifaGagnaskrármeta(gagnasýn(bæti), 0, { útgáfa, frátekið });
+  return bæti;
+}
+
+function hausBæti<Færsla>(
+  stærð: number,
+  skrifa: (sýn: DataView, hliðrun: number, færsla: Færsla) => void,
+  færsla: Færsla,
+): Uint8Array {
+  const bæti = new Uint8Array(stærð);
+  skrifa(gagnasýn(bæti), 0, færsla);
   return bæti;
 }
 
@@ -105,6 +124,18 @@ describe("snið gagnalestur", () => {
     expect(Array.from(tilvik.akkerastofnar)).toEqual([1]);
     expect(textaaukar.orðmyndasæti).toHaveLength(0);
     expect(stafur.uppflettiorð.size + stafur.beygingarmyndir.size).toBe(0);
+  });
+
+  test("hafnar ómögulegum töflufjölda áður en fylki eru úthlutuð", () => {
+    expect(() => lesaSniðsvið(hausBæti(STÆRÐ_SNIÐHAUSS, skrifaSniðhaus, { fjöldi: 1 }))).toThrow(
+      /SNID.*ómögulegan fjölda/,
+    );
+    expect(() =>
+      lesaTilvikasvið(hausBæti(STÆRÐ_TILVIKAHAUSS, skrifaTilvikahaus, { fjöldiAkkera: 1 }), 1, 1),
+    ).toThrow(/TILB.*ómögulegan fjölda/);
+    expect(() =>
+      lesaTextaaukasvið(hausBæti(STÆRÐ_TEXTAAUKAHAUSS, skrifaTextaaukahaus, { fjöldi: 1 })),
+    ).toThrow(/TAUK.*ómögulegan fjölda/);
   });
 
   test("hafnar LBIT sem stemmir ekki við DAFB", async () => {

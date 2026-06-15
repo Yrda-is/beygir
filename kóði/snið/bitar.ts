@@ -27,7 +27,10 @@ export function leiðaRaðforsummu(bitar: Uint8Array, vídd: number): Uint32Arra
 
 /** Hækkar í næsta 4-bæta margfeldi, jöfnunarregla allra gagnaskrárbúta. */
 export function jafna4(gildi: number): number {
-  return (gildi + 3) & ~3;
+  if (!Number.isSafeInteger(gildi) || gildi < 0 || gildi > Number.MAX_SAFE_INTEGER - 3) {
+    throw new RangeError(`Ekki er hægt að jafna ógilda bætastærð: ${gildi}.`);
+  }
+  return gildi + ((4 - (gildi & 3)) & 3);
 }
 
 /**

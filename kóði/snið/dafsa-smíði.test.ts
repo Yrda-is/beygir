@@ -52,6 +52,16 @@ describe("snið DAFSA-smíði", () => {
     expect(inniheldur(smíði.rót, "ac")).toBe(false);
   });
 
+  test("heldur tómum fyrsta lykli sem samþykktri rót", () => {
+    const smíði = smíðaDafsa(["", "a"].map(ascii));
+    const { talning } = greinaDafsa(smíði);
+
+    expect(smíði.fjöldiLykla).toBe(2);
+    expect(talning.get(smíði.rót)).toBe(2);
+    expect(inniheldur(smíði.rót, "")).toBe(true);
+    expect(inniheldur(smíði.rót, "a")).toBe(true);
+  });
+
   test("sameinar jafngild viðskeyti í lágmarks stöðuvél", () => {
     const smíði = smíðaDafsa(["bar", "bur", "dar", "dur"].map(ascii));
     const b = krefjastBarns(smíði.rót, "b");

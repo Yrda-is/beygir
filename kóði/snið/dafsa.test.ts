@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { DafsaLesari, raðaDafsa } from "./dafsa";
+import { DafsaLesari } from "./dafsa";
+import { raðaDafsa } from "./dafsa-röðun";
+import { STÆRÐ_DAFSAHAUSS } from "./fastar";
+import { skrifaDafsahaus } from "./færslur";
 
 function ascii(texti: string): Uint8Array {
   const bæti = new Uint8Array(texti.length);
@@ -48,6 +51,16 @@ function lykillÚrRöð(lesari: DafsaLesari, röð: number): string {
 }
 
 describe("snið DAFSA", () => {
+  test("varðveitir tóman lykil í fyrstu röð", () => {
+    const lesari = new DafsaLesari(raðaDafsa(["", "a"].map(ascii)));
+
+    expect(lesari.lyklafjöldi).toBe(2);
+    expect(lesari.röð(ascii(""), 0, 0)).toBe(0);
+    expect(lesari.röð(ascii("a"), 0, 1)).toBe(1);
+    expect(lykillÚrRöð(lesari, 0)).toBe("");
+    expect(lykillÚrRöð(lesari, 1)).toBe("a");
+  });
+
   test("varpar lyklum í stafrófsröð og til baka", () => {
     const lesari = nýrLesari();
 
@@ -136,5 +149,17 @@ describe("snið DAFSA", () => {
     const umfram = new Uint8Array(bútur.length + 4);
     umfram.set(bútur);
     expect(() => new DafsaLesari(umfram)).toThrow(/umframgögn/);
+
+    const ofMargirHnútar = new Uint8Array(STÆRÐ_DAFSAHAUSS);
+    skrifaDafsahaus(new DataView(ofMargirHnútar.buffer), 0, {
+      hnútafjöldi: 0xffff_ffff,
+      leggjafjöldi: 0,
+      rótarvísir: 0,
+      lyklafjöldi: 0,
+      kóði: 2,
+      útgráðubæti: 0,
+      afgangsbæti: 0,
+    });
+    expect(() => new DafsaLesari(ofMargirHnútar)).toThrow(/hnútafjöldi/);
   });
 });

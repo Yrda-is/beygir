@@ -2,6 +2,8 @@ import type { Kristínarsnið } from "../../../kristínarsnið/skema";
 import { hreinsaMálfræði } from "../../../málfræði/hreinsun";
 import type { Orðmyndaröð, Smíðisamhengi, Stofnhópur } from "./samhengi";
 
+const HÁMARK_U32 = 0xffff_ffff;
+
 /**
  * Allar línur með sama auðkenni verða að hafa sömu stofngildi. Ósamræmi milli
  * lína er inntaksvilla og er hafnað í innlestri, áður en hún getur orðið að
@@ -65,6 +67,12 @@ function staðlaMillivísun(millivísun: number | null): number {
   return millivísun;
 }
 
+function staðfestaAuðkenni(auðkenni: number): void {
+  if (!Number.isSafeInteger(auðkenni) || auðkenni <= 0 || auðkenni > HÁMARK_U32) {
+    throw new Error(`Ógilt auðkenni: ${auðkenni}.`);
+  }
+}
+
 function safnaSameiginlegumStofngildum(
   lína: Kristínarsnið,
   samhengi: Smíðisamhengi,
@@ -102,6 +110,7 @@ export async function lesaÍSmíðisamhengi(
   framvinda?: (skilaboð: string) => void,
 ): Promise<Innlestrarniðurstaða> {
   for await (const lína of færslur) {
+    staðfestaAuðkenni(lína.auðkenni);
     samhengi.fjöldiLína++;
     samhengi.hæstaAuðkenni = Math.max(samhengi.hæstaAuðkenni, lína.auðkenni);
 

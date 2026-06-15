@@ -88,4 +88,19 @@ describe("smiður innlestur", () => {
     expect(villa).toBeInstanceOf(Error);
     expect((villa as Error).message).toBe("Ógild millivísun: 0.");
   });
+
+  test("hafnar auðkenni utan u32 áður en það fer í samhengi", async () => {
+    const samhengi = nýttSmíðisamhengi();
+    let villa: unknown;
+
+    try {
+      await lesaÍSmíðisamhengi([{ ...lágmarkslína(), auðkenni: 0x1_0000_0000 }], samhengi);
+    } catch (fenginVilla) {
+      villa = fenginVilla;
+    }
+
+    expect(villa).toBeInstanceOf(Error);
+    expect((villa as Error).message).toBe("Ógilt auðkenni: 4294967296.");
+    expect(samhengi.fjöldiLína).toBe(0);
+  });
 });

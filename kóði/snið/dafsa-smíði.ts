@@ -67,19 +67,21 @@ export function smíðaDafsa(raðaðirLyklar: Uint8Array[]): DafsaSmíði {
     skrá.set(lykill, barn);
   }
 
-  let fyrra: Uint8Array = new Uint8Array(0);
+  let fyrra: Uint8Array | null = null;
   let fjöldiLykla = 0;
 
   for (let lykilvísir = 0; lykilvísir < raðaðirLyklar.length; lykilvísir++) {
     const orð = sækjaStak(raðaðirLyklar, lykilvísir, "orð");
     let sameiginlegt = 0;
-    const minnst = Math.min(orð.length, fyrra.length);
-    while (sameiginlegt < minnst && orð[sameiginlegt] === fyrra[sameiginlegt]) {
-      sameiginlegt++;
-    }
+    if (fyrra !== null) {
+      const minnst = Math.min(orð.length, fyrra.length);
+      while (sameiginlegt < minnst && orð[sameiginlegt] === fyrra[sameiginlegt]) {
+        sameiginlegt++;
+      }
 
-    if (sameiginlegt === orð.length && orð.length === fyrra.length) {
-      continue;
+      if (sameiginlegt === orð.length && orð.length === fyrra.length) {
+        continue;
+      }
     }
 
     let staða = rót;

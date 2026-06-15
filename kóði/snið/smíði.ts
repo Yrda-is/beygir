@@ -1,5 +1,5 @@
 import type { Kristínarsnið } from "../kristínarsnið/skema";
-import { raðaDafsa } from "./dafsa";
+import { raðaDafsa } from "./dafsa-röðun";
 import {
   GAGNASKRÁRÚTGÁFA,
   LENGD_SHA256_FINGRAFARS,

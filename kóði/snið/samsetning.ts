@@ -132,6 +132,8 @@ export class Samsetningarþáttari {
       return null;
     }
 
+    // Latin-1+ kóðar hvern studdan textastaf í eitt bæti, svo þessar
+    // bætahliðranir eru jafnframt strengjavísar í upprunalega orðinu.
     const hlutar = [orð.slice(höfuðByrjun, lengd)];
     let núverandi = höfuðByrjun;
     while (núverandi > 0) {
