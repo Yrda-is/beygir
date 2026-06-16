@@ -183,6 +183,29 @@ Brotli, samanborið við um 13,26 MiB / 3,21 MiB fyrir fulla gagnaskrá.
 
 Nánari skjölun er á [beygir.yrda.is](http://beygir.yrda.is).
 
+## Tenglar og þakkir
+
+Beygir hefði að sjálfsögðu aldrei orðið til án Beygingarlýsingar íslensks
+nútímamáls (BÍN) og þess mikla þrekvirkis sem Kristín Bjarnadóttir, ritstjóri
+BÍN, og samstarfsfólk hennar hjá Stofnun Árna Magnússonar í íslenskum fræðum
+hafa unnið við að taka BÍN saman, opna gagnasafnið og halda því við. Þau eiga
+fyrir það ómældar þakkir skildar.
+
+Formleg rétthafatilvísun, uppruni, leyfi og lýsing á breytingum eru í
+[GÖGN-OG-LEYFI.md](GÖGN-OG-LEYFI.md).
+
+- [BÍN, Mímisbrunnur](https://bin.arnastofnun.is/gogn/mimisbrunnur/) er
+  uppruni þeirra gagna sem Beygir byggir á.
+- [Kristínarsnið](https://bin.arnastofnun.is/gogn/k-snid) er skjölun
+  Árnastofnunar á ítarlega BÍN-sniðinu sem Beygir les.
+- [BinPackage](https://github.com/mideind/BinPackage) frá Miðeind er rótgróið
+  uppflettingasafn fyrir BÍN í Python, gefið út á PyPI sem
+  [`islenska`](https://pypi.org/project/islenska/). Það er mjög góður kostur
+  þegar unnið er beint í Python. Beygir er þó þróað með það í huga að gagnasniðið
+  sjálft er frá upphafi óháð tungumáli. Enn sem komið er fylgir ekkert tilbúið
+  Python-viðmót, en Rust-lesari með C ABI er í vinnslu til að einfalda bindingar
+  fyrir allflest forritunarmál.
+
 ## Leyfi og ásetningur
 
 Frumkóðinn er undir Apache License 2.0; sjá [LICENSE](LICENSE). Ásetningur
