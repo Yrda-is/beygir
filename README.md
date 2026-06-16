@@ -122,7 +122,7 @@ Nánar í skjölun um
 
 ## Dæmi
 
-Nokkur almennari notkunardæmi er að finna í [`dæmi/`](dæmi/):
+Nokkur almennari notkunardæmi er að finna í [`dæmi/`](https://github.com/Yrda-is/beygir/tree/stofn/dæmi):
 
 ```sh
 # Birtir beygingartöflu
@@ -132,7 +132,7 @@ bun run ./dæmi/beygingartafla/beygingartafla.ts hestur
 bun run ./dæmi/lemmari/lemmari.ts Það mælti mín móðir
 ```
 
-[`dæmi/vefur/index.html`](dæmi/vefur/index.html) er dæmi um notkun í vafra. Það
+[`dæmi/vefur/index.html`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/vefur/index.html) er dæmi um notkun í vafra. Það
 notar `@yrda/beygir/vefur`, sækir tvíundargagnaskrána `.gögn/beygir.bin` með
 `fetch` og leitar í henni beint í vafranum. Vafrar leyfa almennt ekki slíka
 hleðslu úr `file://`, svo keyra þarf einfaldan vefþjón til að veita vafranum
@@ -147,8 +147,8 @@ Opnaðu síðan `http://localhost:4173/dæmi/vefur/`.
 
 ## Viðmið og prófílar
 
-Einföld afkastaviðmið eru í [`skriftur/viðmið.ts`](skriftur/viðmið.ts) og
-samanburðargrunnur í [`.viðmið/grunnlína.json`](.viðmið/grunnlína.json).
+Einföld afkastaviðmið eru í [`skriftur/viðmið.ts`](https://github.com/Yrda-is/beygir/blob/stofn/skriftur/viðmið.ts) og
+samanburðargrunnur í [`.viðmið/grunnlína.json`](https://github.com/Yrda-is/beygir/blob/stofn/.viðmið/grunnlína.json).
 
 ```sh
 bun run viðmið
@@ -165,7 +165,7 @@ bun --cpu-prof --cpu-prof-md ./skriftur/viðmið.ts --prófíll=beygingarmyndir
 
 Gagnasniðið hentar líka sem grunnur fyrir sérhæfð gagnasöfn sem þurfa sama
 lesara en minna eða afmarkaðra innihald. Dæmið
-[`dæmi/bín-kjarni/smíða.ts`](dæmi/bín-kjarni/smíða.ts) smíðar BÍN-kjarna úr
+[`dæmi/bín-kjarni/smíða.ts`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/bín-kjarni/smíða.ts) smíðar BÍN-kjarna úr
 venjulegri gagnaskrá með því að halda aðeins eftir færslum þar sem
 `birting === "K"`. Árnastofnun lýsir
 [BÍN-kjarnanum](https://bin.arnastofnun.is/binkjarni/) sem einfölduðu, vísandi

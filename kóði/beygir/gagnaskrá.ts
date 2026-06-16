@@ -18,7 +18,7 @@
  *
  * Sama leið opnar líka sérsmíðaðar gagnaskrár, svo lengi sem þær eru skrifaðar
  * á venjulegu Beygir-sniði. Dæmið
- * [`dæmi/bín-kjarni/smíða.ts`](../../dæmi/bín-kjarni/smíða.ts) sýnir hvernig má
+ * [`dæmi/bín-kjarni/smíða.ts`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/bín-kjarni/smíða.ts) sýnir hvernig má
  * smíða minni BÍN-kjarna úr pakkagagnaskránni og opna úttakið með
  * `opnaBeygi({ slóð })`.
  *
