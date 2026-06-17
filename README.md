@@ -28,7 +28,7 @@ eða:
 npm install @yrda/beygir@next
 ```
 
-Einnig má prófa [dæmið sem keyrir í vafranum](http://beygir-daemi.yrda.is) (ath.
+Einnig má prófa [dæmið sem keyrir í vafranum](http://beygir.yrda.is/dæmi) (ath.
 að gagnaskráin er sótt og notuð alfarið beint í vafranum, án frekari samskipta
 við bakenda eftir gagnasókn.)
 
