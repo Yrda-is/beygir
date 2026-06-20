@@ -8,7 +8,16 @@ import { DafsaLesari, type Dafsaganga } from "./dafsa";
 import type { Fall } from "../málfræði/mark/fallbeygingarhlutar";
 import { reiknaMarkamaska } from "../málfræði/mark/maski";
 import type { Markaþáttur } from "../málfræði/mark/þættir";
-import { sækjaAfleitt, type Afleittsafn } from "./afleitt";
+import { SNIÐ_AFKÖST, fullgildaEfVirk, sækjaAfleitt, type Afleittsafn } from "./afleitt";
+import {
+  sækjaAfleittVísanasvið,
+  staðfestaAfleittStofnAuðkenni,
+  staðfestaAfleittStofnByrjun,
+  staðfestaAfleittTilvikaformraðir,
+  staðfestaAfleittUppflettiraðir,
+  staðfestaAfleittVísanasvið,
+  staðfestaSviðsvísi,
+} from "./afleitt-staðfesting";
 import {
   afkóðaTilvikaformraðir,
   afkóðaUppflettiraðir,
@@ -473,24 +482,6 @@ function afritaLeitarafgang(afgangur: Leitarafgangur): Leitarafgangsstaða {
   return úttak;
 }
 
-function sækjaAfleittVísanasvið(
-  safn: Afleittsafn | undefined,
-  hliðrunarheiti: string,
-  vísanaheiti: string,
-  fjöldiHliðrana: number,
-  fjöldiVísana: number,
-): Vísanasvið | undefined {
-  const hliðrun = sækjaAfleitt(safn, hliðrunarheiti, fjöldiHliðrana);
-  const vísanir = sækjaAfleitt(safn, vísanaheiti, fjöldiVísana);
-  if (hliðrun === undefined && vísanir === undefined) {
-    return undefined;
-  }
-  if (hliðrun === undefined || vísanir === undefined) {
-    throw new Error(`Afleitt: vísanasvið '${hliðrunarheiti}/${vísanaheiti}' er óheilt.`);
-  }
-  return { hliðrun, vísanir };
-}
-
 function lesaBeygingarkóða(
   sniðbæti: Uint8Array,
   snið: Sniðsvið,
@@ -587,80 +578,6 @@ function staðfestaTextaaukatengsl(
   }
 }
 
-function staðfestaSviðsvísi(heiti: string, vísir: number, efriMörk: number): void {
-  if (vísir >= efriMörk) {
-    throw new Error(`${heiti} ${vísir} er utan marka 0..${efriMörk - 1}.`);
-  }
-}
-
-function erAuðkennisbitiSettur(auðkenni: Auðkennasvið, vísir: number): boolean {
-  return vísir < auðkenni.fjöldi && (auðkenni.bitar[vísir >> 3]! & (1 << (vísir & 7))) !== 0;
-}
-
-function staðfestaAfleittStofnAuðkenni(stofnAuðkenni: Uint32Array, auðkenni: Auðkennasvið): void {
-  let fyrra = -1;
-  for (let stofnsæti = 0; stofnsæti < stofnAuðkenni.length; stofnsæti++) {
-    const gildi = stofnAuðkenni[stofnsæti]!;
-    if (gildi <= fyrra || !erAuðkennisbitiSettur(auðkenni, gildi)) {
-      throw new Error("Afleitt: stofnAuðkenni stemmir ekki við IDBS.");
-    }
-    fyrra = gildi;
-  }
-}
-
-function staðfestaAfleittStofnByrjun(
-  stofnByrjun: Uint32Array,
-  fjöldiSniðliða: Uint8Array,
-  fjöldiOrðmynda: number,
-): void {
-  let vænt = 0;
-  for (let stofnsæti = 0; stofnsæti < stofnByrjun.length; stofnsæti++) {
-    if (stofnByrjun[stofnsæti] !== vænt) {
-      throw new Error("Afleitt: stofnByrjun stemmir ekki við sniðliðafjölda.");
-    }
-    vænt += fjöldiSniðliða[stofnsæti]!;
-  }
-  if (vænt !== fjöldiOrðmynda) {
-    throw new Error("Afleitt: stofnByrjun nær ekki yfir allar orðmyndir.");
-  }
-}
-
-function staðfestaAfleittUppflettiraðir(raðir: Uint32Array, fjöldiFletta: number): void {
-  for (let stofnsæti = 0; stofnsæti < raðir.length; stofnsæti++) {
-    staðfestaSviðsvísi("Afleitt: stofnUppflettiraðir", raðir[stofnsæti]!, fjöldiFletta);
-  }
-}
-
-function staðfestaAfleittTilvikaformraðir(raðir: Uint32Array, fjöldiForma: number): void {
-  for (let orðmyndasæti = 0; orðmyndasæti < raðir.length; orðmyndasæti++) {
-    staðfestaSviðsvísi("Afleitt: tilvikaformraðir", raðir[orðmyndasæti]!, fjöldiForma);
-  }
-}
-
-function staðfestaAfleittVísanasvið(
-  heiti: string,
-  svið: Vísanasvið,
-  fjöldiVísana: number,
-  staðfestaVísun: (vísun: number) => void,
-): void {
-  if (svið.hliðrun[0] !== 0) {
-    throw new Error(`Afleitt: ${heiti} byrjar ekki á núllhliðrun.`);
-  }
-  for (let vísir = 0; vísir + 1 < svið.hliðrun.length; vísir++) {
-    const núverandi = svið.hliðrun[vísir]!;
-    const næsta = svið.hliðrun[vísir + 1]!;
-    if (næsta < núverandi || næsta > fjöldiVísana) {
-      throw new Error(`Afleitt: ${heiti} hefur ógilda hliðrun.`);
-    }
-  }
-  if (svið.hliðrun[svið.hliðrun.length - 1] !== fjöldiVísana) {
-    throw new Error(`Afleitt: ${heiti} nær ekki yfir rétta vísanatölu.`);
-  }
-  for (let vísir = 0; vísir < svið.vísanir.length; vísir++) {
-    staðfestaVísun(svið.vísanir[vísir]!);
-  }
-}
-
 function staðfestaValkostahlut(
   heiti: string,
   valkostir: unknown,
@@ -684,7 +601,7 @@ function sækjaValfrjálstHástafanæmi(
     return true;
   }
   if (typeof gildi !== "boolean") {
-    throw new TypeError(`${heiti}.valkostir.hástafanæmt verður að vera satt eða ósatt.`);
+    throw new TypeError(`${heiti}.valkostir.hástafanæmt verður að vera true eða false.`);
   }
   return gildi;
 }
@@ -715,6 +632,8 @@ export class Lesari {
   private readonly lykiltextasýnForm = textasýn(this.lykilvinnaForm);
   private readonly lykiltextasýnUppflettiorða = textasýn(this.lykilvinnaUppflettiorða);
   private readonly fyrirspurnartextasýn = textasýn(this.fyrirspurnarvinna);
+  // Bein sýn á formlyklageymsluna; afkóðar beygingarmyndir án afritunar í vinnsluminni.
+  private formgeymslusýn: { sýn: Textasýn; hliðrun: Uint32Array } | null | undefined;
 
   private stofnAuðkenni: Uint32Array | undefined;
   private uppflettiraðir: Uint32Array | undefined;
@@ -984,7 +903,9 @@ export class Lesari {
 
     const sótt = sækjaAfleitt(this.afleiðslur, "stofnAuðkenni", this.gögn.stofnar.fjöldiStofna);
     if (sótt !== undefined) {
-      staðfestaAfleittStofnAuðkenni(sótt, this.gögn.auðkenni);
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaAfleittStofnAuðkenni(sótt, this.gögn.auðkenni),
+      );
       this.stofnAuðkenni = sótt;
       return sótt;
     }
@@ -1009,7 +930,9 @@ export class Lesari {
       this.gögn.stofnar.fjöldiStofna,
     );
     if (sóttar !== undefined) {
-      staðfestaAfleittUppflettiraðir(sóttar, this.gögn.flettur.fjöldi);
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaAfleittUppflettiraðir(sóttar, this.gögn.flettur.fjöldi),
+      );
       this.uppflettiraðir = sóttar;
       return sóttar;
     }
@@ -1029,7 +952,13 @@ export class Lesari {
 
     const sótt = sækjaAfleitt(this.afleiðslur, "stofnByrjun", this.gögn.stofnar.fjöldiStofna);
     if (sótt !== undefined) {
-      staðfestaAfleittStofnByrjun(sótt, this.gögn.stofnar.fjöldiSniðliða, this.gögn.fjöldiOrðmynda);
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaAfleittStofnByrjun(
+          sótt,
+          this.gögn.stofnar.fjöldiSniðliða,
+          this.gögn.fjöldiOrðmynda,
+        ),
+      );
       this.stofnByrjun = sótt;
       return sótt;
     }
@@ -1049,7 +978,9 @@ export class Lesari {
 
     const sóttar = sækjaAfleitt(this.afleiðslur, "tilvikaformraðir", this.gögn.fjöldiOrðmynda);
     if (sóttar !== undefined) {
-      staðfestaAfleittTilvikaformraðir(sóttar, this.gögn.formlyklar.lyklafjöldi);
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaAfleittTilvikaformraðir(sóttar, this.gögn.formlyklar.lyklafjöldi),
+      );
       this.tilvikaformraðir = sóttar;
       return sóttar;
     }
@@ -1085,18 +1016,20 @@ export class Lesari {
       this.gögn.fjöldiOrðmynda,
     );
     if (sótt !== undefined) {
-      staðfestaAfleittVísanasvið("formvísanasvið", sótt, this.gögn.fjöldiOrðmynda, (vísun) => {
-        const stofnsæti = vísun >>> ORÐMYND_BITAR;
-        staðfestaSviðsvísi(
-          "Afleitt: formVísanir.stofnsæti",
-          stofnsæti,
-          this.gögn.stofnar.fjöldiStofna,
-        );
-        const sniðliður = vísun & ORÐMYND_SÆTISMASKI;
-        if (sniðliður >= this.gögn.stofnar.fjöldiSniðliða[stofnsæti]!) {
-          throw new Error("Afleitt: formVísanir.sniðliður er utan stofnsniðs.");
-        }
-      });
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaAfleittVísanasvið("formvísanasvið", sótt, this.gögn.fjöldiOrðmynda, (vísun) => {
+          const stofnsæti = vísun >>> ORÐMYND_BITAR;
+          staðfestaSviðsvísi(
+            "Afleitt: formVísanir.stofnsæti",
+            stofnsæti,
+            this.gögn.stofnar.fjöldiStofna,
+          );
+          const sniðliður = vísun & ORÐMYND_SÆTISMASKI;
+          if (sniðliður >= this.gögn.stofnar.fjöldiSniðliða[stofnsæti]!) {
+            throw new Error("Afleitt: formVísanir.sniðliður er utan stofnsniðs.");
+          }
+        }),
+      );
       this.formvísanasvið = sótt;
       return sótt;
     }
@@ -1126,13 +1059,15 @@ export class Lesari {
       this.gögn.stofnar.fjöldiStofna,
     );
     if (sótt !== undefined) {
-      staðfestaAfleittVísanasvið(
-        "flettuvísanasvið",
-        sótt,
-        this.gögn.stofnar.fjöldiStofna,
-        (vísun) => {
-          staðfestaSviðsvísi("Afleitt: flettaVísanir", vísun, this.gögn.stofnar.fjöldiStofna);
-        },
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaAfleittVísanasvið(
+          "flettuvísanasvið",
+          sótt,
+          this.gögn.stofnar.fjöldiStofna,
+          (vísun) => {
+            staðfestaSviðsvísi("Afleitt: flettaVísanir", vísun, this.gögn.stofnar.fjöldiStofna);
+          },
+        ),
       );
       this.flettuvísanasvið = sótt;
       return sótt;
@@ -1276,7 +1211,21 @@ export class Lesari {
     return afkóðaTextasýn(this.lykiltextasýnUppflettiorða, 0, lengd);
   }
 
+  private tryggjaFormgeymslusýn(): { sýn: Textasýn; hliðrun: Uint32Array } | null {
+    if (this.formgeymslusýn === undefined) {
+      const geymsla = this.gögn.formlyklar.lyklageymslubæti();
+      this.formgeymslusýn =
+        geymsla === null ? null : { sýn: textasýn(geymsla.bæti), hliðrun: geymsla.hliðrun };
+    }
+    return this.formgeymslusýn;
+  }
+
   private lágstöfuðBeygingarmynd(formröð: number): string {
+    const geymsla = this.tryggjaFormgeymslusýn();
+    if (geymsla !== null) {
+      const byrjun = geymsla.hliðrun[formröð]!;
+      return afkóðaTextasýn(geymsla.sýn, byrjun, geymsla.hliðrun[formröð + 1]! - byrjun);
+    }
     const lengd = this.formbæti(formröð, this.lykilvinnaForm);
     return afkóðaTextasýn(this.lykiltextasýnForm, 0, lengd);
   }
@@ -2974,11 +2923,11 @@ export class Lesari {
     return this.afleiðslur !== undefined;
   }
 
-  flytjaAfleitt(): ReadonlyMap<string, Uint32Array> {
+  flytjaAfleitt(snið: number = SNIÐ_AFKÖST): ReadonlyMap<string, Uint8Array | Uint32Array> {
     this.undirbúa();
-    const út = new Map<string, Uint32Array>();
-    this.gögn.formlyklar.safnaAfleiðslum(út);
-    this.gögn.flettur.safnaAfleiðslum(út);
+    const út = new Map<string, Uint8Array | Uint32Array>();
+    this.gögn.formlyklar.safnaAfleiðslum(út, snið);
+    this.gögn.flettur.safnaAfleiðslum(út, snið);
     út.set("stofnByrjun", this.tryggjaStofnByrjun());
     út.set("stofnUppflettiraðir", this.tryggjaUppflettiraðir());
     út.set("stofnAuðkenni", this.tryggjaStofnAuðkenni());
@@ -3013,6 +2962,7 @@ export class Lesari {
     this.tilvikaformraðir = undefined;
     this.formvísanasvið = undefined;
     this.flettuvísanasvið = undefined;
+    this.formgeymslusýn = undefined;
     this.stofngrunnar.length = 0;
     return this;
   }

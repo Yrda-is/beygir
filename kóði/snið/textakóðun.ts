@@ -221,8 +221,21 @@ export function reynaAðKóðaLeitartextaÍBætafylki(texti: string, úttak: Uin
   return texti.length;
 }
 
+// Bein lykkja er aðeins hraðari á örstuttum lyklum; lengri strengir fara um
+// Buffer.toString.
+const HÁMARK_HRAÐAFKÓÐUNAR = 8;
+
 export function afkóðaTexta(bæti: Buffer, hliðrun: number, lengd: number): string {
   const endir = hliðrun + lengd;
+
+  if (lengd <= HÁMARK_HRAÐAFKÓÐUNAR) {
+    let texti = "";
+    for (let vísir = hliðrun; vísir < endir; vísir++) {
+      const b = bæti[vísir]!;
+      texti += b === LATIN1_PLÚS_AUKABÆTI ? LATIN1_PLÚS_AUKASTAFUR : String.fromCharCode(b);
+    }
+    return texti;
+  }
 
   let fyrstiStaðgengillVísir = -1;
   for (let vísir = hliðrun; vísir < endir; vísir++) {

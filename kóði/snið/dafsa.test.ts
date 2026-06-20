@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { SNIÐ_AFKÖST, SNIÐ_LÉTT } from "./afleitt";
 import { DafsaLesari } from "./dafsa";
 import { raðaDafsa } from "./dafsa-röðun";
 import { STÆRÐ_DAFSAHAUSS } from "./fastar";
@@ -121,7 +122,7 @@ describe("snið DAFSA", () => {
     const bútur = raðaDafsa(LYKLAR.map(ascii));
     const fyrri = new DafsaLesari(bútur);
     const safn = new Map<string, Uint32Array>();
-    fyrri.safnaAfleiðslum(safn);
+    fyrri.safnaAfleiðslum(safn, SNIÐ_LÉTT);
 
     const seinni = new DafsaLesari(bútur, {
       sækja(heiti: string): Uint32Array | undefined {
@@ -139,12 +140,12 @@ describe("snið DAFSA", () => {
     ).toThrow(/afleiðsla/);
 
     const rót = new DataView(bútur.buffer, bútur.byteOffset, bútur.byteLength).getUint32(12, true);
-    const skemmdTalning = safn.get("dafb.talning")!.slice();
-    skemmdTalning[rót] = 0;
+    const bjöguðTalning = safn.get("dafb.talning")!.slice();
+    bjöguðTalning[rót] = 0;
     expect(() =>
       new DafsaLesari(bútur, {
         sækja(heiti: string): Uint32Array | undefined {
-          return heiti === "dafb.talning" ? skemmdTalning : safn.get(heiti);
+          return heiti === "dafb.talning" ? bjöguðTalning : safn.get(heiti);
         },
       }).undirbúa(),
     ).toThrow(/lyklafjöldi/);
@@ -177,5 +178,61 @@ describe("snið DAFSA", () => {
     const rangurLyklafjöldi = new Uint8Array(bútur);
     new DataView(rangurLyklafjöldi.buffer).setUint32(16, LYKLAR.length + 1, true);
     expect(() => new DafsaLesari(rangurLyklafjöldi).undirbúa()).toThrow(/lyklafjöldi/);
+  });
+
+  test("notar afleidda lyklageymslu í stað göngu", () => {
+    const bæti = raðaDafsa(LYKLAR.map(ascii));
+    const safn = new Map<string, Uint8Array | Uint32Array>();
+    new DafsaLesari(bæti).safnaAfleiðslum(safn, SNIÐ_AFKÖST);
+
+    const meðGeymslu = new DafsaLesari(bæti, { sækja: (heiti) => safn.get(heiti) });
+    meðGeymslu.undirbúa();
+    for (let röð = 0; röð < LYKLAR.length; röð++) {
+      expect(lykillÚrRöð(meðGeymslu, röð)).toBe(LYKLAR[röð]!);
+      expect(meðGeymslu.röð(ascii(LYKLAR[röð]!), 0, LYKLAR[röð]!.length)).toBe(röð);
+    }
+    // Tætileitin skilar sömu niðurstöðu og gangan fyrir lykil sem vantar.
+    expect(meðGeymslu.röð(ascii("zzz"), 0, 3)).toBe(-1);
+    expect(meðGeymslu.röð(ascii("ac"), 0, 2)).toBe(-1);
+    expect(meðGeymslu.röð(ascii("xabcd"), 1, 4)).toBe(LYKLAR.indexOf("abcd"));
+  });
+
+  test("hafnar bjagaðri lyklageymslu", () => {
+    const bæti = raðaDafsa(LYKLAR.map(ascii));
+    const safn = new Map<string, Uint8Array | Uint32Array>();
+    new DafsaLesari(bæti).safnaAfleiðslum(safn, SNIÐ_AFKÖST);
+
+    const bjöguð = (safn.get("dafb.bætahliðrun") as Uint32Array).slice();
+    bjöguð[2] = 0xffff_ffff;
+    safn.set("dafb.bætahliðrun", bjöguð);
+    expect(() => new DafsaLesari(bæti, { sækja: (heiti) => safn.get(heiti) }).undirbúa()).toThrow(
+      /lokahliðrun|vaxandi/,
+    );
+  });
+
+  test("hafnar bjöguðum tætifötum", () => {
+    const bæti = raðaDafsa(LYKLAR.map(ascii));
+    const safn = new Map<string, Uint8Array | Uint32Array>();
+    new DafsaLesari(bæti).safnaAfleiðslum(safn, SNIÐ_AFKÖST);
+
+    const fötur = (safn.get("dafb.tætifötur") as Uint32Array).slice();
+    for (let fata = 0; fata < fötur.length; fata++) {
+      if (fötur[fata] !== 0xffff_ffff) {
+        fötur[fata] = LYKLAR.length + 5;
+        break;
+      }
+    }
+    safn.set("dafb.tætifötur", fötur);
+    expect(() => new DafsaLesari(bæti, { sækja: (heiti) => safn.get(heiti) }).undirbúa()).toThrow(
+      /tætifötur/,
+    );
+
+    // Með fullgilding: false treystir lesarinn skránni og sleppir fullgildingu.
+    expect(() =>
+      new DafsaLesari(bæti, {
+        fullgilding: false,
+        sækja: (heiti) => safn.get(heiti),
+      }).undirbúa(),
+    ).not.toThrow();
   });
 });

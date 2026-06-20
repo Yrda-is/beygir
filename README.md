@@ -109,16 +109,25 @@ varðveita `.bin`-skrána við hlið pakkans. Í skrifvörðum umhverfum getur h
 ekki varðveitt úttakið og afþjappar þá í minni við opnun. Með `slóð` eða
 `GAGNASKRA_SLOD` má vísa beint á tilbúna gagnaskrá.
 
-Afleiddir vísar eru byggðir í leti. `undirbúa: true` framkvæmir þann
-undirbúning við opnun. `afleitt: "skrá-minni"` og `afleitt: "skrá-mmap"` reyna
-að endurnýta `.afleitt` hliðarskrá milli ferla; `skrá-mmap` er aðeins tiltækt í
-Bun. Ef hliðarskrá vantar eða passar ekki við gagnaskrána er hún leidd út aftur.
+Afleiddir vísar eru byggðir eftir þörfum. `undirbúa: true` framkvæmir
+undirbúning við opnun. Með `afleitt: "skrá-minni"` eða `afleitt: "skrá-mmap"` má
+endurnýta `.afleitt` hliðarskrá milli opnana; ef hana vantar eða hún passar ekki
+við gagnaskrána er hún leidd út aftur.
+
+Með `afkastaafleiðslur: true` má skrifa stærri hliðarskrá sem flýtir
+uppflettingum þar sem hægt er. `staðfestaAfleitt` virkjar þyngri fullgildingu á
+hliðarskránni (sjá
+[skjölun](http://beygir.yrda.is/functions/gagnaskrá.opnaBeygi.html)).
 
 ### Umhverfisbreytur
 
 - `GAGNASKRA_SLOD` velur gagnaskrá þegar `slóð` er ekki gefin.
 - `BEYGIR_AFLEITT` velur afleiðsluham: `reikna`, `skrá-minni` eða `skrá-mmap`.
-- `BEYGIR_UNDIRBUA=1` undirbýr letivísa strax við opnun.
+- `BEYGIR_UNDIRBUA=1` undirbýr afleidda vísa strax við opnun.
+- `BEYGIR_AFKASTAAFLEIDSLUR=1` byggir afkastaafleiðslur í hliðarskrána (stærri
+  skrá, hraðari uppflettingar); aðeins virkt með `skrá-minni`/`skrá-mmap`.
+- `BEYGIR_STADFESTA_AFLEITT=1` virkjar þyngri fullgildingu á hliðarskránni
+  (sjálfgefið af; jafngildir `staðfestaAfleitt`); `=0` slekkur.
 
 Nánar í skjölun um
 [opnaBeygi](http://beygir.yrda.is/functions/gagnaskrá.opnaBeygi.html).
@@ -165,12 +174,18 @@ Opnaðu síðan `http://localhost:4173/dæmi/vefur/`.
 
 ## Viðmið og prófílar
 
-Einföld afkastaviðmið eru í [`skriftur/viðmið.ts`](https://github.com/Yrda-is/beygir/blob/stofn/skriftur/viðmið.ts) og
-samanburðargrunnur í [`.viðmið/grunnlína.json`](https://github.com/Yrda-is/beygir/blob/stofn/.viðmið/grunnlína.json).
+Einföld afkastaviðmið eru í
+[`skriftur/viðmið.ts`](https://github.com/Yrda-is/beygir/blob/stofn/skriftur/viðmið.ts).
+Sjálfgefinn samanburðargrunnur er
+[`.viðmið/grunnlína.json`](https://github.com/Yrda-is/beygir/blob/stofn/.viðmið/grunnlína.json)
+og afkastasnið hliðarskrár á sér grunn í
+[`.viðmið/grunnlína-afköst.json`](https://github.com/Yrda-is/beygir/blob/stofn/.viðmið/grunnlína-afköst.json).
 
 ```sh
 bun run viðmið
 bun run viðmið -- --grunnlína
+bun run viðmið -- --afköst
+bun run viðmið -- --afköst --grunnlína
 ```
 
 Sömu skriftu má nota sem mark fyrir CPU-prófíl Bun, t.d.:

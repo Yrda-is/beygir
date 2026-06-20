@@ -245,7 +245,7 @@ export function skrifaTextaaukahaus(sýn: DataView, hliðrun: number, færsla: T
 
 export interface Afleiðsluhaus {
   readonly útgáfa: number;
-  readonly frátekið: number;
+  readonly snið: number;
   readonly heildarlengd: number;
   readonly lykill: Uint8Array;
   readonly fjöldi: number;
@@ -261,7 +261,7 @@ export function lesaAfleiðsluhaus(sýn: DataView, hliðrun: number): Afleiðslu
 
   return {
     útgáfa: sýn.getUint16(hliðrun + 4, true),
-    frátekið: sýn.getUint16(hliðrun + 6, true),
+    snið: sýn.getUint16(hliðrun + 6, true),
     heildarlengd: sýn.getUint32(hliðrun + 8, true),
     lykill: lesaBæti(sýn, hliðrun + 12, LENGD_SHA256_FINGRAFARS),
     fjöldi: sýn.getUint32(hliðrun + 44, true),
@@ -271,7 +271,7 @@ export function lesaAfleiðsluhaus(sýn: DataView, hliðrun: number): Afleiðslu
 export function skrifaAfleiðsluhaus(sýn: DataView, hliðrun: number, færsla: Afleiðsluhaus): void {
   skrifaTöfrastreng(sýn, hliðrun, BAFL_TÖFRASTRENGUR);
   sýn.setUint16(hliðrun + 4, færsla.útgáfa, true);
-  sýn.setUint16(hliðrun + 6, færsla.frátekið, true);
+  sýn.setUint16(hliðrun + 6, færsla.snið, true);
   sýn.setUint32(hliðrun + 8, færsla.heildarlengd, true);
   skrifaBæti(sýn, hliðrun + 12, færsla.lykill, LENGD_SHA256_FINGRAFARS, "Afleiðslulykill");
   sýn.setUint32(hliðrun + 44, færsla.fjöldi, true);

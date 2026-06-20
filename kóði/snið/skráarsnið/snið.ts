@@ -216,7 +216,7 @@ export const FÆRSLUSNIÐ = [
   færsla("Afleiðsluhaus", [
     töfrareitur(BAFL_TÖFRASTRENGUR, "Afleiðsluskrá: rangur töfrastrengur, ekki BAFL."),
     u16("útgáfa"),
-    u16("frátekið"),
+    u16("snið"),
     u32("heildarlengd"),
     bæti("lykill", LENGD_SHA256_FINGRAFARS, "Afleiðslulykill"),
     u32("fjöldi"),

@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { SNIÐ_AFKÖST, type Afleittsafn } from "./afleitt";
 import { DafsaLesari } from "./dafsa";
 import { raðaDafsa } from "./dafsa-röðun";
 import { Flettusýn } from "./flettusýn";
@@ -11,7 +12,11 @@ function texti(út: Uint8Array, lengd: number): string {
   return afkóðaTexta(Buffer.from(út.buffer, út.byteOffset, út.byteLength), 0, lengd);
 }
 
-function smíðaFlettusýn(formstrengir: readonly string[], uppflettistrengir: readonly string[]) {
+function smíðaFlettusýn(
+  formstrengir: readonly string[],
+  uppflettistrengir: readonly string[],
+  afleiðslur?: Afleittsafn,
+) {
   const formlyklar = smíðaLágstafaðaLyklaröð(formstrengir);
   const uppflettilyklar = smíðaLágstafaðaLyklaröð(uppflettistrengir);
   const formlesari = new DafsaLesari(raðaDafsa([...formlyklar.lyklar]));
@@ -19,7 +24,7 @@ function smíðaFlettusýn(formstrengir: readonly string[], uppflettistrengir: r
     smíðaLemmubita(formlyklar, uppflettilyklar),
     formlyklar.fjöldi,
   );
-  return new Flettusýn(formlesari, lemmubitar);
+  return new Flettusýn(formlesari, lemmubitar, afleiðslur);
 }
 
 describe("snið flettusýn", () => {
@@ -69,6 +74,32 @@ describe("snið flettusýn", () => {
     expect(flettur.forskeytiStaða(kóðaTexta("a"), 0, 1)).toEqual({ grunnröð: 0, fjöldi: 2 });
     expect(flettur.forskeytiStaða(kóðaTexta("az"), 0, 2)).toEqual({ grunnröð: 1, fjöldi: 1 });
     expect(flettur.forskeytiStaða(kóðaTexta("x"), 0, 1)).toBeNull();
+  });
+
+  test("notar afleidda formröðTilUppflettingar-vörpun og hafnar bjagaðri vörpun", () => {
+    const form = ["b", "d", "f"];
+    const lemmur = ["a", "b", "c", "d", "e", "f", "g"];
+    const grunn = smíðaFlettusýn(form, lemmur);
+    const safn = new Map<string, Uint8Array | Uint32Array>();
+    grunn.safnaAfleiðslum(safn, SNIÐ_AFKÖST);
+    expect(safn.has("flettur.formröðTilUppflettingar")).toBe(true);
+
+    const meðAfleitt = smíðaFlettusýn(form, lemmur, { sækja: (h) => safn.get(h) });
+    for (const w of [...lemmur, "x", "bb"]) {
+      expect(meðAfleitt.röð(kóðaTexta(w), 0, w.length)).toBe(grunn.röð(kóðaTexta(w), 0, w.length));
+    }
+
+    const bjöguð = (safn.get("flettur.formröðTilUppflettingar") as Uint32Array).slice();
+    for (let vísir = 0; vísir < bjöguð.length; vísir++) {
+      if (bjöguð[vísir] !== 0xffff_ffff) {
+        bjöguð[vísir] = 999;
+        break;
+      }
+    }
+    safn.set("flettur.formröðTilUppflettingar", bjöguð);
+    expect(() => smíðaFlettusýn(form, lemmur, { sækja: (h) => safn.get(h) }).undirbúa()).toThrow(
+      /formröðTilUppflettingar/,
+    );
   });
 
   test("finnur forskeytisbil með mörgum lyklum utan formmengis", () => {

@@ -766,7 +766,7 @@ export interface Beygir {
   greina(orð: string): Greining | null;
 
   /**
-   * Leiðir út alla letivísa lesarans fyrirfram.
+   * Leiðir út alla afleidda vísa lesarans fyrirfram.
    *
    * Þetta getur flýtt fyrstu uppflettingum í langlífu ferli og er einnig notað
    * til að skrifa afleidda hliðarskrá þegar sá hamur er virkur. Aðferðin er

@@ -15,6 +15,7 @@ const rök = process.argv.slice(2);
 const meðKöldu = rök.includes("--kalt");
 const meðJson = rök.includes("--json");
 const meðGrunnlínu = rök.includes("--grunnlína");
+const meðAfköst = rök.includes("--afköst");
 const prófílheiti = sækjaRök("prófíll");
 const sía = sækjaRök("sía");
 const prófílms = Number(sækjaRök("ms") ?? process.env["BEYGIR_PROFILL_MS"] ?? 2_000);
@@ -42,14 +43,27 @@ function leysaGagnaskrárslóð(): string | undefined {
   return slóðir.find((slóð) => slóð !== undefined && existsSync(slóð));
 }
 
-function opna(undirbúa: boolean): LokanlegurBeygir {
+function opnunarvalkostir(undirbúa: boolean): OpnaBeygiValkostir {
   const valkostir: OpnaBeygiValkostir = slóð === undefined ? { undirbúa } : { slóð, undirbúa };
-  return opnaBeygi(valkostir);
+  return meðAfköst
+    ? { ...valkostir, afleitt: "skrá-minni", afkastaafleiðslur: true, staðfestaAfleitt: false }
+    : valkostir;
+}
+
+function opna(undirbúa: boolean): LokanlegurBeygir {
+  return opnaBeygi(opnunarvalkostir(undirbúa));
 }
 
 async function opnaÓsamstillt(undirbúa: boolean): Promise<LokanlegurBeygir> {
-  const valkostir: OpnaBeygiValkostir = slóð === undefined ? { undirbúa } : { slóð, undirbúa };
-  return await opnaBeygiÓsamstillt(valkostir);
+  return await opnaBeygiÓsamstillt(opnunarvalkostir(undirbúa));
+}
+
+function tryggjaAfkastaafleiðslur(): void {
+  if (!meðAfköst) {
+    return;
+  }
+  const beygir = opna(true);
+  beygir.loka();
 }
 
 function mæla(keyrsla: () => unknown): Promise<void> | void {
@@ -251,6 +265,7 @@ async function hreinsaNiðurstöðu(niðurstaða: MitataNiðurstaða): Promise<u
   return {
     útgáfa: 1,
     ...(meðGrunnlínu ? {} : { tími: new Date().toISOString() }),
+    hamur: meðAfköst ? "afköst" : "sjálfgefið",
     gagnaskrá: await lýsaGagnaskrá(),
     síur: {
       köld: meðKöldu,
@@ -268,13 +283,16 @@ async function hreinsaNiðurstöðu(niðurstaða: MitataNiðurstaða): Promise<u
 async function skrifaJsonNiðurstöðu(niðurstaða: MitataNiðurstaða): Promise<void> {
   await mkdir(úttaksmappa, { recursive: true });
   const heiti = meðGrunnlínu
-    ? "grunnlína.json"
+    ? meðAfköst
+      ? "grunnlína-afköst.json"
+      : "grunnlína.json"
     : `${new Date().toISOString().replaceAll(":", "-")}.json`;
   const slóð = `${úttaksmappa}/${heiti}`;
   await writeFile(slóð, `${JSON.stringify(await hreinsaNiðurstöðu(niðurstaða), null, 2)}\n`);
   console.log(`JSON: ${slóð}`);
 }
 
+tryggjaAfkastaafleiðslur();
 const { beygir, tilvik } = búaTilTilvik();
 if (meðKöldu) {
   bætaKöldumTilvikum(tilvik);

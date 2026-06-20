@@ -57,33 +57,29 @@ async function smíðaPrófunarskráMeðAukaflettu(): Promise<Uint8Array> {
   return skrifaÍlát(niðurstaða.bútar);
 }
 
-function spillaBút(
-  skrá: Uint8Array,
-  merki: string,
-  spilla: (bæti: Uint8Array) => void,
-): Uint8Array {
+function bjagaBút(skrá: Uint8Array, merki: string, bjaga: (bæti: Uint8Array) => void): Uint8Array {
   const út = skrá.slice();
-  spilla(opnaBútasafn(út).sýn(merki));
+  bjaga(opnaBútasafn(út).sýn(merki));
   return út;
 }
 
-function væntaSkemmdrarAfleiðslu(
+function væntaBjagaðrarAfleiðslu(
   skrá: Uint8Array,
-  afleitt: ReadonlyMap<string, Uint32Array>,
+  afleitt: ReadonlyMap<string, Uint8Array | Uint32Array>,
   heiti: string,
-  spilla: (gildi: Uint32Array) => void,
+  bjaga: (gildi: Uint8Array | Uint32Array) => void,
   mynstur: RegExp,
 ): void {
-  const skemmt = new Map(afleitt);
+  const bjagað = new Map(afleitt);
   const gildi = afleitt.get(heiti)?.slice();
   if (gildi === undefined) {
     throw new Error(`Afleitt gildi vantaði í prófi: ${heiti}.`);
   }
-  spilla(gildi);
-  skemmt.set(heiti, gildi);
+  bjaga(gildi);
+  bjagað.set(heiti, gildi);
   const lesari = new Lesari(skrá, {
     afleitt: {
-      sækja: (sóttHeiti) => skemmt.get(sóttHeiti),
+      sækja: (sóttHeiti) => bjagað.get(sóttHeiti),
     },
   });
   expect(() => lesari.undirbúa()).toThrow(mynstur);
@@ -123,18 +119,18 @@ describe("snið lestur", () => {
   });
 
   test("hafnar SNID-vísum sem vísa út fyrir tengdar töflur við opnun", async () => {
-    const spillt = spillaBút(await smíðaPrófunarskrá(), "SNID", (bæti) => {
+    const bjagað = bjagaBút(await smíðaPrófunarskrá(), "SNID", (bæti) => {
       const hliðrun = STÆRÐ_SNIÐHAUSS + 1;
       const markvísir = 1023;
       bæti[hliðrun] = markvísir & 0xff;
       bæti[hliðrun + 1] = (bæti[hliðrun + 1]! & 0xfc) | (markvísir >>> 8);
     });
 
-    expect(() => new Lesari(spillt)).toThrow(/SNID\[0:0\]\.markvísir/);
+    expect(() => new Lesari(bjagað)).toThrow(/SNID\[0:0\]\.markvísir/);
   });
 
   test("hafnar STOF-vísum sem vísa út fyrir tengdar töflur við opnun", async () => {
-    const spillt = spillaBút(await smíðaPrófunarskrá(), "STOF", (bæti) => {
+    const bjagað = bjagaBút(await smíðaPrófunarskrá(), "STOF", (bæti) => {
       const fjöldiStofna = new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength).getUint32(
         0,
         true,
@@ -148,17 +144,17 @@ describe("snið lestur", () => {
       bæti[orðflokkahliðrun] = 200;
     });
 
-    expect(() => new Lesari(spillt)).toThrow(/STOF\[0\]\.orðflokkur/);
+    expect(() => new Lesari(bjagað)).toThrow(/STOF\[0\]\.orðflokkur/);
   });
 
   test("hafnar TAUK-aukaflettuvísum sem vísa út fyrir AUKA-töflu við opnun", async () => {
-    const spillt = spillaBút(await smíðaPrófunarskráMeðAukaflettu(), "TAUK", (bæti) => {
+    const bjagað = bjagaBút(await smíðaPrófunarskráMeðAukaflettu(), "TAUK", (bæti) => {
       const lesari = new VarintLesari(bæti, STÆRÐ_TEXTAAUKAHAUSS, "TAUK próf");
       lesari.lesa();
       bæti[lesari.staða] = 7;
     });
 
-    expect(() => new Lesari(spillt)).toThrow(/TAUK\[0\]\.aukaflettuvísir/);
+    expect(() => new Lesari(bjagað)).toThrow(/TAUK\[0\]\.aukaflettuvísir/);
   });
 
   test("undirbýr og losar afleidda vísa", async () => {
@@ -174,7 +170,7 @@ describe("snið lestur", () => {
     const skrá = await smíðaPrófunarskrá();
     const afleitt = new Lesari(skrá).flytjaAfleitt();
 
-    væntaSkemmdrarAfleiðslu(
+    væntaBjagaðrarAfleiðslu(
       skrá,
       afleitt,
       "stofnAuðkenni",
@@ -183,7 +179,7 @@ describe("snið lestur", () => {
       },
       /stofnAuðkenni/,
     );
-    væntaSkemmdrarAfleiðslu(
+    væntaBjagaðrarAfleiðslu(
       skrá,
       afleitt,
       "flettur.merktarFormraðir",
@@ -192,7 +188,7 @@ describe("snið lestur", () => {
       },
       /merktarFormraðir/,
     );
-    væntaSkemmdrarAfleiðslu(
+    væntaBjagaðrarAfleiðslu(
       skrá,
       afleitt,
       "formVísanir",

@@ -1,7 +1,9 @@
 import { BITAFJÖLDI_BÆTIS, IDBS_BLOKK } from "./bitar";
 import { type Dafsaganga, DafsaLesari } from "./dafsa";
-import { sækjaAfleitt, type Afleittsafn } from "./afleitt";
+import { erMeðSniði, fullgildaEfVirk, sækjaAfleitt, type Afleittsafn } from "./afleitt";
 import type { Lemmubitasvið } from "./gagnalestur";
+
+const TÓM_UPPFLETTIRÖÐ = 0xffff_ffff;
 
 interface Flettugöngugögn {
   readonly fjöldi: number;
@@ -129,6 +131,9 @@ export class Flettusýn {
   private readonly afleiðslur: Afleittsafn | undefined;
 
   private merktarFormraðir: Uint32Array | undefined;
+  // Afleidd bein vörpun formraðar í uppflettiröð (eða TÓM); sparar LBIT-talningu.
+  private formröðTilUppflettingar: Uint32Array | undefined;
+  private formröðReynd = false;
 
   constructor(formlyklar: DafsaLesari, svið: Lemmubitasvið, afleiðslur?: Afleittsafn) {
     this.formlyklar = formlyklar;
@@ -144,16 +149,62 @@ export class Flettusýn {
 
   undirbúa(): this {
     this.tryggjaMerktarFormraðir();
+    this.tryggjaFormröðTilUppflettingar();
     return this;
   }
 
   losa(): this {
     this.merktarFormraðir = undefined;
+    this.formröðTilUppflettingar = undefined;
+    this.formröðReynd = false;
     return this;
   }
 
-  safnaAfleiðslum(út: Map<string, Uint32Array>): void {
+  safnaAfleiðslum(út: Map<string, Uint8Array | Uint32Array>, snið: number): void {
     út.set("flettur.merktarFormraðir", this.tryggjaMerktarFormraðir());
+    if (erMeðSniði("flettur.formröðTilUppflettingar", snið)) {
+      út.set("flettur.formröðTilUppflettingar", this.byggjaFormröðTilUppflettingar());
+    }
+  }
+
+  // Bein vörpun formraðar í uppflettiröð; aðeins lesin úr afkastahliðarskrá.
+  private tryggjaFormröðTilUppflettingar(): Uint32Array | undefined {
+    if (this.formröðReynd) {
+      return this.formröðTilUppflettingar;
+    }
+    this.formröðReynd = true;
+    const sótt = sækjaAfleitt(this.afleiðslur, "flettur.formröðTilUppflettingar", this.vídd);
+    if (sótt !== undefined) {
+      fullgildaEfVirk(this.afleiðslur, () => this.staðfestaFormröðTilUppflettingar(sótt));
+      this.formröðTilUppflettingar = sótt;
+    }
+    return this.formröðTilUppflettingar;
+  }
+
+  private byggjaFormröðTilUppflettingar(): Uint32Array {
+    const merkt = this.tryggjaMerktarFormraðir();
+    const vörpun = new Uint32Array(this.vídd).fill(TÓM_UPPFLETTIRÖÐ);
+    for (let merkturVísir = 0; merkturVísir < merkt.length; merkturVísir++) {
+      vörpun[merkt[merkturVísir]!] = this.fletturöðAfMerktum(merkturVísir);
+    }
+    return vörpun;
+  }
+
+  private staðfestaFormröðTilUppflettingar(vörpun: Uint32Array): void {
+    let virkar = 0;
+    for (let formröð = 0; formröð < vörpun.length; formröð++) {
+      const uppflettiröð = vörpun[formröð]!;
+      if (uppflettiröð === TÓM_UPPFLETTIRÖÐ) {
+        continue;
+      }
+      if (uppflettiröð >= this.fjöldi || !this.erMerkt(formröð)) {
+        throw new Error("Afleitt: flettur.formröðTilUppflettingar stemmir ekki við LBIT.");
+      }
+      virkar++;
+    }
+    if (virkar !== this.fjöldiMerktra) {
+      throw new Error("Afleitt: flettur.formröðTilUppflettingar hefur rangan fjölda merktra raða.");
+    }
   }
 
   tryggjaMerktarFormraðir(): Uint32Array {
@@ -163,7 +214,7 @@ export class Flettusýn {
 
     const sótt = sækjaAfleitt(this.afleiðslur, "flettur.merktarFormraðir", this.fjöldiMerktra);
     if (sótt !== undefined) {
-      this.staðfestaMerktarFormraðir(sótt);
+      fullgildaEfVirk(this.afleiðslur, () => this.staðfestaMerktarFormraðir(sótt));
       this.merktarFormraðir = sótt;
       return sótt;
     }
@@ -246,6 +297,14 @@ export class Flettusýn {
 
   röðMeðFormröð(formröð: number, bæti: Uint8Array, frá: number, lengd: number): number {
     if (formröð >= 0) {
+      if (!this.formröðReynd) {
+        this.tryggjaFormröðTilUppflettingar();
+      }
+      const vörpun = this.formröðTilUppflettingar;
+      if (vörpun !== undefined) {
+        const uppflettiröð = vörpun[formröð]!;
+        return uppflettiröð === TÓM_UPPFLETTIRÖÐ ? -1 : uppflettiröð;
+      }
       if (!this.erMerkt(formröð)) {
         return -1;
       }

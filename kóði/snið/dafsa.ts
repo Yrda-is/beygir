@@ -1,11 +1,23 @@
-import { sækjaAfleitt as sækjaAfleiðslu, type Afleittsafn as Afleiðslusafn } from "./afleitt";
+import {
+  erMeðSniði,
+  fullgildaEfVirk,
+  sækjaAfleitt as sækjaAfleiðslu,
+  sækjaAfleittBæti as sækjaAfleiðsluBæti,
+  type Afleittsafn as Afleiðslusafn,
+} from "./afleitt";
 import { jafna4 } from "./bitar";
 import { STÆRÐ_DAFSAHAUSS } from "./fastar";
+import { HÁMARK_LYKILBÆTA } from "./lyklafastar";
 import { lesaDafsahaus } from "./færslur";
+import { fnv1a32 } from "./tætifall";
 import { VarintLesari } from "./varint";
 
 const KÓÐI_KEÐJA = 2;
 const HÁMARK_U32 = 0xffff_ffff;
+// Tætifötur: eitt u32 raðnúmer á fötu. Tóm fata er auðkennd með TÓM_FATA.
+// Hleðslustuðull heldur línulegri leit stuttri.
+const TÓM_FATA = 0xffff_ffff;
+const TÆTI_HLEÐSLA = 0.7;
 
 /**
  * Bætasniðslýsing fyrir DAFB, sem geymir DAFSA-net yfir lágstafaða formlykla
@@ -37,6 +49,10 @@ interface Dafsagöngugögn {
   readonly merkingar: Uint8Array;
   readonly mark: Uint32Array;
   readonly viðbót: Uint32Array;
+  // Þegar lyklageymsla er til staðar les gangan lykla beint úr henni eftir röð
+  // í stað þess að ferðast um netið; annars er gengið á hefðbundinn hátt.
+  readonly lyklabæti?: Uint8Array | undefined;
+  readonly lyklahliðrun?: Uint32Array | undefined;
 }
 
 // Bætaminnið er hluti af stöðu göngunnar: `áfram` varðveitir fyrra forskeyti og
@@ -55,8 +71,26 @@ export class Dafsaganga {
     this.færaAðRöð(röð);
   }
 
+  private afritaÚrGeymslu(lyklabæti: Uint8Array, hliðrun: Uint32Array, röð: number): void {
+    const byrjun = hliðrun[röð]!;
+    const lengd = hliðrun[röð + 1]! - byrjun;
+    const bæti = this.bæti;
+    if (lengd > bæti.length) {
+      throw new Error("DFSA-lykill rúmast ekki í úttaksminni.");
+    }
+    for (let vísir = 0; vísir < lengd; vísir++) {
+      bæti[vísir] = lyklabæti[byrjun + vísir]!;
+    }
+    this.röð = röð;
+    this.lengd = lengd;
+  }
+
   færaAðRöð(röð: number): this {
     const gögn = this.gögn;
+    if (gögn.lyklabæti !== undefined && gögn.lyklahliðrun !== undefined) {
+      this.afritaÚrGeymslu(gögn.lyklabæti, gögn.lyklahliðrun, röð);
+      return this;
+    }
     const viðbót = gögn.viðbót;
     const leggjamörk = gögn.leggjamörk;
     const lokabitar = gögn.lokabitar;
@@ -112,6 +146,14 @@ export class Dafsaganga {
 
   áfram(): boolean {
     const gögn = this.gögn;
+    if (gögn.lyklabæti !== undefined && gögn.lyklahliðrun !== undefined) {
+      const næsta = this.röð + 1;
+      if (næsta >= gögn.lyklafjöldi) {
+        return false;
+      }
+      this.afritaÚrGeymslu(gögn.lyklabæti, gögn.lyklahliðrun, næsta);
+      return true;
+    }
     const stafli = this.stafli;
     const leggjamörk = gögn.leggjamörk;
     const lokabitar = gögn.lokabitar;
@@ -176,6 +218,75 @@ function staðfestaHámarksfjölda(heiti: string, fjöldi: number, hámark: numb
 
 function erLokastaða(lokabitar: Uint8Array, hnútur: number): boolean {
   return (lokabitar[hnútur >> 3]! & (1 << (hnútur & 7))) !== 0;
+}
+
+/** Fjöldi tætifatna: minnsta veldi af tveimur sem heldur hleðslustuðli undir mörkum. */
+function tætifötufjöldi(lyklafjöldi: number): number {
+  let fjöldi = 1;
+  const lágmark = Math.ceil(lyklafjöldi / TÆTI_HLEÐSLA) + 1;
+  while (fjöldi < lágmark) {
+    fjöldi *= 2;
+  }
+  return fjöldi;
+}
+
+/**
+ * Byggir opnar tætifötur með línulegri leit. Hver fata geymir aðeins raðnúmer
+ * (eitt u32); lyklageymslan staðfestir samsvörun svo geymt tætigildi er óþarft.
+ */
+function byggjaTætifötur(hliðrun: Uint32Array, bæti: Uint8Array, lyklafjöldi: number): Uint32Array {
+  const fjöldiFatna = tætifötufjöldi(lyklafjöldi);
+  const maski = fjöldiFatna - 1;
+  const fötur = new Uint32Array(fjöldiFatna).fill(TÓM_FATA);
+
+  for (let röð = 0; röð < lyklafjöldi; röð++) {
+    const byrjun = hliðrun[röð]!;
+    const tæti = fnv1a32(bæti, byrjun, hliðrun[röð + 1]! - byrjun);
+    let fata = tæti & maski;
+    while (fötur[fata] !== TÓM_FATA) {
+      fata = (fata + 1) & maski;
+    }
+    fötur[fata] = röð;
+  }
+  return fötur;
+}
+
+function staðfestaTætifötur(fötur: Uint32Array, lyklafjöldi: number): void {
+  if (fötur.length !== tætifötufjöldi(lyklafjöldi)) {
+    throw new Error("DFSA-tætifötur: rangur fjöldi fatna.");
+  }
+  let virkar = 0;
+  for (let fata = 0; fata < fötur.length; fata++) {
+    const röð = fötur[fata]!;
+    if (röð === TÓM_FATA) {
+      continue;
+    }
+    if (röð >= lyklafjöldi) {
+      throw new Error("DFSA-tætifötur: raðnúmer utan marka.");
+    }
+    virkar++;
+  }
+  if (virkar !== lyklafjöldi) {
+    throw new Error("DFSA-tætifötur: fjöldi virkra fatna stemmir ekki við lyklafjölda.");
+  }
+}
+
+function staðfestaLyklageymslu(
+  hliðrun: Uint32Array,
+  lyklafjöldi: number,
+  heildarbæti: number,
+): void {
+  if (hliðrun.length !== lyklafjöldi + 1 || hliðrun[0] !== 0) {
+    throw new Error("DFSA-lyklageymsla: ógildar hliðranir.");
+  }
+  for (let röð = 0; röð < lyklafjöldi; röð++) {
+    if (hliðrun[röð + 1]! < hliðrun[röð]!) {
+      throw new Error("DFSA-lyklageymsla: hliðranir ekki vaxandi.");
+    }
+  }
+  if (hliðrun[lyklafjöldi] !== heildarbæti) {
+    throw new Error("DFSA-lyklageymsla: lokahliðrun stemmir ekki við bætafjölda.");
+  }
 }
 
 function staðfestaTalningu(talning: Uint32Array, rót: number, lyklafjöldi: number): void {
@@ -261,6 +372,13 @@ export class DafsaLesari {
 
   private viðbót: Uint32Array | undefined;
   private talning: Uint32Array | undefined;
+  // Afleidd lyklageymsla: lágstafaðir lyklar í raðnúmeraröð. Aðeins notuð þegar
+  // hún kemur úr hliðarskrá; hún er aldrei byggð eftir þörfum á heitu leiðinni.
+  private lyklabæti: Uint8Array | undefined;
+  private lyklahliðrun: Uint32Array | undefined;
+  private tætifötur: Uint32Array | undefined;
+  private tætimaski = 0;
+  private reyndLyklageymsla = false;
 
   constructor(bæti: Uint8Array, afleiðslur?: Afleiðslusafn) {
     this.afleiðslur = afleiðslur;
@@ -350,18 +468,104 @@ export class DafsaLesari {
 
   undirbúa(): this {
     this.tryggjaViðbót();
+    this.tryggjaLyklageymslu();
     return this;
   }
 
   losa(): this {
     this.talning = undefined;
     this.viðbót = undefined;
+    this.lyklabæti = undefined;
+    this.lyklahliðrun = undefined;
+    this.tætifötur = undefined;
+    this.tætimaski = 0;
+    this.reyndLyklageymsla = false;
     return this;
   }
 
-  safnaAfleiðslum(út: Map<string, Uint32Array>): void {
+  safnaAfleiðslum(út: Map<string, Uint8Array | Uint32Array>, snið: number): void {
     út.set("dafb.talning", this.tryggjaTalningu());
     út.set("dafb.viðbót", this.tryggjaViðbót());
+    // Lyklageymslan og tætifötur eru samtengd því tætifötur vísa í bætaröðina.
+    // Því eru þau byggð í einni göngu, en hvert heiti ræðst af eigin sniði í
+    // AFLEIÐSLUSKRÁ frekar en einu sameiginlegu nafni.
+    if (
+      !erMeðSniði("dafb.bætahliðrun", snið) &&
+      !erMeðSniði("dafb.bæti", snið) &&
+      !erMeðSniði("dafb.tætifötur", snið)
+    ) {
+      return;
+    }
+    const geymsla = this.byggjaLyklageymslu();
+    if (erMeðSniði("dafb.bætahliðrun", snið)) {
+      út.set("dafb.bætahliðrun", geymsla.hliðrun);
+    }
+    if (erMeðSniði("dafb.bæti", snið)) {
+      út.set("dafb.bæti", geymsla.bæti);
+    }
+    if (erMeðSniði("dafb.tætifötur", snið)) {
+      út.set("dafb.tætifötur", byggjaTætifötur(geymsla.hliðrun, geymsla.bæti, this.lyklafjöldi));
+    }
+  }
+
+  /**
+   * Sækir afleidda lyklageymslu úr hliðarskrá ef hún er til staðar. Geymslan er
+   * SHA-256-bundin gagnaskránni svo formvensl eru tryggð; hér er aðeins
+   * sannreynt að hliðranir séu vaxandi og nái yfir bætafylkið. Geymslan er
+   * aðeins byggð við ritun hliðarskrár (`byggjaLyklageymslu`).
+   */
+  private tryggjaLyklageymslu(): void {
+    if (this.reyndLyklageymsla) {
+      return;
+    }
+    this.reyndLyklageymsla = true;
+
+    const hliðrun = sækjaAfleiðslu(this.afleiðslur, "dafb.bætahliðrun", this.lyklafjöldi + 1);
+    if (hliðrun === undefined) {
+      return;
+    }
+    const heildarbæti = hliðrun[this.lyklafjöldi]!;
+    const bæti = sækjaAfleiðsluBæti(this.afleiðslur, "dafb.bæti", heildarbæti);
+    if (bæti === undefined) {
+      throw new Error("DFSA: lyklahliðranir til staðar en lyklabæti vantar.");
+    }
+    fullgildaEfVirk(this.afleiðslur, () =>
+      staðfestaLyklageymslu(hliðrun, this.lyklafjöldi, heildarbæti),
+    );
+
+    this.lyklahliðrun = hliðrun;
+    this.lyklabæti = bæti;
+
+    // Notkun tætifatna er valfrjáls, séu þær ekki til staðar er DAFSA-ganga
+    // notuð sem fyrr.
+    const fjöldiFatna = tætifötufjöldi(this.lyklafjöldi);
+    const fötur = sækjaAfleiðslu(this.afleiðslur, "dafb.tætifötur", fjöldiFatna);
+    if (fötur !== undefined) {
+      fullgildaEfVirk(this.afleiðslur, () => staðfestaTætifötur(fötur, this.lyklafjöldi));
+      this.tætifötur = fötur;
+      this.tætimaski = fjöldiFatna - 1;
+    }
+  }
+
+  /** Byggir lyklageymsluna með því að skrifa hvern lykil einu sinni í raðnúmeraröð. */
+  private byggjaLyklageymslu(): { hliðrun: Uint32Array; bæti: Uint8Array } {
+    const fjöldi = this.lyklafjöldi;
+    const hliðrun = new Uint32Array(fjöldi + 1);
+    let bæti = new Uint8Array(Math.max(HÁMARK_LYKILBÆTA, fjöldi * 8));
+    let staða = 0;
+
+    for (let röð = 0; röð < fjöldi; röð++) {
+      hliðrun[röð] = staða;
+      // Tryggja pláss fyrir lengsta mögulega lykil áður en hann er skrifaður.
+      if (staða + HÁMARK_LYKILBÆTA > bæti.length) {
+        const stærra = new Uint8Array(bæti.length * 2);
+        stærra.set(bæti.subarray(0, staða));
+        bæti = stærra;
+      }
+      staða += this.lykillÚrRöðGanga(röð, bæti, staða);
+    }
+    hliðrun[fjöldi] = staða;
+    return { hliðrun, bæti: bæti.subarray(0, staða) };
   }
 
   private tryggjaTalningu(): Uint32Array {
@@ -371,7 +575,7 @@ export class DafsaLesari {
 
     const sótt = sækjaAfleiðslu(this.afleiðslur, "dafb.talning", this.hnútafjöldi);
     if (sótt !== undefined) {
-      staðfestaTalningu(sótt, this.rót, this.lyklafjöldi);
+      fullgildaEfVirk(this.afleiðslur, () => staðfestaTalningu(sótt, this.rót, this.lyklafjöldi));
       this.talning = sótt;
       return sótt;
     }
@@ -436,13 +640,15 @@ export class DafsaLesari {
 
     const sótt = sækjaAfleiðslu(this.afleiðslur, "dafb.viðbót", this.leggjafjöldi);
     if (sótt !== undefined) {
-      staðfestaViðbót(
-        sótt,
-        this.leggjamörk,
-        this.lokabitar,
-        this.tryggjaTalningu(),
-        this.mark,
-        this.hnútafjöldi,
+      fullgildaEfVirk(this.afleiðslur, () =>
+        staðfestaViðbót(
+          sótt,
+          this.leggjamörk,
+          this.lokabitar,
+          this.tryggjaTalningu(),
+          this.mark,
+          this.hnútafjöldi,
+        ),
       );
       this.viðbót = sótt;
       return sótt;
@@ -467,6 +673,47 @@ export class DafsaLesari {
   }
 
   röð(bæti: Uint8Array, frá: number, lengd: number): number {
+    if (!this.reyndLyklageymsla) {
+      this.tryggjaLyklageymslu();
+    }
+    if (this.tætifötur !== undefined && this.lyklabæti !== undefined) {
+      return this.röðMeðTæti(bæti, frá, lengd);
+    }
+    return this.röðMeðGöngu(bæti, frá, lengd);
+  }
+
+  // Tætileit: bein uppfletting raðnúmers án DAFSA-göngu. Tætigildið hafnar
+  // flestum röngum frambjóðendum strax; bætasamanburður tryggir nákvæmni.
+  private röðMeðTæti(bæti: Uint8Array, frá: number, lengd: number): number {
+    const fötur = this.tætifötur!;
+    const lyklabæti = this.lyklabæti!;
+    const hliðrun = this.lyklahliðrun!;
+    const maski = this.tætimaski;
+    const tæti = fnv1a32(bæti, frá, lengd);
+
+    for (let fata = tæti & maski; ; fata = (fata + 1) & maski) {
+      const röð = fötur[fata]!;
+      if (röð === TÓM_FATA) {
+        return -1;
+      }
+      const byrjun = hliðrun[röð]!;
+      if (hliðrun[röð + 1]! - byrjun !== lengd) {
+        continue;
+      }
+      let samur = true;
+      for (let vísir = 0; vísir < lengd; vísir++) {
+        if (lyklabæti[byrjun + vísir]! !== bæti[frá + vísir]!) {
+          samur = false;
+          break;
+        }
+      }
+      if (samur) {
+        return röð;
+      }
+    }
+  }
+
+  private röðMeðGöngu(bæti: Uint8Array, frá: number, lengd: number): number {
     const viðbót = this.tryggjaViðbót();
     const leggjamörk = this.leggjamörk;
     const lokabitar = this.lokabitar;
@@ -486,7 +733,39 @@ export class DafsaLesari {
     return erLokastaða(lokabitar, hnútur) ? raðnúmer : -1;
   }
 
+  /** Bætasvæði lyklageymslunnar til þess að forðast óþarfa afritun eða úthlutun minnis. */
+  lyklageymslubæti(): { bæti: Uint8Array; hliðrun: Uint32Array } | null {
+    if (!this.reyndLyklageymsla) {
+      this.tryggjaLyklageymslu();
+    }
+    if (this.lyklabæti === undefined || this.lyklahliðrun === undefined) {
+      return null;
+    }
+    return { bæti: this.lyklabæti, hliðrun: this.lyklahliðrun };
+  }
+
   lykillÚrRöð(röð: number, út: Uint8Array): number {
+    if (!this.reyndLyklageymsla) {
+      this.tryggjaLyklageymslu();
+    }
+    if (this.lyklabæti !== undefined && this.lyklahliðrun !== undefined) {
+      const lyklabæti = this.lyklabæti;
+      const hliðrun = this.lyklahliðrun;
+      const byrjun = hliðrun[röð]!;
+      const lengd = hliðrun[röð + 1]! - byrjun;
+      if (lengd > út.length) {
+        throw new Error("DFSA-lykill rúmast ekki í úttaksminni.");
+      }
+      // Bein bætaafritun forðast óþarfa úthlutun í hverri uppflettingu.
+      for (let vísir = 0; vísir < lengd; vísir++) {
+        út[vísir] = lyklabæti[byrjun + vísir]!;
+      }
+      return lengd;
+    }
+    return this.lykillÚrRöðGanga(röð, út);
+  }
+
+  private lykillÚrRöðGanga(röð: number, út: Uint8Array, frá = 0): number {
     const viðbót = this.tryggjaViðbót();
     const leggjamörk = this.leggjamörk;
     const lokabitar = this.lokabitar;
@@ -517,12 +796,12 @@ export class DafsaLesari {
       if (leggur < byrjun) {
         break;
       }
-      if (lengd >= út.length) {
+      if (frá + lengd >= út.length) {
         throw new Error("DFSA-lykill rúmast ekki í úttaksminni.");
       }
       const viðbótLeggjar = viðbót[leggur]!;
       const næstu = leggur + 1 < endir ? viðbót[leggur + 1]! : fjöldiUndir;
-      út[lengd] = merkingar[leggur]!;
+      út[frá + lengd] = merkingar[leggur]!;
       lengd++;
       eftir -= viðbótLeggjar;
       fjöldiUndir = næstu - viðbótLeggjar;
@@ -536,6 +815,9 @@ export class DafsaLesari {
   }
 
   gangaMeðMinni(röð: number, bæti: Uint8Array): Dafsaganga {
+    if (!this.reyndLyklageymsla) {
+      this.tryggjaLyklageymslu();
+    }
     return new Dafsaganga(
       {
         rót: this.rót,
@@ -545,6 +827,8 @@ export class DafsaLesari {
         merkingar: this.merkingar,
         mark: this.mark,
         viðbót: this.tryggjaViðbót(),
+        lyklabæti: this.lyklabæti,
+        lyklahliðrun: this.lyklahliðrun,
       },
       bæti,
       röð,

@@ -183,7 +183,7 @@ describe("snið færslur", () => {
 
     skrifaAfleiðsluhaus(gagnasýn(bæti), 0, {
       útgáfa: 1,
-      frátekið: 0,
+      snið: 0,
       heildarlengd: 4096,
       lykill,
       fjöldi: 99,
@@ -191,7 +191,7 @@ describe("snið færslur", () => {
 
     expect(lesaAfleiðsluhaus(gagnasýn(bæti), 0)).toEqual({
       útgáfa: 1,
-      frátekið: 0,
+      snið: 0,
       heildarlengd: 4096,
       lykill,
       fjöldi: 99,
@@ -220,7 +220,7 @@ describe("snið færslur", () => {
     const afleiðsla = new Uint8Array(STÆRÐ_AFLEIÐSLUHAUSS);
     skrifaAfleiðsluhaus(gagnasýn(afleiðsla), 0, {
       útgáfa: 1,
-      frátekið: 0,
+      snið: 0,
       heildarlengd: 4096,
       lykill: fylki(LENGD_SHA256_FINGRAFARS, 1),
       fjöldi: 99,
@@ -303,7 +303,7 @@ describe("snið færslur", () => {
       STÆRÐ_AFLEIÐSLUHAUSS,
       {
         útgáfa: U16_SÝNISHORN,
-        frátekið: U16_SÝNISHORN,
+        snið: U16_SÝNISHORN,
         heildarlengd: U32_SÝNISHORN,
         lykill: fylki(LENGD_SHA256_FINGRAFARS, 1),
         fjöldi: U32_SÝNISHORN,

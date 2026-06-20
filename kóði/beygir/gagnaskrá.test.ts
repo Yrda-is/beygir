@@ -1,7 +1,9 @@
 import { afterEach, describe, expect, test } from "bun:test";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { opnaBeygi, opnaBeygiÓsamstillt, semÍtarlegFærsla } from "./gagnaskrá";
+import { lesaAfleitt } from "../snið/afleitt";
 import { skrifaÍlát } from "../snið/ilát";
 import { smíðaÚrKristínarsniði } from "../snið/smíði";
 import {
@@ -314,6 +316,72 @@ describe("afleidd hliðarskrá", () => {
       expect(existsSync(`${slóð}.afleitt`)).toBe(true);
     } finally {
       loka(beygir);
+    }
+  });
+
+  test("afkastaafleiðslur skrifa afkastasnið sem næsta opnun nýtir, einnig treyst", async () => {
+    let fyrri: LokanlegurBeygir | undefined;
+    let seinni: LokanlegurBeygir | undefined;
+    let treyst: LokanlegurBeygir | undefined;
+    try {
+      const slóð = await skrifaPrófunarskrá();
+
+      fyrri = opnaBeygi({ slóð, afleitt: "skrá-minni", afkastaafleiðslur: true, undirbúa: true });
+      expect(existsSync(`${slóð}.afleitt`)).toBe(true);
+      const vænt = fyrri.finnaBeygingarfærslur("hest").map((færsla) => færsla.mark);
+      fyrri.loka();
+
+      seinni = opnaBeygi({ slóð, afleitt: "skrá-minni", afkastaafleiðslur: true, undirbúa: true });
+      expect(seinni.staða().afleittVirkt).toBe(true);
+      expect(seinni.finnaBeygingarfærslur("hest").map((færsla) => færsla.mark)).toEqual(vænt);
+      expect(seinni.hefur("hestur")).toBe(true);
+
+      // staðfestaAfleitt:false treystir skránni en á að gefa sömu niðurstöður.
+      treyst = opnaBeygi({
+        slóð,
+        afleitt: "skrá-minni",
+        afkastaafleiðslur: true,
+        staðfestaAfleitt: false,
+        undirbúa: true,
+      });
+      expect(treyst.finnaBeygingarfærslur("hest").map((færsla) => færsla.mark)).toEqual(vænt);
+      expect(treyst.hefur("hestur")).toBe(true);
+    } finally {
+      loka(treyst);
+      loka(seinni);
+      loka(fyrri);
+    }
+  });
+
+  test("hliðarskrá er treyst en staðfestaAfleitt: true grípur bjagaðar skrár", async () => {
+    const opnanir: LokanlegurBeygir[] = [];
+    try {
+      const slóð = await skrifaPrófunarskrá();
+      // Skrifa hliðarskrá og bjaga innihald (stofnByrjun[0] á að vera 0) þannig
+      // að bygging standist en fullgilding geri það ekki; SHA-lykillinn helst réttur.
+      opnaBeygi({ slóð, afleitt: "skrá-minni", undirbúa: true }).loka();
+      const afleittSlóð = `${slóð}.afleitt`;
+      const bæti = new Uint8Array(readFileSync(afleittSlóð));
+      const lykill = new Uint8Array(createHash("sha256").update(readFileSync(slóð)).digest());
+      const stofnByrjun = lesaAfleitt(bæti, lykill, false)?.sækja("stofnByrjun");
+      expect(stofnByrjun).toBeInstanceOf(Uint32Array);
+      new DataView(bæti.buffer).setUint32((stofnByrjun as Uint32Array).byteOffset, 7, true);
+      writeFileSync(afleittSlóð, bæti);
+
+      for (const afleitt of hamirAfleiðsluTilPrófunar) {
+        // Við treystum skránni út frá tætisummu og því opnast hún hér án villu.
+        const sjálfgefinn = opnaBeygi({ slóð, afleitt, undirbúa: true });
+        opnanir.push(sjálfgefinn);
+        expect(sjálfgefinn.staða().afleittVirkt).toBe(true);
+        // Með staðfestaAfleitt: true er bjögunin gripin við undirbúning.
+        expect(() =>
+          opnaBeygi({ slóð, afleitt, staðfestaAfleitt: true, undirbúa: true }),
+        ).toThrow();
+      }
+    } finally {
+      for (const beygir of opnanir) {
+        loka(beygir);
+      }
     }
   });
 
