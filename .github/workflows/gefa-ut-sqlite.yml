@@ -66,8 +66,30 @@ jobs:
 
       - name: Skoða SQLite-gögn
         run: |
-          ls -lh .gögn/beygir.sqlite .gögn/beygir.sqlite.br .gögn/beygir.sqlite.sha256
+          ls -lh .gögn/beygir.sqlite .gögn/beygir.sqlite.br .gögn/beygir.sqlite.sha256 .gögn/beygir.sqlite.br.sha256
           cat .gögn/beygir.sqlite.sha256
+          cat .gögn/beygir.sqlite.br.sha256
+          cd .gögn
+          sha256sum -c beygir.sqlite.sha256
+          sha256sum -c beygir.sqlite.br.sha256
+
+      - name: Pakka SQLite-gögnum
+        run: |
+          mkdir -p sqlite-útgáfa
+          cp .gögn/beygir.sqlite sqlite-útgáfa/beygir.sqlite
+          cp .gögn/beygir.sqlite.br sqlite-útgáfa/beygir.sqlite.br
+          cp .gögn/beygir.sqlite.sha256 sqlite-útgáfa/beygir.sqlite.sha256
+          cp .gögn/beygir.sqlite.br.sha256 sqlite-útgáfa/beygir.sqlite.br.sha256
+          cp GÖGN-OG-LEYFI.md sqlite-útgáfa/GÖGN-OG-LEYFI.md
+          cp LICENSE sqlite-útgáfa/LICENSE
+          cp NOTICE sqlite-útgáfa/NOTICE
+
+      - name: Hlaða upp SQLite-gögnum sem artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: beygir-sqlite-${{ inputs.version }}
+          path: sqlite-útgáfa/
+          if-no-files-found: error
 
       - name: Birta SQLite-gögn
         if: ${{ !inputs.dry_run }}
@@ -75,8 +97,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "v${{ inputs.version }}" \
-            .gögn/beygir.sqlite \
-            .gögn/beygir.sqlite.br \
-            .gögn/beygir.sqlite.sha256 \
+            sqlite-útgáfa/beygir.sqlite \
+            sqlite-útgáfa/beygir.sqlite.br \
+            sqlite-útgáfa/beygir.sqlite.sha256 \
+            sqlite-útgáfa/beygir.sqlite.br.sha256 \
+            sqlite-útgáfa/GÖGN-OG-LEYFI.md \
+            sqlite-útgáfa/LICENSE \
+            sqlite-útgáfa/NOTICE \
             --repo "$GITHUB_REPOSITORY" \
             --clobber

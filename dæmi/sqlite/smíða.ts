@@ -23,6 +23,7 @@ const NOTKUN = `Notkun:
   bun run ./dæmi/sqlite/smíða.ts [beygir.bin] [beygir.sqlite] [--án-vísa] [--þjappa]
   bun run ./dæmi/sqlite/smíða.ts --bæta-vísum [beygir.sqlite] [--þjappa]`;
 const FRAMVINDA_UPPFLETTIORÐ = 25_000;
+const SQLITE_BROTLI_GÆÐI = 9;
 const SQLITE_SNIÐSÚTGÁFA = 1;
 const KRISTÍNARSNIÐSVEFSLÓÐ = "https://bin.arnastofnun.is/gogn/mimisbrunnur/";
 const KRISTÍNARSNIÐSSKRÁ = "KRISTINsnid.csv";
@@ -56,6 +57,9 @@ export interface SmíðaSqliteNiðurstaða {
   readonly úttaksslóð: string;
   readonly sha256Slóð: string;
   readonly brotliSlóð?: string;
+  readonly brotliSha256Slóð?: string;
+  readonly brotliSha256?: string;
+  readonly brotliSkráarstærð?: number;
   readonly sha256: string;
   readonly skráarstærð: number;
   readonly fjöldiUppflettiorða: number;
@@ -67,6 +71,9 @@ export interface BætaVísumViðNiðurstaða {
   readonly slóð: string;
   readonly sha256Slóð: string;
   readonly brotliSlóð?: string;
+  readonly brotliSha256Slóð?: string;
+  readonly brotliSha256?: string;
+  readonly brotliSkráarstærð?: number;
   readonly sha256: string;
   readonly skráarstærð: number;
 }
@@ -446,12 +453,26 @@ async function skrifaFingrafar(slóð: string): Promise<{
 async function skrifaBrotliEfÞarf(
   slóð: string,
   þjappa: boolean | undefined,
-): Promise<{ readonly brotliSlóð?: string }> {
+  framvinda?: (skilaboð: string) => void,
+): Promise<{
+  readonly brotliSlóð?: string;
+  readonly brotliSha256Slóð?: string;
+  readonly brotliSha256?: string;
+  readonly brotliSkráarstærð?: number;
+}> {
   if (þjappa !== true) {
     return {};
   }
 
-  return { brotliSlóð: await þjappaBrotliSkrá(slóð) };
+  framvinda?.(`SQLite-gagnagrunnur skrifaður; þjappa ${slóð} með Brotli...`);
+  const brotliSlóð = await þjappaBrotliSkrá(slóð, `${slóð}.br`, { gæði: SQLITE_BROTLI_GÆÐI });
+  const fingrafar = await skrifaFingrafar(brotliSlóð);
+  return {
+    brotliSlóð,
+    brotliSha256Slóð: fingrafar.sha256Slóð,
+    brotliSha256: fingrafar.sha256,
+    brotliSkráarstærð: fingrafar.skráarstærð,
+  };
 }
 
 export async function smíðaSqlite(valkostir: SmíðaSqliteValkostir): Promise<SmíðaSqliteNiðurstaða> {
@@ -493,7 +514,7 @@ export async function smíðaSqlite(valkostir: SmíðaSqliteValkostir): Promise<
 
     await rename(tímabundinSlóð, úttaksslóð);
     const fingrafar = await skrifaFingrafar(úttaksslóð);
-    const brotli = await skrifaBrotliEfÞarf(úttaksslóð, valkostir.þjappa);
+    const brotli = await skrifaBrotliEfÞarf(úttaksslóð, valkostir.þjappa, valkostir.framvinda);
 
     return {
       úttaksslóð,
@@ -510,7 +531,7 @@ export async function smíðaSqlite(valkostir: SmíðaSqliteValkostir): Promise<
 
 export async function bætaVísumViðSqlite(
   slóð: string,
-  valkostir: { readonly þjappa?: boolean } = {},
+  valkostir: { readonly þjappa?: boolean; readonly framvinda?: (skilaboð: string) => void } = {},
 ): Promise<BætaVísumViðNiðurstaða> {
   const gagnagrunnsslóð = resolve(slóð);
   if (!(await Bun.file(gagnagrunnsslóð).exists())) {
@@ -527,17 +548,27 @@ export async function bætaVísumViðSqlite(
   }
 
   const fingrafar = await skrifaFingrafar(gagnagrunnsslóð);
-  const brotli = await skrifaBrotliEfÞarf(gagnagrunnsslóð, valkostir.þjappa);
+  const brotli = await skrifaBrotliEfÞarf(gagnagrunnsslóð, valkostir.þjappa, valkostir.framvinda);
   return { slóð: gagnagrunnsslóð, ...fingrafar, ...brotli };
 }
 
-function lýsaBrotli(brotliSlóð: string | undefined): string[] {
-  if (brotliSlóð === undefined) {
+function lýsaBrotli(
+  niðurstaða: Pick<
+    SmíðaSqliteNiðurstaða | BætaVísumViðNiðurstaða,
+    "brotliSlóð" | "brotliSha256Slóð" | "brotliSkráarstærð"
+  >,
+): string[] {
+  if (niðurstaða.brotliSlóð === undefined) {
     return [];
   }
 
-  const stærð = Bun.file(brotliSlóð).size;
-  return [`Brotli-skrá skrifuð í ${brotliSlóð}: ${stærð} bæti.`];
+  const stærð = niðurstaða.brotliSkráarstærð ?? Bun.file(niðurstaða.brotliSlóð).size;
+  return [
+    `Brotli-skrá skrifuð í ${niðurstaða.brotliSlóð}: ${stærð} bæti.`,
+    ...(niðurstaða.brotliSha256Slóð === undefined
+      ? []
+      : [`Brotli-fingrafar skrifað í ${niðurstaða.brotliSha256Slóð}.`]),
+  ];
 }
 
 async function keyra(): Promise<void> {
@@ -546,13 +577,14 @@ async function keyra(): Promise<void> {
   if (viðföng.skipun === "bæta-vísum") {
     const niðurstaða = await bætaVísumViðSqlite(viðföng.gagnagrunnsslóð, {
       þjappa: viðföng.þjappa,
+      framvinda: (skilaboð) => console.error(skilaboð),
     });
     console.log(
       [
         `Bætti vísum við ${niðurstaða.slóð}.`,
         `${niðurstaða.skráarstærð} bæti, sha256 ${niðurstaða.sha256}.`,
         `Fingrafar skrifað í ${niðurstaða.sha256Slóð}.`,
-        ...lýsaBrotli(niðurstaða.brotliSlóð),
+        ...lýsaBrotli(niðurstaða),
         `Tók ${Math.round(performance.now() - byrjun)} ms.`,
       ].join("\n"),
     );
@@ -573,7 +605,7 @@ async function keyra(): Promise<void> {
       `Vísar: ${niðurstaða.vísar ? "já" : "nei"}.`,
       `${niðurstaða.skráarstærð} bæti, sha256 ${niðurstaða.sha256}.`,
       `Fingrafar skrifað í ${niðurstaða.sha256Slóð}.`,
-      ...lýsaBrotli(niðurstaða.brotliSlóð),
+      ...lýsaBrotli(niðurstaða),
       `Tók ${Math.round(performance.now() - byrjun)} ms.`,
     ].join("\n"),
   );

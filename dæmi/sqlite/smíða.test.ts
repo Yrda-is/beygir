@@ -57,15 +57,32 @@ describe("SQLite-dæmi", () => {
     const mappa = búaTilBráðabirgðamöppu(bráðabirgðamöppur, "beygir-sqlite-");
     const inntaksslóð = await skrifaPrófskrá(mappa);
     const úttaksslóð = join(mappa, "beygir.sqlite");
+    const framvinda: string[] = [];
 
-    const niðurstaða = await smíðaSqlite({ inntaksslóð, úttaksslóð, þjappa: true });
+    const niðurstaða = await smíðaSqlite({
+      inntaksslóð,
+      úttaksslóð,
+      þjappa: true,
+      framvinda: (skilaboð) => framvinda.push(skilaboð),
+    });
 
     expect(niðurstaða.fjöldiUppflettiorða).toBe(2);
     expect(niðurstaða.fjöldiBeyginga).toBe(3);
+    expect(framvinda).toEqual([
+      `SQLite-gagnagrunnur skrifaður; þjappa ${úttaksslóð} með Brotli...`,
+    ]);
     expect(existsSync(úttaksslóð)).toBe(true);
     expect(existsSync(`${úttaksslóð}.sha256`)).toBe(true);
+    expect(readFileSync(`${úttaksslóð}.sha256`, "utf8")).toBe(
+      `${await reiknaSha256Hex(úttaksslóð)}  beygir.sqlite\n`,
+    );
     expect(niðurstaða.brotliSlóð).toBe(`${úttaksslóð}.br`);
+    expect(niðurstaða.brotliSha256Slóð).toBe(`${úttaksslóð}.br.sha256`);
     expect(existsSync(niðurstaða.brotliSlóð!)).toBe(true);
+    expect(existsSync(niðurstaða.brotliSha256Slóð!)).toBe(true);
+    expect(readFileSync(niðurstaða.brotliSha256Slóð!, "utf8")).toBe(
+      `${await reiknaSha256Hex(niðurstaða.brotliSlóð!)}  beygir.sqlite.br\n`,
+    );
     expect(
       brotliDecompressSync(readFileSync(niðurstaða.brotliSlóð!)).equals(readFileSync(úttaksslóð)),
     ).toBe(true);

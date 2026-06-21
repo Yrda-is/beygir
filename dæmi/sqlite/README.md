@@ -24,9 +24,17 @@ eigið fingrafar í `lýsigögn`; þar eru hins vegar fingraför gagnaskrár Bey
 upprunalegs Kristínarsniðs.
 
 Setja má `--þjappa` með smíði eða `--bæta-vísum` til að skrifa
-`beygir.sqlite.br`. GitHub-útgáfur birta grunninn án vísa bæði sem
-`beygir.sqlite` og `beygir.sqlite.br`; `.sha256`-hliðarskráin á við
-óþjöppuðu SQLite-skrána.
+`beygir.sqlite.br`. Tilbúinn grunn án vísa má sækja úr
+[GitHub-útgáfum verkefnisins](https://github.com/Yrda-is/beygir/releases) bæði
+sem `beygir.sqlite` og `beygir.sqlite.br`. `beygir.sqlite.sha256` á við
+óþjöppuðu skrána og `beygir.sqlite.br.sha256` á við Brotli-skrána.
+
+`Gefa út SQLite`-keyrslan hleður sömu skrám líka upp sem artifact svo hægt sé að
+sækja þær beint af workflow-keyrslunni. Í GitHub CLI má sækja artifactið með:
+
+```sh
+gh run download <run-id> -n beygir-sqlite-<útgáfa>
+```
 
 ## Fyrirspurnir
 
@@ -78,8 +86,8 @@ keyrt.
 ## Stærð og vísar
 
 Með núverandi gögnum mældist óþjappað SQLite-úttak um 283 MiB án vísa og um
-824 MiB með vísum. Brotli með þjöppunarstillingu á 9 gaf um 48 MiB án vísa og
-um 132 MiB með vísum. Ath. þó að þessar tölur eru aðeins viðmið.
+824 MiB með vísum. Brotli með þjöppunarstillingu á 9 gaf um 47 MiB án vísa og
+um 129 MiB með vísum. Ath. þó að þessar tölur eru aðeins viðmið.
 
 Vísarnir skipta miklu fyrir uppflettingar sem ekki fylgja aðallykli. Á sömu vél
 mældist miðgildi til dæmis:
