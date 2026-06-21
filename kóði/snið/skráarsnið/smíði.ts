@@ -6,12 +6,12 @@ import {
   FÆRSLUSNIÐ,
   SMÁSTRENGJASNIÐ,
   SNIÐFASTAR,
-  type Bætafasta,
+  type Bætafasti,
   type Bútlýsing,
   type Færslureitur,
   type Færslusnið,
   type Reitagerð,
-  type Sniðfasta,
+  type Sniðfasti,
   type Smástrengjasnið,
 } from "./snið";
 
@@ -32,7 +32,7 @@ const STÆRÐ_TÖLUREITA: Record<Tölureitagerð, number> = {
   u64: 8,
 };
 
-function kóðaBætafasta(fasti: Bætafasta): Uint8Array {
+function bætafastiSemBæti(fasti: Bætafasti): Uint8Array {
   return UTF8_KÓÐARI.encode(fasti.texti);
 }
 
@@ -51,9 +51,9 @@ function hex(gildi: number, breidd = 8): string {
   return `0x${gildi.toString(16).padStart(breidd, "0")}`;
 }
 
-function fastagildi(fasti: Sniðfasta): string {
+function fastagildi(fasti: Sniðfasti): string {
   if ("texti" in fasti) {
-    const bæti = [...kóðaBætafasta(fasti)].map((gildi) => hex(gildi, 2)).join(", ");
+    const bæti = [...bætafastiSemBæti(fasti)].map((gildi) => hex(gildi, 2)).join(", ");
     return `new Uint8Array([${bæti}])`;
   }
   return fasti.gildi > 0xffff ? hex(fasti.gildi) : String(fasti.gildi);
@@ -65,7 +65,7 @@ function staðfestaBútamerki(merki: string): void {
   }
 }
 
-function staðfestaFastasnið(fastar: readonly Sniðfasta[]): void {
+function staðfestaFastasnið(fastar: readonly Sniðfasti[]): void {
   const séð = new Set<string>();
   for (const fasti of fastar) {
     if (séð.has(fasti.heiti)) {
@@ -104,7 +104,7 @@ function reiknaReiti(snið: Færslusnið): ReiturMeðHliðrun[] {
       throw new Error(`${snið.heiti}: reiturinn ${reitur.heiti} er tvískráður.`);
     }
     if (reitur.gerð === "töfra") {
-      const fastalengd = kóðaBætafasta(reitur.fasti).byteLength;
+      const fastalengd = bætafastiSemBæti(reitur.fasti).byteLength;
       if (fastalengd === 0) {
         throw new Error(`${snið.heiti}.${reitur.heiti}: töfrastrengur má ekki vera tómur.`);
       }
@@ -127,7 +127,7 @@ function stærðReits(reitur: Færslureitur): number {
     case "bæti":
       return reitur.stærð.gildi;
     case "töfra":
-      return kóðaBætafasta(reitur.fasti).byteLength;
+      return bætafastiSemBæti(reitur.fasti).byteLength;
   }
 }
 

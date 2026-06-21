@@ -4,13 +4,13 @@ export interface Tölufasti {
   readonly útflutt?: boolean;
 }
 
-export interface Bætafasta {
+export interface Bætafasti {
   readonly heiti: string;
   readonly texti: string;
   readonly útflutt?: boolean;
 }
 
-export type Sniðfasta = Tölufasti | Bætafasta;
+export type Sniðfasti = Tölufasti | Bætafasti;
 
 export type Reitagerð = "u16" | "u32" | "u64" | "bæti" | "töfra";
 
@@ -32,7 +32,7 @@ export interface Bætareitur extends Grunnreitur {
 
 export interface Töfrareitur extends Grunnreitur {
   readonly gerð: "töfra";
-  readonly fasti: Bætafasta;
+  readonly fasti: Bætafasti;
   readonly villa: string;
 }
 
@@ -73,7 +73,7 @@ function fasti(heiti: string, gildi: number, útflutt?: boolean): Tölufasti {
   return útflutt === undefined ? { heiti, gildi } : { heiti, gildi, útflutt };
 }
 
-function bætafasta(heiti: string, texti: string, útflutt?: boolean): Bætafasta {
+function bætafasti(heiti: string, texti: string, útflutt?: boolean): Bætafasti {
   return útflutt === undefined ? { heiti, texti } : { heiti, texti, útflutt };
 }
 
@@ -93,7 +93,7 @@ function bæti(heiti: string, stærð: Tölufasti, villuheiti: string): Bætarei
   return { heiti, gerð: "bæti", stærð, villuheiti, íViðmóti: true };
 }
 
-function töfra(fasti: Bætafasta, villa: string): Töfrareitur {
+function töfrareitur(fasti: Bætafasti, villa: string): Töfrareitur {
   return { heiti: "töfrastrengur", gerð: "töfra", fasti, villa, íViðmóti: false };
 }
 
@@ -148,10 +148,10 @@ function bútur(heiti: string, merki: string, lýsing: string): Bútlýsing {
   return { fasti: `BÚTAMERKI_${heiti}`, merki, lýsing };
 }
 
-const TÖFRASTRENGUR = bætafasta("TÖFRASTRENGUR", "BEYGIR01");
-const BSNF_TÖFRASTRENGUR = bætafasta("BSNF_TÖFRASTRENGUR", "BSNF");
-const DFSA_TÖFRASTRENGUR = bætafasta("DFSA_TÖFRASTRENGUR", "DFSA");
-const BAFL_TÖFRASTRENGUR = bætafasta("BAFL_TÖFRASTRENGUR", "BAFL");
+const TÖFRASTRENGUR = bætafasti("TÖFRASTRENGUR", "BEYGIR01");
+const BSNF_TÖFRASTRENGUR = bætafasti("BSNF_TÖFRASTRENGUR", "BSNF");
+const DFSA_TÖFRASTRENGUR = bætafasti("DFSA_TÖFRASTRENGUR", "DFSA");
+const BAFL_TÖFRASTRENGUR = bætafasti("BAFL_TÖFRASTRENGUR", "BAFL");
 
 const STÆRÐ_U32_BÆTA = fasti("STÆRÐ_U32_BÆTA", 4);
 const LENGD_SHA256_FINGRAFARS = fasti("LENGD_SHA256_FINGRAFARS", 32);
@@ -160,7 +160,7 @@ export const FÆRSLUSNIÐ = [
   færsla(
     "Bútasafnshaussfærsla",
     [
-      töfra(TÖFRASTRENGUR, "Rangur töfrastrengur í bútaskrá."),
+      töfrareitur(TÖFRASTRENGUR, "Rangur töfrastrengur í bútaskrá."),
       u32("haussstærð"),
       u32("fjöldiBúta"),
       u32("frátekið"),
@@ -183,7 +183,7 @@ export const FÆRSLUSNIÐ = [
     skrifaFall: "skrifaMarkamaskafærslu",
   }),
   færsla("Gagnaskrármeta", [
-    töfra(BSNF_TÖFRASTRENGUR, "Gagnaskrá: rangur META-töfrastrengur, ekki BSNF."),
+    töfrareitur(BSNF_TÖFRASTRENGUR, "Gagnaskrá: rangur META-töfrastrengur, ekki BSNF."),
     u16("útgáfa"),
     u16("frátekið"),
   ]),
@@ -193,7 +193,7 @@ export const FÆRSLUSNIÐ = [
     bæti("sha256", LENGD_SHA256_FINGRAFARS, "SHA-256 fingrafar"),
   ]),
   færsla("Dafsahaus", [
-    töfra(DFSA_TÖFRASTRENGUR, "Rangur DFSA-töfrastrengur."),
+    töfrareitur(DFSA_TÖFRASTRENGUR, "Rangur DFSA-töfrastrengur."),
     u32("hnútafjöldi"),
     u32("leggjafjöldi"),
     u32("rótarvísir"),
@@ -214,7 +214,7 @@ export const FÆRSLUSNIÐ = [
   færsla("Tilvikahaus", [u32("fjöldiAkkera")]),
   færsla("Textaaukahaus", [u32("fjöldi")]),
   færsla("Afleiðsluhaus", [
-    töfra(BAFL_TÖFRASTRENGUR, "Afleiðsluskrá: rangur töfrastrengur, ekki BAFL."),
+    töfrareitur(BAFL_TÖFRASTRENGUR, "Afleiðsluskrá: rangur töfrastrengur, ekki BAFL."),
     u16("útgáfa"),
     u16("frátekið"),
     u32("heildarlengd"),
@@ -228,7 +228,7 @@ export const SMÁSTRENGJASNIÐ: Smástrengjasnið = {
   stærðHliðrunar: fasti("STÆRÐ_SMÁSTRENGJATÖFLU_HLIÐRUNAR", 4, false),
 };
 
-export const SNIÐFASTAR: readonly Sniðfasta[] = [
+export const SNIÐFASTAR: readonly Sniðfasti[] = [
   TÖFRASTRENGUR,
   BSNF_TÖFRASTRENGUR,
   DFSA_TÖFRASTRENGUR,
