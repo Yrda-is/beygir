@@ -4,7 +4,6 @@ import { randomUUID } from "node:crypto";
 import { mkdir, open, rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { brotliCompressSync, constants as zlibFastar } from "node:zlib";
 import { lesaKristínarsniðslínur } from "../kóði/kristínarsnið/innlestur";
 import { bætiSemHex } from "../kóði/snið/bitar";
 import {
@@ -37,11 +36,11 @@ import {
   type SmíðaTölfræði,
   type SmíðaValkostir,
 } from "../kóði/snið/smíði";
+import { þjappaBrotli } from "./brotli";
 
 const RÓT = resolve(import.meta.dir, "..");
 const NOTKUN =
   "Notkun: bun run ./skriftur/smíða-gagnaskrá.ts [kristínarsniðsslóð] [--út mappa] [--þjappa]";
-const BROTLI_GLUGGI = 24;
 
 const NAUÐSYNLEG_BÚTAMERKI = [
   BÚTAMERKI_META,
@@ -199,16 +198,6 @@ export function staðfestaSmíðaðaGagnaskrá(skrá: Uint8Array): void {
   if (meta.útgáfa !== GAGNASKRÁRÚTGÁFA || meta.frátekið !== 0) {
     throw new Error(`Ógilt META í gagnaskrá: útgáfa ${meta.útgáfa}, frátekið ${meta.frátekið}.`);
   }
-}
-
-function þjappaBrotli(skrá: Uint8Array): Uint8Array {
-  return brotliCompressSync(skrá, {
-    params: {
-      [zlibFastar.BROTLI_PARAM_QUALITY]: zlibFastar.BROTLI_MAX_QUALITY,
-      [zlibFastar.BROTLI_PARAM_LGWIN]: BROTLI_GLUGGI,
-      [zlibFastar.BROTLI_PARAM_SIZE_HINT]: skrá.length,
-    },
-  });
 }
 
 export async function skrifaSmíðaðaGagnaskrá(
