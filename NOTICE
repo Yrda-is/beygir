@@ -1,28 +1,49 @@
 Beygir
 Copyright 2026 Haukur Páll Hallvarðsson
 
+Gögn þriðja aðila
+
+Pakkinn inniheldur gögn sem eru leidd af Beygingarlýsingu íslensks nútímamáls
+(BÍN). BÍN-gögnin eru ekki samin af höfundum Beygis og eru ekki eign þeirra;
+þeim er endurdreift hér í afleiddu formi samkvæmt leyfi upprunagagnanna,
+CC BY-SA 4.0.
+
+Rétthafatilvísun, uppruni, leyfi og lýsing á breytingum BÍN-afleiddu gagnanna
+eru í GÖGN-OG-LEYFI.md.
+
 Ásetningur
 
 Beygir er gefinn út sem opinn hugbúnaður til að styðja við íslenska máltækni,
 íslenskt málsamfélag og lifandi notkun íslenskrar tungu í stafrænum kerfum.
 
-Það er í anda verkefnisins að nota, breyta og dreifa hugbúnaðinum til verka sem
-styrkja íslensku, bæta aðgengi að máltæknigögnum eða auðvelda fólki og vélum að
-vinna með íslenskt mál.
+Það er í anda verkefnisins að nota, breyta og dreifa frumkóðanum til verka sem
+styrkja íslensku, bæta aðgengi að máltæknigögnum eða auðvelda fólki og vélum
+að vinna með íslenskt mál.
 
-Þessi yfirlýsing er ekki leyfisskilyrði. Hún lýsir tilgangi verkefnisins, en
-réttindi til notkunar, breytinga og dreifingar fara eftir Apache License 2.0 í
-LICENSE.
+Þessi yfirlýsing er ekki leyfisskilyrði. Hún lýsir tilgangi verkefnisins.
+Réttindi til notkunar, breytinga og dreifingar frumkóðans fara eftir Apache
+License 2.0 í LICENSE. Réttindi til notkunar og dreifingar BÍN-afleiddu
+gagnanna fara eftir CC BY-SA 4.0, eins og lýst er í GÖGN-OG-LEYFI.md.
+
+Third-party data
+
+This package includes data derived from Beygingarlýsing íslensks nútímamáls
+(BÍN). The BÍN data is not authored or owned by the Beygir authors; it is
+redistributed here in derived form under the upstream data license, CC BY-SA 4.0.
+
+Attribution, source, license, and modification notes for the BÍN-derived data
+are in GÖGN-OG-LEYFI.md.
 
 Intent
 
 Beygir is released as open software to support Icelandic language technology, the
 Icelandic language community, and the living use of Icelandic in digital systems.
 
-Use, modification, and redistribution of this software for work that strengthens
+Use, modification, and redistribution of this source code for work that strengthens
 Icelandic, improves access to language technology data, or makes it easier for
 people and machines to work with Icelandic are in the spirit of the project.
 
 This statement is not a license condition. It describes the purpose of the
-project; rights to use, modify, and distribute the software are governed by the
-Apache License 2.0 in LICENSE.
+project. Rights to use, modify, and distribute the source code are governed by
+the Apache License 2.0 in LICENSE. Rights to use and redistribute BÍN-derived
+data are governed by CC BY-SA 4.0, as described in GÖGN-OG-LEYFI.md.
