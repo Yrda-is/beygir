@@ -139,9 +139,12 @@ bun run ./dæmi/sqlite/smíða.ts .gögn/beygir.bin .gögn/beygir.sqlite
 SQLite-gagnagrunn með töflunum `uppflettiorð`, `beygingar` og `lýsigögn`, auk
 sýnarinnar `kristínarsnið`. Með `--án-vísa` má smíða minni grunnskrá og
 `smíða.ts --bæta-vísum` bætir vísum við. Tilbúinn grunn án vísa má einnig sækja
-úr [GitHub-útgáfum verkefnisins](https://github.com/Yrda-is/beygir/releases) sem
-`beygir.sqlite` eða `beygir.sqlite.br`, ásamt SHA-256 hliðarskrám og
-leyfisupplýsingum. Nánari lýsing á sniði, vísum og mörkum varðveislu er í
+úr nýjustu GitHub-útgáfu verkefnisins sem
+[`beygir.sqlite`](https://github.com/Yrda-is/beygir/releases/latest/download/beygir.sqlite)
+eða
+[`beygir.sqlite.br`](https://github.com/Yrda-is/beygir/releases/latest/download/beygir.sqlite.br),
+ásamt SHA-256 hliðarskrám og leyfisupplýsingum. Nánari lýsing á sniði og vísum
+er í
 [`dæmi/sqlite/README.md`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/sqlite/README.md).
 
 [`dæmi/vefur/index.html`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/vefur/index.html) er dæmi um notkun í vafra. Það

@@ -82,6 +82,18 @@ jobs:
           GAGNASKRA_SLOD: .gögn/beygir.bin
         run: bun run node:reykpróf
 
+      - name: Smíða SQLite-gagnagrunn
+        run: bun run ./dæmi/sqlite/smíða.ts .gögn/beygir.bin .gögn/beygir.sqlite --án-vísa --þjappa
+
+      - name: Staðfesta SQLite-gögn
+        run: |
+          ls -lh .gögn/beygir.sqlite .gögn/beygir.sqlite.br .gögn/beygir.sqlite.sha256 .gögn/beygir.sqlite.br.sha256
+          cat .gögn/beygir.sqlite.sha256
+          cat .gögn/beygir.sqlite.br.sha256
+          cd .gögn
+          sha256sum -c beygir.sqlite.sha256
+          sha256sum -c beygir.sqlite.br.sha256
+
       - name: Skrá útgáfuupplýsingar gagnaskrár
         run: |
           bun -e 'import { opnaBeygi } from "./kóði/beygir/gagnaskrá.ts"; using beygir = opnaBeygi({ slóð: ".gögn/beygir.bin" }); await Bun.write(".gögn/uppruni.json", `${JSON.stringify(beygir.staða().uppruni, null, 2)}\n`);'
@@ -94,6 +106,10 @@ jobs:
           cp .gögn/beygir.bin .gögn/útgáfa/beygir.bin
           cp .gögn/beygir.bin.br .gögn/útgáfa/beygir.bin.br
           cp .gögn/beygir.bin.sha256 .gögn/útgáfa/beygir.bin.sha256
+          cp .gögn/beygir.sqlite .gögn/útgáfa/beygir.sqlite
+          cp .gögn/beygir.sqlite.br .gögn/útgáfa/beygir.sqlite.br
+          cp .gögn/beygir.sqlite.sha256 .gögn/útgáfa/beygir.sqlite.sha256
+          cp .gögn/beygir.sqlite.br.sha256 .gögn/útgáfa/beygir.sqlite.br.sha256
           cp .gögn/uppruni.json .gögn/útgáfa/uppruni.json
           cp LICENSE .gögn/útgáfa/LICENSE
           cp NOTICE .gögn/útgáfa/NOTICE
@@ -140,5 +156,12 @@ jobs:
             .gögn/beygir.bin \
             .gögn/beygir.bin.br \
             .gögn/beygir.bin.sha256 \
+            .gögn/beygir.sqlite \
+            .gögn/beygir.sqlite.br \
+            .gögn/beygir.sqlite.sha256 \
+            .gögn/beygir.sqlite.br.sha256 \
             .gögn/uppruni.json \
+            .gögn/útgáfa/GÖGN-OG-LEYFI.md \
+            .gögn/útgáfa/LICENSE \
+            .gögn/útgáfa/NOTICE \
             --repo "$GITHUB_REPOSITORY"
