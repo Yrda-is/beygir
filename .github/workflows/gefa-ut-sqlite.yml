@@ -85,7 +85,7 @@ jobs:
           cp NOTICE sqlite-útgáfa/NOTICE
 
       - name: Hlaða upp SQLite-gögnum sem artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: beygir-sqlite-${{ inputs.version }}
           path: sqlite-útgáfa/
