@@ -24,17 +24,16 @@ eigið fingrafar í `lýsigögn`; þar eru hins vegar fingraför gagnaskrár Bey
 upprunalegs Kristínarsniðs.
 
 Setja má `--þjappa` með smíði eða `--bæta-vísum` til að skrifa
-`beygir.sqlite.br`. Tilbúinn grunn án vísa má sækja úr
-[GitHub-útgáfum verkefnisins](https://github.com/Yrda-is/beygir/releases) bæði
-sem `beygir.sqlite` og `beygir.sqlite.br`. `beygir.sqlite.sha256` á við
-óþjöppuðu skrána og `beygir.sqlite.br.sha256` á við Brotli-skrána.
+`beygir.sqlite.br`. Tilbúinn grunn án vísa má sækja úr nýjustu GitHub-útgáfu
+verkefnisins:
 
-`Gefa út SQLite`-keyrslan hleður sömu skrám líka upp sem artifact svo hægt sé að
-sækja þær beint af workflow-keyrslunni. Í GitHub CLI má sækja artifactið með:
+- [`beygir.sqlite`](https://github.com/Yrda-is/beygir/releases/latest/download/beygir.sqlite)
+- [`beygir.sqlite.sha256`](https://github.com/Yrda-is/beygir/releases/latest/download/beygir.sqlite.sha256)
+- [`beygir.sqlite.br`](https://github.com/Yrda-is/beygir/releases/latest/download/beygir.sqlite.br)
+- [`beygir.sqlite.br.sha256`](https://github.com/Yrda-is/beygir/releases/latest/download/beygir.sqlite.br.sha256)
 
-```sh
-gh run download <run-id> -n beygir-sqlite-<útgáfa>
-```
+`beygir.sqlite.sha256` á við óþjöppuðu skrána og `beygir.sqlite.br.sha256` á við
+Brotli-skrána.
 
 ## Fyrirspurnir
 
