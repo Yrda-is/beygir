@@ -45,3 +45,5 @@ Breytingar:
 Fingrafarið í `.gögn/beygir.bin.sha256` er SHA-256 af óþjöppuðu
 Beygir-gagnaskránni (`beygir.bin`) í þessari útgáfu pakkans. Upprunafingrafar
 Kristínarsniðs er geymt í lýsigögnum gagnaskrárinnar og er annað fingrafar.
+SQLite-útgáfugögn nota samsvarandi hliðarskrár: `beygir.sqlite.sha256` fyrir
+óþjöppuðu SQLite-skrána og `beygir.sqlite.br.sha256` fyrir Brotli-skrána.
