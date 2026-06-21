@@ -4,8 +4,15 @@ https://www.apache.org/licenses/
 
 Copyright 2026 Haukur Páll Hallvarðsson
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
+Scope note: This Apache License 2.0 applies to the Beygir source code and
+project material, except where other material is separately identified.
+BÍN-derived data in this package is not authored or owned by the Beygir authors;
+it is redistributed in derived form under the upstream CC BY-SA 4.0 license.
+See GÖGN-OG-LEYFI.md for BÍN attribution, source, license, and
+modification notes.
+
+The Beygir source code is licensed under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
     https://www.apache.org/licenses/LICENSE-2.0

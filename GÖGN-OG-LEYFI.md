@@ -1,6 +1,8 @@
 # Gögn og leyfi
 
-Þessi hirsla inniheldur bæði frumkóða og afleidd gögn. Leyfin skiptast þannig:
+Þessi hirsla inniheldur bæði frumkóða og afleidd gögn. BÍN-gögnin eru frá
+þriðja aðila og þeim er endurdreift hér í afleiddu formi; þau eru ekki samin af
+höfundum Beygis og eru ekki eign þeirra. Leyfin skiptast þannig:
 
 - Frumkóði hirslunnar er undir Apache License 2.0.
 - Gagnaskrá pakkans og önnur gögn sem eru leidd af BÍN-gögnum eru ekki undir
@@ -16,7 +18,8 @@ tiltekið Kristínarsniði (`KRISTINsnid.csv`) úr Mímisbrunni BÍN.
 
 - Uppruni: [BÍN, Mímisbrunnur](https://bin.arnastofnun.is/gogn/mimisbrunnur/)
 - Vefur BÍN: [https://bin.arnastofnun.is](https://bin.arnastofnun.is)
-- Leyfi: [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/deed.is)
+- Leyfi: [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/deed.is),
+  Creative Commons Attribution-ShareAlike 4.0 International
 
 Rétthafatilvísun gagna:
 
