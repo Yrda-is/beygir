@@ -130,7 +130,17 @@ bun run ./dæmi/beygingartafla/beygingartafla.ts hestur
 
 # Greinir uppflettiorð í texta
 bun run ./dæmi/lemmari/lemmari.ts Það mælti mín móðir
+
+# Smíðar SQLite-gagnagrunn fyrir almennar SQL-fyrirspurnir
+bun run ./dæmi/sqlite/smíða.ts .gögn/beygir.bin .gögn/beygir.sqlite
 ```
+
+[`dæmi/sqlite/smíða.ts`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/sqlite/smíða.ts) smíðar
+SQLite-gagnagrunn með töflunum `uppflettiorð`, `beygingar` og `lýsigögn`, auk
+sýnarinnar `kristínarsnið`. Með `--án-vísa` má smíða minni grunnskrá og
+`smíða.ts --bæta-vísum` bætir vísum við. Nánari lýsing á sniði, vísum og mörkum
+varðveislu er í
+[`dæmi/sqlite/README.md`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/sqlite/README.md).
 
 [`dæmi/vefur/index.html`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/vefur/index.html) er dæmi um notkun í vafra. Það
 notar `@yrda/beygir/vefur`, sækir tvíundargagnaskrána `.gögn/beygir.bin` með
