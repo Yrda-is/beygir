@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, test } from "bun:test";
-import { KristínarsniðSkema } from "../kóði/kristínarsnið/skema";
+import { fullgildaKristínarsnið } from "../kóði/kristínarsnið/fullgilding";
 import {
   búaTilBráðabirgðamöppu,
   geymaAðeinsBrotliGagnaskrá,
@@ -21,7 +21,7 @@ describe("smíðihjálp", () => {
       mark: "ÞFET",
     });
 
-    expect(KristínarsniðSkema.safeParse(færsla).success).toBe(true);
+    expect(fullgildaKristínarsnið(færsla).tókst).toBe(true);
     expect(færsla.orð).toBe("kona");
     expect(færsla.beygingarmynd).toBe("konu");
   });
@@ -29,7 +29,7 @@ describe("smíðihjálp", () => {
   test("býr til lágmarkslínu með tómum valkvæðum strengjum", () => {
     const færsla = lágmarkslína({ málfræði: "setn", aukafletta: "auka" });
 
-    expect(KristínarsniðSkema.safeParse(færsla).success).toBe(true);
+    expect(fullgildaKristínarsnið(færsla).tókst).toBe(true);
     expect(færsla.málsniðOrðs).toBe("");
     expect(færsla.málfræði).toBe("setn");
     expect(færsla.málsniðBeygingarmyndar).toBe("");

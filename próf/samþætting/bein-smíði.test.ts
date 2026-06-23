@@ -13,7 +13,7 @@ import { lesaGagnaskrármeta, lesaUpprunahaus } from "../../kóði/snið/færslu
 import { lesaHausOgBútaskrá, sækjaBút, skrifaÍlát } from "../../kóði/snið/ilát";
 import { lesaSmástrengjatöflu } from "../../kóði/snið/smástrengjatöflur";
 import { GAGNASKRÁRÚTGÁFA, smíðaÚrKristínarsniði } from "../../kóði/snið/smíði";
-import type { Kristínarsnið } from "../../kóði/kristínarsnið/skema";
+import type { Kristínarsnið } from "../../kóði/kristínarsnið/snið";
 import { kristínarsniðsfærsla } from "../smíðihjálp";
 
 const BREIÐUR_BÚTUR = [

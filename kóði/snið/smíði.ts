@@ -1,4 +1,4 @@
-import type { Kristínarsnið } from "../kristínarsnið/skema";
+import type { Kristínarsnið } from "../kristínarsnið/snið";
 import { raðaDafsa } from "./dafsa-röðun";
 import {
   GAGNASKRÁRÚTGÁFA,
@@ -26,7 +26,7 @@ import { smíðaTextaauka } from "./smiður/smíði/textaaukar";
 const HÁMARK_U32 = 0xffff_ffff;
 
 export { GAGNASKRÁRÚTGÁFA } from "./fastar";
-export type { Kristínarsnið } from "../kristínarsnið/skema";
+export type { Kristínarsnið } from "../kristínarsnið/snið";
 
 export interface SmíðaTölfræði {
   readonly fjöldiForma: number;

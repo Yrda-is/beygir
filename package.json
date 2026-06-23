@@ -99,7 +99,6 @@
     "oxlint": "1.71.0",
     "oxlint-tsgolint": "0.23.0",
     "typedoc": "0.28.19",
-    "typescript": "6.0.2",
-    "zod": "4.3.6"
+    "typescript": "6.0.2"
   }
 }

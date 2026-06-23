@@ -12,7 +12,7 @@ import {
   væntaGildis,
 } from "../../próf/smíðihjálp";
 import type { Afleiðsluhamur, LokanlegurBeygir } from "../snið/viðmót";
-import type { Kristínarsnið } from "../kristínarsnið/skema";
+import type { Kristínarsnið } from "../kristínarsnið/snið";
 
 const bráðabirgðamöppur: string[] = [];
 const upprunalegGagnaskrárslóð = process.env["GAGNASKRA_SLOD"];

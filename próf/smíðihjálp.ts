@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { brotliCompressSync } from "node:zlib";
-import type { Kristínarsnið } from "../kóði/kristínarsnið/skema";
+import type { Kristínarsnið } from "../kóði/kristínarsnið/snið";
 
 const SJÁLFGEFIN_PRÓFFÆRSLA = {
   orð: "hestur",
