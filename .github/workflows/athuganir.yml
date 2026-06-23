@@ -34,9 +34,14 @@ jobs:
       - run: bun run lint
       - run: bun run tsc
       - run: bun run dauður-kóði
+      - run: bun run smíða:dreifingu
+        if: github.event_name == 'push'
+      - run: bun test
+        if: github.event_name == 'push'
 
   samthaetting:
     name: Samþættingarpróf
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -105,6 +110,7 @@ jobs:
 
   pakkning:
     name: Pökkun
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
