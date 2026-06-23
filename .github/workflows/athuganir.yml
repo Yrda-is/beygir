@@ -87,11 +87,12 @@ jobs:
             .gögn/KRISTINsnid.csv.br
             .gögn/KRISTINsnid.csv.sha256sum
           key: ${{ steps.kristinarsnid-lykill.outputs.key }}
-      - name: Smíða og þjappa gagnaskrá
-        run: bun run smíða:gagnaskrá --þjappa
+      - name: Smíða gagnaskrá
+        run: bun run smíða:gagnaskrá
       - name: Staðfesta fulla gagnaskrá
         env:
-          BEYGIR_FULL_PARITY_CSV: .gögn/KRISTINsnid.csv
+          BEYGIR_HEILDARSAMRAEMI_KRISTINARSNID: .gögn/KRISTINsnid.csv
+          BEYGIR_HEILDARSAMRAEMI_GAGNASKRA: .gögn/beygir.bin
         run: bun test próf/samþætting/gagnaskrá-sha.test.ts
       - name: Smíða Node.js dreifingu
         run: bun run smíða:dreifingu

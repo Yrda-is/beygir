@@ -71,7 +71,8 @@ jobs:
 
       - name: Staðfesta fulla gagnaskrá
         env:
-          BEYGIR_FULL_PARITY_CSV: .gögn/KRISTINsnid.csv
+          BEYGIR_HEILDARSAMRAEMI_KRISTINARSNID: .gögn/KRISTINsnid.csv
+          BEYGIR_HEILDARSAMRAEMI_GAGNASKRA: .gögn/beygir.bin
         run: bun test próf/samþætting/gagnaskrá-sha.test.ts
 
       - name: Keyra gæðapróf
