@@ -1,4 +1,4 @@
-import type { Kristínarsnið } from "./skema";
+import type { Kristínarsnið } from "./snið";
 import { þáttaKristínarsniðslínu } from "./þáttun";
 
 async function* lesaTextalínur(slóð: string): AsyncGenerator<string> {

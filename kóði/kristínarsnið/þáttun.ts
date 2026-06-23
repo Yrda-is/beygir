@@ -1,6 +1,5 @@
-import type { ZodError } from "zod";
-import type { Kristínarsnið } from "./skema";
-import { KristínarsniðSkema } from "./skema";
+import { fullgildaKristínarsnið, sníðaVilluboð } from "./fullgilding";
+import type { Kristínarsnið } from "./snið";
 
 // Opinbert Kristínarsnið hefur 15 svið, 9 um uppflettiorð og 6 um beygingarmynd.
 const DÁLKAFJÖLDI = 15;
@@ -47,24 +46,10 @@ export function þáttaKristínarsniðslínu(
     return lína as Kristínarsnið;
   }
 
-  const niðurstaða = KristínarsniðSkema.safeParse(lína);
-  if (!niðurstaða.success) {
-    throw new Error(sníðaVilluboð(niðurstaða.error, línunúmer));
+  const niðurstaða = fullgildaKristínarsnið(lína);
+  if (!niðurstaða.tókst) {
+    throw new Error(sníðaVilluboð(niðurstaða.villa, línunúmer));
   }
 
-  return niðurstaða.data;
-}
-
-function sníðaVilluboð(villa: ZodError, línunúmer: number): string {
-  const fyrstaVandamál = villa.issues[0];
-  if (fyrstaVandamál === undefined) {
-    return `Ógilt Kristínarsnið í línu ${línunúmer}.`;
-  }
-
-  const heiti = fyrstaVandamál.path[0];
-  if (typeof heiti !== "string") {
-    return `Ógilt Kristínarsnið í línu ${línunúmer}.`;
-  }
-
-  return `Ógilt gildi (${heiti}) í línu ${línunúmer}: ${fyrstaVandamál.message}`;
+  return niðurstaða.gildi;
 }

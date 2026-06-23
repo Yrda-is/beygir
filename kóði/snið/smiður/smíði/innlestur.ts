@@ -1,4 +1,4 @@
-import type { Kristínarsnið } from "../../../kristínarsnið/skema";
+import type { Kristínarsnið } from "../../../kristínarsnið/snið";
 import { hreinsaMálfræði } from "../../../málfræði/hreinsun";
 import type { Orðmyndaröð, Smíðisamhengi, Stofnhópur } from "./samhengi";
 

@@ -12,7 +12,7 @@ import {
   lágmarkslína,
 } from "../../próf/smíðihjálp";
 import { bætaVísumViðSqlite, smíðaSqlite } from "./smíða";
-import type { Kristínarsnið } from "../../kóði/kristínarsnið/skema";
+import type { Kristínarsnið } from "../../kóði/kristínarsnið/snið";
 
 const bráðabirgðamöppur: string[] = [];
 
