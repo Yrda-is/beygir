@@ -82,24 +82,24 @@
     "sækja:gögn": "bun run ./skriftur/sækja-kristínarsnið.ts .gögn",
     "test": "bun test",
     "tsc": "bunx --bun tsc --noEmit",
-    "eslint": "bunx --bun eslint .",
-    "prettier:athuga": "bunx --bun prettier --check .",
-    "prettier:laga": "bunx --bun prettier --write .",
+    "oxlint": "bun x --bun oxlint --type-aware .",
+    "innflutningur": "bun run ./skriftur/athuga-innflutning.ts",
+    "lint": "bun run oxlint && bun run innflutningur",
+    "oxfmt:athuga": "bun x --bun oxfmt --check .",
+    "oxfmt:laga": "bun x --bun oxfmt .",
     "dauður-kóði": "bunx --bun knip",
-    "kemba": "bun run smíða:skráarsnið && bun run prettier:laga && bun run eslint && bun run tsc && bun run dauður-kóði && bun run smíða:dreifingu && bun test",
-    "kemba:skoða": "bun run smíða:skráarsnið:athuga && bun run prettier:athuga && bun run eslint && bun run tsc && bun run dauður-kóði && bun run smíða:dreifingu && bun test"
+    "kemba": "bun run smíða:skráarsnið && bun run oxfmt:laga && bun run lint && bun run tsc && bun run dauður-kóði && bun run smíða:dreifingu && bun test",
+    "kemba:skoða": "bun run smíða:skráarsnið:athuga && bun run oxfmt:athuga && bun run lint && bun run tsc && bun run dauður-kóði && bun run smíða:dreifingu && bun test"
   },
   "devDependencies": {
     "@types/bun": "1.3.11",
-    "eslint": "9.39.1",
-    "eslint-import-resolver-typescript": "4.4.4",
-    "eslint-plugin-import": "2.32.0",
     "knip": "6.3.0",
     "mitata": "^1.0.34",
-    "prettier": "3.8.1",
+    "oxfmt": "0.56.0",
+    "oxlint": "1.71.0",
+    "oxlint-tsgolint": "0.23.0",
     "typedoc": "0.28.19",
     "typescript": "6.0.2",
-    "typescript-eslint": "8.58.0",
     "zod": "4.3.6"
   }
 }
