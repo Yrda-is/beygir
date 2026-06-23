@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { format } from "prettier";
+import { format } from "oxfmt";
 import {
   BÚTASNIÐ,
   FÆRSLUSNIÐ,
@@ -434,8 +434,18 @@ export function skrifaSmástrengjahliðrun(sýn: DataView, vísir: number, hlið
 `;
 }
 
+async function sníðaTypescript(slóð: string, efni: string): Promise<string> {
+  const niðurstaða = await format(slóð, efni, { printWidth: 100 });
+  if (niðurstaða.errors.length > 0) {
+    throw new Error(
+      `oxfmt mistókst fyrir ${slóð}: ${niðurstaða.errors.map((villa) => villa.message).join("; ")}`,
+    );
+  }
+  return niðurstaða.code;
+}
+
 async function skrifaEðaAthuga(slóð: string, efni: string, athuga: boolean): Promise<boolean> {
-  const sniðið = await format(efni, { parser: "typescript", printWidth: 100 });
+  const sniðið = await sníðaTypescript(slóð, efni);
   if (!athuga) {
     writeFileSync(slóð, sniðið);
     console.log(`Smíðaði ${slóð}`);

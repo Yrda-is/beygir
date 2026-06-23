@@ -1,0 +1,34 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import"],
+  "ignorePatterns": ["dreifing/**", "node_modules/**", "skjöl/forritaskil/**", ".gögn/**"],
+  "rules": {
+    "typescript/explicit-module-boundary-types": "error",
+    "typescript/no-confusing-void-expression": [
+      "error",
+      {
+        "ignoreArrowShorthand": true
+      }
+    ],
+    "typescript/no-confusing-non-null-assertion": "error",
+    "typescript/no-import-type-side-effects": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-non-null-assertion": "off",
+    "typescript/prefer-for-of": "off",
+    "typescript/restrict-template-expressions": [
+      "error",
+      {
+        "allowNumber": true
+      }
+    ],
+    "import/no-cycle": [
+      "error",
+      {
+        "ignoreExternal": true
+      }
+    ],
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "unicorn/no-new-array": "off"
+  }
+}

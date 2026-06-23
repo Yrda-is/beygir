@@ -30,8 +30,8 @@ jobs:
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
       - run: bun run smíða:skráarsnið:athuga
-      - run: bun run prettier:athuga
-      - run: bun run eslint
+      - run: bun run oxfmt:athuga
+      - run: bun run lint
       - run: bun run tsc
       - run: bun run dauður-kóði
 
