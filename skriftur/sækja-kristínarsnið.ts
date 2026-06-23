@@ -14,8 +14,10 @@ const SJÁLFGEFIN_NIÐURHALSTÍMAMÖRK_MS = 2 * 60_000;
 /*
  * BÍN-uppfærsla byrjar hér: sækja KRISTINsnid.csv.zip frá Árnastofnun, staðfesta
  * með KRISTINsnid.csv.sha256sum úr sömu zip-skrá, keyra síðan
- * `bun run smíða:gagnaskrá .gögn/KRISTINsnid.csv --þjappa` og loks
- * `BEYGIR_FULL_PARITY_CSV=.gögn/KRISTINsnid.csv bun test próf/samþætting/gagnaskrá-sha.test.ts`.
+ * `bun run smíða:gagnaskrá .gögn/KRISTINsnid.csv` og loks
+ * `próf/samþætting/gagnaskrá-sha.test.ts` með
+ * `BEYGIR_HEILDARSAMRAEMI_KRISTINARSNID`; `BEYGIR_HEILDARSAMRAEMI_GAGNASKRA`
+ * má setja ef gagnaskráin er ekki á sjálfgefnu slóðinni.
  */
 interface Viðföng {
   readonly úttaksmappa: string;

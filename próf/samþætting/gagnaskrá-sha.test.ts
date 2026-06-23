@@ -1,15 +1,17 @@
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { expect, test } from "bun:test";
-import { smíðaGagnaskrá } from "../../skriftur/smíða-gagnaskrá";
+import { bætiSemHex } from "../../kóði/snið/bitar";
+import { BÚTAMERKI_UPPRUNI } from "../../kóði/snið/bútamerki";
+import { lesaUpprunahaus } from "../../kóði/snið/færslur";
+import { lesaHausOgBútaskrá, sækjaBút } from "../../kóði/snið/ilát";
+import { staðfestaSmíðaðaGagnaskrá } from "../../skriftur/smíða-gagnaskrá";
 
 interface VæntGagnaskrá {
   readonly sha256: string;
   readonly stærð: number;
 }
 
-const KRISTÍNARSNIÐSSLÓÐ = process.env["BEYGIR_FULL_PARITY_CSV"];
+const KRISTÍNARSNIÐSSLÓÐ = process.env["BEYGIR_HEILDARSAMRAEMI_KRISTINARSNID"];
+const GAGNASKRÁRSLÓÐ = process.env["BEYGIR_HEILDARSAMRAEMI_GAGNASKRA"] ?? ".gögn/beygir.bin";
 const ÞEKKTAR_GAGNASKRÁR = new Map<string, VæntGagnaskrá>([
   [
     "2b098b93445c01bde5d210329201a048055c45d5b7bac30299bd60226f80bf2f",
@@ -38,11 +40,12 @@ async function reiknaSha256(slóð: string): Promise<string> {
 const próf = KRISTÍNARSNIÐSSLÓÐ === undefined ? test.skip : test;
 
 próf(
-  "smíðar fulla gagnaskrá með þekktu SHA-fingrafari",
+  "staðfestir fulla gagnaskrá með þekktu SHA-fingrafari",
   async () => {
     const inntaksslóð = KRISTÍNARSNIÐSSLÓÐ;
+    const gagnaskrárslóð = GAGNASKRÁRSLÓÐ;
     if (inntaksslóð === undefined) {
-      throw new Error("BEYGIR_FULL_PARITY_CSV vantar.");
+      throw new Error("BEYGIR_HEILDARSAMRAEMI_KRISTINARSNID vantar.");
     }
 
     const upprunaSha256 = await reiknaSha256(inntaksslóð);
@@ -54,16 +57,19 @@ próf(
       return;
     }
 
-    const útmappa = await mkdtemp(join(tmpdir(), "beygir-gagnaskra-sha-"));
-    try {
-      const niðurstaða = await smíðaGagnaskrá({ inntaksslóð, útmappa });
+    const gagnaskrá = new Uint8Array(await Bun.file(gagnaskrárslóð).arrayBuffer());
+    staðfestaSmíðaðaGagnaskrá(gagnaskrá);
 
-      expect(niðurstaða.upprunaSha256).toBe(upprunaSha256);
-      expect(niðurstaða.sha256).toBe(vænt.sha256);
-      expect(niðurstaða.skráarstærð).toBe(vænt.stærð);
-    } finally {
-      await rm(útmappa, { force: true, recursive: true });
-    }
+    const haus = lesaHausOgBútaskrá(gagnaskrá);
+    const uppruni = lesaUpprunahaus(
+      new DataView(gagnaskrá.buffer, gagnaskrá.byteOffset, gagnaskrá.byteLength),
+      sækjaBút(haus, BÚTAMERKI_UPPRUNI).hliðrun,
+    );
+
+    expect(bætiSemHex(uppruni.sha256)).toBe(upprunaSha256);
+    expect(Number(uppruni.bæti)).toBe(Bun.file(inntaksslóð).size);
+    expect(await reiknaSha256(gagnaskrárslóð)).toBe(vænt.sha256);
+    expect(gagnaskrá.length).toBe(vænt.stærð);
   },
   120_000,
 );
