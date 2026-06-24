@@ -31,10 +31,6 @@ npm install @yrda/beygir@next
 Beygir notar engin ytri forritasöfn við inningu og því innsetur ofangreint
 aðeins forritasafnið sjálft ásamt gagnaskránni.
 
-Einnig má prófa [dæmið sem keyrir í vafranum](http://beygir.yrda.is/dæmi) (ath.
-að gagnaskráin er sótt og notuð alfarið beint í vafranum, án frekari samskipta
-við bakenda eftir gagnasókn.)
-
 ## Einföld dæmi
 
 ```ts
@@ -68,7 +64,11 @@ const færslur = beygir.finnaBeygingarfærslur("hesti", {
 // [{ orð: "hestur", mark: "ÞGFET" }]
 ```
 
-Sjá einnig [ítarlegri notkunardæmi](#dæmi) útlistuð neðar. Nánari API-skjölun
+Einnig má prófa [dæmið sem keyrir í vafranum](http://beygir.yrda.is/dæmi) (ath.
+að gagnaskráin er sótt og notuð alfarið beint í vafranum, án frekari samskipta
+við bakenda eftir gagnasókn.)
+
+Ítarlegri notkunardæmi eru [útlistuð neðar](#dæmi). Nánari API-skjölun
 er á [beygir.yrda.is](http://beygir.yrda.is).
 
 ## Hugtök
