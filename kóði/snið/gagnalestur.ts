@@ -30,14 +30,13 @@ export interface Gagnauppruni {
   readonly sha256: string;
 }
 
-/**
- * Opnunarkóði gagnaskrár staðfestir samninga milli búta áður en lesarinn fer í
- * heitar leiðir: skyldubútar þurfa að vera til, fastir hausar og frátekin gildi
- * þurfa að vera kanónísk, LBIT.vídd þarf að stemma við DAFB, IDBS-bitafjöldi
- * þarf að stemma við stofnafjölda og öll breytileg svæði þurfa að enda á
- * nákvæmum mörkum.
+/*
+ * Grunnlestur gagnaskrár staðfestir þau mörk sem þarf til að þátta búta örugglega:
+ * skyldubútar þurfa að vera til, fastir hausar þurfa að hafa rétta lengd,
+ * frátekin gildi þurfa að vera núllstillt, LBIT.vídd þarf að stemma við DAFB
+ * og breytileg svæði þurfa að enda á nákvæmum mörkum. Ítarleg tengsl milli
+ * taflna eru staðfest við smíði eða með `Lesari(..., { staðfesta: true })`.
  */
-
 function staðfestaLengd(heiti: string, fengin: number, vænt: number): void {
   if (fengin !== vænt) {
     throw new Error(`${heiti} hefur ranga lengd: ${fengin} bæti, vænti ${vænt}.`);

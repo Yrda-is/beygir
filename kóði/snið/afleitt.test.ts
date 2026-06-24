@@ -39,6 +39,7 @@ describe("snið afleitt", () => {
       expect(Array.from(lesið!.sækja(heiti)!)).toEqual(Array.from(færslur.get(heiti)!));
     }
     expect(lesaAfleitt(skrá, lykill(1))).toBeNull();
+    expect(lesaAfleitt(skrá, null)).not.toBeNull();
   });
 
   test("staðfestir heiti, lengdir og færslumörk safns", () => {

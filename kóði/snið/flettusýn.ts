@@ -1,6 +1,6 @@
 import { BITAFJÖLDI_BÆTIS, IDBS_BLOKK } from "./bitar";
 import { type Dafsaganga, DafsaLesari } from "./dafsa";
-import { sækjaAfleitt, type Afleittsafn } from "./afleitt";
+import { sækjaAfleitt, type AfleittSafn } from "./afleitt";
 import type { Lemmubitasvið } from "./gagnalestur";
 
 interface Flettugöngugögn {
@@ -126,11 +126,17 @@ export class Flettusýn {
   private readonly raðforsumma: Uint32Array;
   private readonly raðirUtanFormmengis: Uint32Array;
   private readonly lyklarUtanFormmengis: readonly Uint8Array[];
-  private readonly afleiðslur: Afleittsafn | undefined;
+  private readonly afleiðslur: AfleittSafn | undefined;
+  private readonly staðfestaAfleiðslur: boolean;
 
   private merktarFormraðir: Uint32Array | undefined;
 
-  constructor(formlyklar: DafsaLesari, svið: Lemmubitasvið, afleiðslur?: Afleittsafn) {
+  constructor(
+    formlyklar: DafsaLesari,
+    svið: Lemmubitasvið,
+    afleiðslur?: AfleittSafn,
+    staðfestaAfleiðslur = true,
+  ) {
     this.formlyklar = formlyklar;
     this.vídd = svið.vídd;
     this.fjöldi = svið.fjöldi;
@@ -140,6 +146,7 @@ export class Flettusýn {
     this.raðirUtanFormmengis = svið.raðirUtanFormmengis;
     this.lyklarUtanFormmengis = svið.lyklarUtanFormmengis;
     this.afleiðslur = afleiðslur;
+    this.staðfestaAfleiðslur = staðfestaAfleiðslur;
   }
 
   undirbúa(): this {
@@ -161,9 +168,16 @@ export class Flettusýn {
       return this.merktarFormraðir;
     }
 
-    const sótt = sækjaAfleitt(this.afleiðslur, "flettur.merktarFormraðir", this.fjöldiMerktra);
+    const sótt = sækjaAfleitt(
+      this.afleiðslur,
+      "flettur.merktarFormraðir",
+      this.fjöldiMerktra,
+      this.staðfestaAfleiðslur,
+    );
     if (sótt !== undefined) {
-      this.staðfestaMerktarFormraðir(sótt);
+      if (this.staðfestaAfleiðslur) {
+        this.staðfestaMerktarFormraðir(sótt);
+      }
       this.merktarFormraðir = sótt;
       return sótt;
     }

@@ -156,6 +156,9 @@ export class Beygir implements LokanlegurBeygir {
   }
 
   undirbúa(): this {
+    if (this.#undirbúið) {
+      return this;
+    }
     this.#sækjaLesara().undirbúa();
     this.#undirbúið = true;
     this.#viðUndirbúning?.();

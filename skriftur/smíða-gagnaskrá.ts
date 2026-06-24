@@ -30,6 +30,7 @@ import {
 } from "../kóði/snið/bútamerki";
 import { lesaGagnaskrármeta } from "../kóði/snið/færslur";
 import { lesaHausOgBútaskrá, sækjaBút, skrifaÍlát, type Bútur } from "../kóði/snið/ilát";
+import { Lesari } from "../kóði/snið/lestur";
 import {
   GAGNASKRÁRÚTGÁFA,
   smíðaÚrKristínarsniði,
@@ -198,6 +199,8 @@ export function staðfestaSmíðaðaGagnaskrá(skrá: Uint8Array): void {
   if (meta.útgáfa !== GAGNASKRÁRÚTGÁFA || meta.frátekið !== 0) {
     throw new Error(`Ógilt META í gagnaskrá: útgáfa ${meta.útgáfa}, frátekið ${meta.frátekið}.`);
   }
+
+  new Lesari(skrá, { staðfesta: true }).undirbúa();
 }
 
 export async function skrifaSmíðaðaGagnaskrá(

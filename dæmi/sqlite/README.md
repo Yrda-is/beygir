@@ -112,7 +112,7 @@ SELECT
   (SELECT COUNT(*) FROM "beygingar") AS "beygingar";
 ```
 
-Gögnin eru þó geymd á stöðluðu Beygir-sniði. Texti er NFC-staðlaður, `málfræði`
-er samræmd og tóm eða núllstillt `millivísun` er geymd sem `NULL`. Þess vegna er
-ekki hægt að endurgera upprunalega `KRISTINsnid.csv` bæti fyrir bæti úr
-SQLite-skránni einni saman.
+Gögnin eru þó geymd á innbyggða gagnaskrársniðinu. Texti er NFC-staðlaður,
+`málfræði` er samræmd og tóm eða núllstillt `millivísun` er geymd sem `NULL`.
+Þess vegna er ekki hægt að endurgera upprunalega `KRISTINsnid.csv` bæti fyrir
+bæti úr SQLite-skránni einni saman.

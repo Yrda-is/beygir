@@ -3,7 +3,8 @@ import { spawnSync } from "node:child_process";
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { skrifaÍlát } from "../snið/ilát";
+import { STÆRÐ_SNIÐHAUSS } from "../snið/fastar";
+import { opnaBútasafn, skrifaÍlát } from "../snið/ilát";
 import { smíðaÚrKristínarsniði } from "../snið/smíði";
 import { opnaBeygiÚrBiðminni, sækjaBeygi } from "./vefur";
 import { lágmarkslína } from "../../próf/smíðihjálp";
@@ -15,6 +16,16 @@ async function smíðaPrófunarskrá(): Promise<Uint8Array> {
     lágmarkslína({ auðkenni: 1, orð: "hestur", beygingarmynd: "hest", mark: "ÞFET" }),
   ]);
   return skrifaÍlát(niðurstaða.bútar);
+}
+
+function bjagaSniðmark(skrá: Uint8Array): Uint8Array {
+  const út = skrá.slice();
+  const snið = opnaBútasafn(út).sýn("SNID");
+  const hliðrun = STÆRÐ_SNIÐHAUSS + 1;
+  const markvísir = 1023;
+  snið[hliðrun] = markvísir & 0xff;
+  snið[hliðrun + 1] = (snið[hliðrun + 1]! & 0xfc) | (markvísir >>> 8);
+  return út;
 }
 
 describe("vefopnari", () => {
@@ -29,6 +40,19 @@ describe("vefopnari", () => {
     });
     expect(beygir.hefur("hestur")).toBe(true);
     expect(beygir.finnaBeygingarfærslur("hest").map((færsla) => færsla.mark)).toEqual(["ÞFET"]);
+  });
+
+  test("staðfestir veflestur sjálfgefið og leyfir traustan hraðham", async () => {
+    const bjagað = bjagaSniðmark(await smíðaPrófunarskrá());
+
+    expect(() => opnaBeygiÚrBiðminni(bjagað)).toThrow(/SNID\[0:0\]\.markvísir/);
+
+    const beygir = opnaBeygiÚrBiðminni(bjagað, { staðfesta: false });
+    try {
+      expect(beygir.snið).toBe("gagnaskrá");
+    } finally {
+      beygir.loka();
+    }
   });
 
   test("sækir gagnaskrá með fetch-samhæfu falli", async () => {

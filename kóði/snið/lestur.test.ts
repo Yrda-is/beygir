@@ -85,6 +85,7 @@ function væntaSkemmdrarAfleiðslu(
     afleitt: {
       sækja: (sóttHeiti) => skemmt.get(sóttHeiti),
     },
+    staðfesta: true,
   });
   expect(() => lesari.undirbúa()).toThrow(mynstur);
 }
@@ -122,7 +123,18 @@ describe("snið lestur", () => {
     expect(lesari.fjöldiOrðmynda).toBe(6);
   });
 
-  test("hafnar SNID-vísum sem vísa út fyrir tengdar töflur við opnun", async () => {
+  test("frestar grunnlestri þar til gagnasvið eru notuð", async () => {
+    const spillt = spillaBút(await smíðaPrófunarskrá(), "DAFB", (bæti) => {
+      bæti[0] = 0;
+    });
+
+    const lesari = new Lesari(spillt);
+
+    expect(lesari.uppruni.línufjöldi).toBe(6);
+    expect(() => lesari.fjöldiForma).toThrow(/DFSA|töfrastreng/);
+  });
+
+  test("hafnar SNID-vísum sem vísa út fyrir tengdar töflur þegar staðfest er", async () => {
     const spillt = spillaBút(await smíðaPrófunarskrá(), "SNID", (bæti) => {
       const hliðrun = STÆRÐ_SNIÐHAUSS + 1;
       const markvísir = 1023;
@@ -130,10 +142,11 @@ describe("snið lestur", () => {
       bæti[hliðrun + 1] = (bæti[hliðrun + 1]! & 0xfc) | (markvísir >>> 8);
     });
 
-    expect(() => new Lesari(spillt)).toThrow(/SNID\[0:0\]\.markvísir/);
+    expect(() => new Lesari(spillt)).not.toThrow();
+    expect(() => new Lesari(spillt, { staðfesta: true })).toThrow(/SNID\[0:0\]\.markvísir/);
   });
 
-  test("hafnar STOF-vísum sem vísa út fyrir tengdar töflur við opnun", async () => {
+  test("hafnar STOF-vísum sem vísa út fyrir tengdar töflur þegar staðfest er", async () => {
     const spillt = spillaBút(await smíðaPrófunarskrá(), "STOF", (bæti) => {
       const fjöldiStofna = new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength).getUint32(
         0,
@@ -148,17 +161,19 @@ describe("snið lestur", () => {
       bæti[orðflokkahliðrun] = 200;
     });
 
-    expect(() => new Lesari(spillt)).toThrow(/STOF\[0\]\.orðflokkur/);
+    expect(() => new Lesari(spillt)).not.toThrow();
+    expect(() => new Lesari(spillt, { staðfesta: true })).toThrow(/STOF\[0\]\.orðflokkur/);
   });
 
-  test("hafnar TAUK-aukaflettuvísum sem vísa út fyrir AUKA-töflu við opnun", async () => {
+  test("hafnar TAUK-aukaflettuvísum sem vísa út fyrir AUKA-töflu þegar staðfest er", async () => {
     const spillt = spillaBút(await smíðaPrófunarskráMeðAukaflettu(), "TAUK", (bæti) => {
       const lesari = new VarintLesari(bæti, STÆRÐ_TEXTAAUKAHAUSS, "TAUK próf");
       lesari.lesa();
       bæti[lesari.staða] = 7;
     });
 
-    expect(() => new Lesari(spillt)).toThrow(/TAUK\[0\]\.aukaflettuvísir/);
+    expect(() => new Lesari(spillt)).not.toThrow();
+    expect(() => new Lesari(spillt, { staðfesta: true })).toThrow(/TAUK\[0\]\.aukaflettuvísir/);
   });
 
   test("undirbýr og losar afleidda vísa", async () => {

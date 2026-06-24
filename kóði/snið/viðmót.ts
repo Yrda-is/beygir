@@ -77,10 +77,14 @@ export type Gagnasnið = "gagnaskrá";
 /**
  * Meðferð afleiddra vísa við opnun.
  *
- * - `"reikna"` leiðir vísana í minni eftir þörfum við notkun.
+ * - `"reikna"` leiðir vísana í minni eftir þörf við notkun.
  * - `"skrá-minni"` les og skrifar hliðarskrá sem afkastabestun milli opnana.
  * - `"skrá-mmap"` er sama leið og `"skrá-minni"`, en notar mmap til að minnka
  *   vinnsluminni þar sem það er stutt. Sá hamur er aðeins tiltækur í Bun.
+ *
+ * Traust opnun sleppir SHA-256-samanburði hliðarskrár við gagnaskrána en opna
+ * skal með `staðfesta: true` þegar hliðarskráin kemur úr sérsmíðuðu eða ótraustu
+ * ferli.
  */
 export type Afleiðsluhamur = "reikna" | "skrá-mmap" | "skrá-minni";
 
@@ -175,6 +179,9 @@ export interface Beygisstaða {
  * innifalin í `r` eða `f`; `m` er aðeins sýnt þegar stök strengsmíði er
  * aðalkostnaður. DAFSA-ganga eftir sjálfum lyklinum er línuleg í `l`; í
  * venjulegri notkun ræður fjöldi heimsóttra niðurstöðuraða mestu um kostnaðinn.
+ * Flækjustig miðar við að nauðsynlegir afleiddir vísar séu þegar til. Fyrsta
+ * kall getur annars þurft að leiða þá út, en `undirbúa()` framkvæmir þann
+ * einskiptiskostnað undir eins.
  */
 export interface Beygir {
   /**
@@ -766,11 +773,14 @@ export interface Beygir {
   greina(orð: string): Greining | null;
 
   /**
-   * Leiðir út alla letivísa lesarans fyrirfram.
+   * Leiðir út alla afleidda vísa lesarans fyrirfram.
    *
    * Þetta getur flýtt fyrstu uppflettingum í langlífu ferli og er einnig notað
    * til að skrifa afleidda hliðarskrá þegar sá hamur er virkur. Aðferðin er
    * samstillt og skilar þessum lesara þegar undirbúningi lýkur.
+   *
+   * Tímaflækja: fyrsta kall er `O(a)`, þar sem `a` er stærð afleiddu vísanna sem
+   * þarf að leiða út eða sækja. Síðari köll eru `O(1)` þar til `losa()` er kallað.
    *
    * @returns Þessi lesari.
    */
@@ -780,7 +790,7 @@ export interface Beygir {
    * Losar afleidda vísa og vinnsluminni sem má endurreikna.
    *
    * Grunngagnaskráin helst opin. Næsta aðgerð sem þarf afleidda vísa leiðir þá
-   * út aftur eftir þörfum. Aðferðin skilar þessum lesara þegar losun lýkur.
+   * út aftur eftir þörf. Aðferðin skilar þessum lesara þegar losun lýkur.
    *
    * @returns Þessi lesari.
    */

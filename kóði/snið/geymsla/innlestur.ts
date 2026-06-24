@@ -6,6 +6,8 @@ import { brotliDecompress, brotliDecompressSync } from "node:zlib";
 const ER_BUN = typeof globalThis.Bun !== "undefined";
 const afþjappaBrotliÓsamstillt = promisify(brotliDecompress);
 
+export type Gagnaskrárbiðminni = ArrayBuffer | ArrayBufferView;
+
 function erBrotliGagnaskrárslóð(slóð: string): boolean {
   return slóð.endsWith(".br");
 }
@@ -30,21 +32,27 @@ export function finnaTiltækaGagnaskrárslóð(slóð: string): string | null {
   return existsSync(brotliSlóð) ? brotliSlóð : null;
 }
 
-export function lesaGagnaskrárbiðminniSamstillt(slóð: string): ArrayBuffer {
+function lesaÓþjappaðSamstillt(slóð: string): Gagnaskrárbiðminni {
+  return ER_BUN ? Bun.mmap(slóð) : semBiðminni(readFileSync(slóð));
+}
+
+function lesaÓþjappaðÓsamstillt(slóð: string): Promise<Gagnaskrárbiðminni> | Gagnaskrárbiðminni {
+  return ER_BUN ? Bun.mmap(slóð) : readFile(slóð).then(semBiðminni);
+}
+
+export function lesaGagnaskrárbiðminniSamstillt(slóð: string): Gagnaskrárbiðminni {
   const raunslóð = finnaTiltækaGagnaskrárslóð(slóð) ?? slóð;
   if (erBrotliGagnaskrárslóð(raunslóð)) {
     return semBiðminni(brotliDecompressSync(readFileSync(raunslóð)));
   }
-  return semBiðminni(readFileSync(raunslóð));
+  return lesaÓþjappaðSamstillt(raunslóð);
 }
 
-export async function lesaGagnaskrárbiðminniÓsamstillt(slóð: string): Promise<ArrayBuffer> {
+export async function lesaGagnaskrárbiðminniÓsamstillt(slóð: string): Promise<Gagnaskrárbiðminni> {
   const raunslóð = finnaTiltækaGagnaskrárslóð(slóð) ?? slóð;
   if (erBrotliGagnaskrárslóð(raunslóð)) {
     const brotliBæti = ER_BUN ? await Bun.file(raunslóð).bytes() : await readFile(raunslóð);
     return semBiðminni(await afþjappaBrotliÓsamstillt(brotliBæti));
   }
-  return ER_BUN
-    ? semBiðminni(await Bun.file(raunslóð).bytes())
-    : semBiðminni(await readFile(raunslóð));
+  return await lesaÓþjappaðÓsamstillt(raunslóð);
 }
