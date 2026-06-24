@@ -1,5 +1,5 @@
 /**
- * Lesari opnar gagnaskrána einu sinni, leiðir vísitölur eftir þörfum og heldur
+ * Lesari opnar gagnaskrána einu sinni, leiðir vísitölur eftir þörf og heldur
  * uppflettingum á bætasniði eins lengi og hægt er. Opinbera hjúplagið má bæta
  * við líftíma- og valkostasamningi, en þessi skrá heldur utan um mældu
  * raðgöngurnar og vinnsluminnin sem eiga ekki að úthluta minni í innri lykkjum.
@@ -8,7 +8,7 @@ import { DafsaLesari, type Dafsaganga } from "./dafsa";
 import type { Fall } from "../málfræði/mark/fallbeygingarhlutar";
 import { reiknaMarkamaska } from "../málfræði/mark/maski";
 import type { Markaþáttur } from "../málfræði/mark/þættir";
-import { sækjaAfleitt, type Afleittsafn } from "./afleitt";
+import { sækjaAfleitt, type AfleittSafn } from "./afleitt";
 import {
   afkóðaTilvikaformraðir,
   afkóðaUppflettiraðir,
@@ -61,7 +61,7 @@ import {
   type Leitarvalkostir,
 } from "./leit";
 import { Samsetningarþáttari } from "./samsetning";
-import { opnaBútasafn } from "./ilát";
+import { opnaBútasafn, type Bútasafn } from "./ilát";
 import { BITAFJÖLDI_BÆTIS, IDBS_BLOKK } from "./bitar";
 import {
   TEXTI_EKKI_KÓÐANLEGUR,
@@ -210,7 +210,14 @@ export interface Fallskiptavalkostir<Valið = Færsla> {
 }
 
 export interface Lesaravalkostir {
-  readonly afleitt?: Afleittsafn;
+  readonly afleitt?: AfleittSafn;
+  /**
+   * Keyrir ítarlega staðfestingu tengsla milli búta við opnun.
+   *
+   * Sjálfgefið er að treysta gagnaskrá sem hefur þegar verið staðfest við smíði.
+   * Settu `true` fyrir sérsmíðaðar eða ótraustar skrár.
+   */
+  readonly staðfesta?: boolean;
 }
 
 export type {
@@ -306,30 +313,6 @@ const HÖFUÐ_ORÐFLOKKAR = new Set(["kk", "kvk", "hk", "lo", "so", "to", "rt"])
 interface Markamaskagildi {
   readonly lágt: number;
   readonly hátt: number;
-}
-
-interface Lesaragögn {
-  readonly uppruni: Gagnauppruni;
-  readonly formlyklar: DafsaLesari;
-  readonly flettur: Flettusýn;
-  readonly snið: Sniðsvið;
-  readonly sniðbæti: Uint8Array;
-  readonly stofnar: Stofnsvið;
-  readonly auðkenni: Auðkennasvið;
-  readonly tilvik: Tilvikasvið;
-  readonly textaaukar: Textaaukasvið;
-  readonly stafur: Stafsvið;
-  readonly orðflokkar: Smástrengjatafla;
-  readonly hlutar: Smástrengjatafla;
-  readonly mörk: Smástrengjatafla;
-  readonly málsniðOrða: Smástrengjatafla;
-  readonly málfræði: Smástrengjatafla;
-  readonly birtingar: Smástrengjatafla;
-  readonly málsniðBeygingarmynda: Smástrengjatafla;
-  readonly gildiBeygingarmynda: Smástrengjatafla;
-  readonly aukaflettur: Smástrengjatafla;
-  readonly markamaskar: Uint32Array;
-  readonly fjöldiOrðmynda: number;
 }
 
 interface Stofngrunnur {
@@ -474,18 +457,22 @@ function afritaLeitarafgang(afgangur: Leitarafgangur): Leitarafgangsstaða {
 }
 
 function sækjaAfleittVísanasvið(
-  safn: Afleittsafn | undefined,
+  safn: AfleittSafn | undefined,
   hliðrunarheiti: string,
   vísanaheiti: string,
   fjöldiHliðrana: number,
   fjöldiVísana: number,
+  strangt: boolean,
 ): Vísanasvið | undefined {
-  const hliðrun = sækjaAfleitt(safn, hliðrunarheiti, fjöldiHliðrana);
-  const vísanir = sækjaAfleitt(safn, vísanaheiti, fjöldiVísana);
+  const hliðrun = sækjaAfleitt(safn, hliðrunarheiti, fjöldiHliðrana, strangt);
+  const vísanir = sækjaAfleitt(safn, vísanaheiti, fjöldiVísana, strangt);
   if (hliðrun === undefined && vísanir === undefined) {
     return undefined;
   }
   if (hliðrun === undefined || vísanir === undefined) {
+    if (!strangt) {
+      return undefined;
+    }
     throw new Error(`Afleitt: vísanasvið '${hliðrunarheiti}/${vísanaheiti}' er óheilt.`);
   }
   return { hliðrun, vísanir };
@@ -507,7 +494,7 @@ function staðfestaTöfluvísi(heiti: string, vísir: number, tafla: Smástrengj
   }
 }
 
-function staðfestaSniðstengsl(
+function staðfestaSniðtengsl(
   snið: Sniðsvið,
   sniðbæti: Uint8Array,
   mörk: Smástrengjatafla,
@@ -684,7 +671,7 @@ function sækjaValfrjálstHástafanæmi(
     return true;
   }
   if (typeof gildi !== "boolean") {
-    throw new TypeError(`${heiti}.valkostir.hástafanæmt verður að vera satt eða ósatt.`);
+    throw new TypeError(`${heiti}.valkostir.hástafanæmt verður að vera true eða false.`);
   }
   return gildi;
 }
@@ -704,8 +691,32 @@ function sækjaValfrjálstVelja(
 }
 
 export class Lesari {
-  private readonly gögn: Lesaragögn;
-  private readonly afleiðslur: Afleittsafn | undefined;
+  private readonly bútasafn: Bútasafn;
+  private readonly gagnauppruni: Gagnauppruni;
+  private readonly afleiðslur: AfleittSafn | undefined;
+  private readonly staðfestaGögn: boolean;
+  #formlyklar: DafsaLesari | undefined;
+  #flettur: Flettusýn | undefined;
+  #snið: Sniðsvið | undefined;
+  #sniðbæti: Uint8Array | undefined;
+  #stofnar: Stofnsvið | undefined;
+  #auðkenni: Auðkennasvið | undefined;
+  #tilvik: Tilvikasvið | undefined;
+  #textaaukar: Textaaukasvið | undefined;
+  #stafur: Stafsvið | undefined;
+  #orðflokkar: Smástrengjatafla | undefined;
+  #hlutar: Smástrengjatafla | undefined;
+  #mörk: Smástrengjatafla | undefined;
+  #málsniðOrða: Smástrengjatafla | undefined;
+  #málfræði: Smástrengjatafla | undefined;
+  #birtingar: Smástrengjatafla | undefined;
+  #málsniðBeygingarmynda: Smástrengjatafla | undefined;
+  #gildiBeygingarmynda: Smástrengjatafla | undefined;
+  #aukaflettur: Smástrengjatafla | undefined;
+  #markamaskar: Uint32Array | undefined;
+  #fjöldiOrðmynda: number | undefined;
+  private búiðAðStaðfestaTengsl = false;
+  private búiðAðUndirbúa = false;
 
   // Sömu bætavinnusvæði lifa milli kalla; ný sýn inni í leitarlykkju var
   // mælanlegur kostnaður í fyrri afkastamælingum.
@@ -869,112 +880,188 @@ export class Lesari {
 
   constructor(inntak: ArrayBuffer | ArrayBufferView, valkostir: Lesaravalkostir = {}) {
     this.afleiðslur = valkostir.afleitt;
-    const bútasafn = opnaBútasafn(inntak);
-    staðfestaNauðsynlegaBúta(bútasafn);
-    staðfestaMeta(bútasafn.gagnasýn("META"));
-    const uppruni = lesaUppruna(bútasafn.sýn("UPPR"));
-
-    const formlyklar = new DafsaLesari(bútasafn.sýn("DAFB"), this.afleiðslur);
-
-    const flettusvið = lesaLemmubitasvið(bútasafn.sýn("LBIT"), formlyklar.lyklafjöldi);
-    const flettur = new Flettusýn(formlyklar, flettusvið, this.afleiðslur);
-
-    const sniðbæti = bútasafn.sýn("SNID");
-    const snið = lesaSniðsvið(sniðbæti);
-    const stofnar = lesaStofnsvið(bútasafn.sýn("STOF"), snið);
-
-    const auðkenni = lesaAuðkennasvið(bútasafn.sýn("IDBS"));
-    let fjöldiSettraAuðkennabita = 0;
-    for (let vísir = 0; vísir < auðkenni.bitar.length; vísir++) {
-      fjöldiSettraAuðkennabita += BITAFJÖLDI_BÆTIS[auðkenni.bitar[vísir]!]!;
+    this.staðfestaGögn = valkostir.staðfesta === true;
+    this.bútasafn = opnaBútasafn(inntak);
+    staðfestaNauðsynlegaBúta(this.bútasafn);
+    staðfestaMeta(this.bútasafn.gagnasýn("META"));
+    this.gagnauppruni = lesaUppruna(this.bútasafn.sýn("UPPR"));
+    if (this.staðfestaGögn) {
+      this.staðfestaTengsl();
     }
-    if (fjöldiSettraAuðkennabita !== stofnar.fjöldiStofna) {
-      throw new Error("IDBS-talning stemmir ekki við stofnafjölda.");
+  }
+
+  private get formlyklar(): DafsaLesari {
+    return (this.#formlyklar ??= new DafsaLesari(
+      this.bútasafn.sýn("DAFB"),
+      this.afleiðslur,
+      this.staðfestaGögn,
+    ));
+  }
+
+  private get flettur(): Flettusýn {
+    return (this.#flettur ??= new Flettusýn(
+      this.formlyklar,
+      lesaLemmubitasvið(this.bútasafn.sýn("LBIT"), this.formlyklar.lyklafjöldi),
+      this.afleiðslur,
+      this.staðfestaGögn,
+    ));
+  }
+
+  private get sniðbæti(): Uint8Array {
+    return (this.#sniðbæti ??= this.bútasafn.sýn("SNID"));
+  }
+
+  private get snið(): Sniðsvið {
+    return (this.#snið ??= lesaSniðsvið(this.sniðbæti));
+  }
+
+  private get stofnar(): Stofnsvið {
+    return (this.#stofnar ??= lesaStofnsvið(this.bútasafn.sýn("STOF"), this.snið));
+  }
+
+  private get auðkenni(): Auðkennasvið {
+    return (this.#auðkenni ??= lesaAuðkennasvið(this.bútasafn.sýn("IDBS")));
+  }
+
+  private get tilvik(): Tilvikasvið {
+    return (this.#tilvik ??= lesaTilvikasvið(
+      this.bútasafn.sýn("TILB"),
+      this.stofnar.fjöldiStofna,
+      this.formlyklar.lyklafjöldi,
+    ));
+  }
+
+  private get textaaukar(): Textaaukasvið {
+    return (this.#textaaukar ??= lesaTextaaukasvið(this.bútasafn.sýn("TAUK")));
+  }
+
+  private get stafur(): Stafsvið {
+    return (this.#stafur ??= lesaStafsvið(this.bútasafn.sýn("STAF")));
+  }
+
+  private get orðflokkar(): Smástrengjatafla {
+    return (this.#orðflokkar ??= lesaSmástrengjatöflu(this.bútasafn.sýn("OFLK")));
+  }
+
+  private get hlutar(): Smástrengjatafla {
+    return (this.#hlutar ??= lesaSmástrengjatöflu(this.bútasafn.sýn("HLUT")));
+  }
+
+  private get mörk(): Smástrengjatafla {
+    return (this.#mörk ??= lesaSmástrengjatöflu(this.bútasafn.sýn("BEYG")));
+  }
+
+  private get málsniðOrða(): Smástrengjatafla {
+    return (this.#málsniðOrða ??= lesaSmástrengjatöflu(this.bútasafn.sýn("MLSN")));
+  }
+
+  private get málfræði(): Smástrengjatafla {
+    return (this.#málfræði ??= lesaSmástrengjatöflu(this.bútasafn.sýn("MLFR")));
+  }
+
+  private get birtingar(): Smástrengjatafla {
+    return (this.#birtingar ??= lesaSmástrengjatöflu(this.bútasafn.sýn("BIRT")));
+  }
+
+  private get málsniðBeygingarmynda(): Smástrengjatafla {
+    return (this.#málsniðBeygingarmynda ??= lesaSmástrengjatöflu(this.bútasafn.sýn("BMAL")));
+  }
+
+  private get gildiBeygingarmynda(): Smástrengjatafla {
+    return (this.#gildiBeygingarmynda ??= lesaSmástrengjatöflu(this.bútasafn.sýn("BGIL")));
+  }
+
+  private get aukaflettur(): Smástrengjatafla {
+    return (this.#aukaflettur ??= lesaSmástrengjatöflu(this.bútasafn.sýn("AUKA")));
+  }
+
+  private get markamaskar(): Uint32Array {
+    if (this.#markamaskar !== undefined) {
+      return this.#markamaskar;
     }
 
-    let fjöldiOrðmynda = 0;
-    for (let vísir = 0; vísir < stofnar.fjöldiSniðliða.length; vísir++) {
-      fjöldiOrðmynda += stofnar.fjöldiSniðliða[vísir]!;
-    }
-
-    const tilvik = lesaTilvikasvið(
-      bútasafn.sýn("TILB"),
-      stofnar.fjöldiStofna,
-      formlyklar.lyklafjöldi,
-    );
-    const textaaukar = lesaTextaaukasvið(bútasafn.sýn("TAUK"));
-    const stafur = lesaStafsvið(bútasafn.sýn("STAF"));
-
-    const orðflokkar = lesaSmástrengjatöflu(bútasafn.sýn("OFLK"));
-    const hlutar = lesaSmástrengjatöflu(bútasafn.sýn("HLUT"));
-    const mörk = lesaSmástrengjatöflu(bútasafn.sýn("BEYG"));
-    const málsniðOrða = lesaSmástrengjatöflu(bútasafn.sýn("MLSN"));
-    const málfræði = lesaSmástrengjatöflu(bútasafn.sýn("MLFR"));
-    const birtingar = lesaSmástrengjatöflu(bútasafn.sýn("BIRT"));
-    const málsniðBeygingarmynda = lesaSmástrengjatöflu(bútasafn.sýn("BMAL"));
-    const gildiBeygingarmynda = lesaSmástrengjatöflu(bútasafn.sýn("BGIL"));
-    const aukaflettur = lesaSmástrengjatöflu(bútasafn.sýn("AUKA"));
-
-    const markamaskabútur = bútasafn.bútur("BMSK");
-    const væntMarkamaskalengd = mörk.fjöldi * STÆRÐ_MARKAMASKAFÆRSLU;
+    const markamaskabútur = this.bútasafn.bútur("BMSK");
+    const væntMarkamaskalengd = this.mörk.fjöldi * STÆRÐ_MARKAMASKAFÆRSLU;
     if (markamaskabútur.lengd !== væntMarkamaskalengd) {
       throw new Error(
         `BMSK-bútur hefur ranga lengd: ${markamaskabútur.lengd} bæti, vænti ${væntMarkamaskalengd}.`,
       );
     }
-    const markamaskar = new Uint32Array(
-      bútasafn.skrá.buffer,
-      bútasafn.skrá.byteOffset + markamaskabútur.hliðrun,
+    this.#markamaskar = new Uint32Array(
+      this.bútasafn.skrá.buffer,
+      this.bútasafn.skrá.byteOffset + markamaskabútur.hliðrun,
       markamaskabútur.lengd / 4,
     );
+    return this.#markamaskar;
+  }
 
-    staðfestaSniðstengsl(snið, sniðbæti, mörk, málsniðBeygingarmynda, gildiBeygingarmynda);
-    staðfestaStofntengsl(stofnar, orðflokkar, hlutar, málsniðOrða, málfræði, birtingar);
-    staðfestaTextaaukatengsl(textaaukar, aukaflettur, fjöldiOrðmynda);
+  private staðfestaAuðkennatengsl(): void {
+    let fjöldiSettraAuðkennabita = 0;
+    for (let vísir = 0; vísir < this.auðkenni.bitar.length; vísir++) {
+      fjöldiSettraAuðkennabita += BITAFJÖLDI_BÆTIS[this.auðkenni.bitar[vísir]!]!;
+    }
+    if (fjöldiSettraAuðkennabita !== this.stofnar.fjöldiStofna) {
+      throw new Error("IDBS-talning stemmir ekki við stofnafjölda.");
+    }
+  }
 
-    this.gögn = {
-      uppruni,
-      formlyklar,
-      flettur,
-      snið,
-      sniðbæti,
-      stofnar,
-      auðkenni,
-      tilvik,
-      textaaukar,
-      stafur,
-      orðflokkar,
-      hlutar,
-      mörk,
-      málsniðOrða,
-      málfræði,
-      birtingar,
-      málsniðBeygingarmynda,
-      gildiBeygingarmynda,
-      aukaflettur,
-      markamaskar,
-      fjöldiOrðmynda,
-    };
+  private staðfestaTengsl(): void {
+    if (this.búiðAðStaðfestaTengsl) {
+      return;
+    }
+
+    this.staðfestaAuðkennatengsl();
+    // Snertir latar sýnir sem staðfesting tengir saman hér fyrir neðan.
+    void this.flettur;
+    void this.tilvik;
+    void this.stafur;
+    void this.markamaskar;
+    staðfestaSniðtengsl(
+      this.snið,
+      this.sniðbæti,
+      this.mörk,
+      this.málsniðBeygingarmynda,
+      this.gildiBeygingarmynda,
+    );
+    staðfestaStofntengsl(
+      this.stofnar,
+      this.orðflokkar,
+      this.hlutar,
+      this.málsniðOrða,
+      this.málfræði,
+      this.birtingar,
+    );
+    staðfestaTextaaukatengsl(this.textaaukar, this.aukaflettur, this.fjöldiOrðmynda);
+    this.búiðAðStaðfestaTengsl = true;
   }
 
   get uppruni(): Gagnauppruni {
-    return this.gögn.uppruni;
+    return this.gagnauppruni;
   }
 
   get fjöldiForma(): number {
-    return this.gögn.formlyklar.lyklafjöldi;
+    return this.formlyklar.lyklafjöldi;
   }
 
   get fjöldiFletta(): number {
-    return this.gögn.flettur.fjöldi;
+    return this.flettur.fjöldi;
   }
 
   get fjöldiStofna(): number {
-    return this.gögn.stofnar.fjöldiStofna;
+    return this.stofnar.fjöldiStofna;
   }
 
   get fjöldiOrðmynda(): number {
-    return this.gögn.fjöldiOrðmynda;
+    if (this.#fjöldiOrðmynda !== undefined) {
+      return this.#fjöldiOrðmynda;
+    }
+
+    let fjöldi = 0;
+    for (let vísir = 0; vísir < this.stofnar.fjöldiSniðliða.length; vísir++) {
+      fjöldi += this.stofnar.fjöldiSniðliða[vísir]!;
+    }
+    this.#fjöldiOrðmynda = fjöldi;
+    return fjöldi;
   }
 
   private tryggjaStofnAuðkenni(): Uint32Array {
@@ -982,17 +1069,24 @@ export class Lesari {
       return this.stofnAuðkenni;
     }
 
-    const sótt = sækjaAfleitt(this.afleiðslur, "stofnAuðkenni", this.gögn.stofnar.fjöldiStofna);
+    const sótt = sækjaAfleitt(
+      this.afleiðslur,
+      "stofnAuðkenni",
+      this.stofnar.fjöldiStofna,
+      this.staðfestaGögn,
+    );
     if (sótt !== undefined) {
-      staðfestaAfleittStofnAuðkenni(sótt, this.gögn.auðkenni);
+      if (this.staðfestaGögn) {
+        staðfestaAfleittStofnAuðkenni(sótt, this.auðkenni);
+      }
       this.stofnAuðkenni = sótt;
       return sótt;
     }
 
     const auðkenni = leiðaStofnAuðkenni(
-      this.gögn.auðkenni.bitar,
-      this.gögn.auðkenni.fjöldi,
-      this.gögn.stofnar.fjöldiStofna,
+      this.auðkenni.bitar,
+      this.auðkenni.fjöldi,
+      this.stofnar.fjöldiStofna,
     );
     this.stofnAuðkenni = auðkenni;
     return auðkenni;
@@ -1006,17 +1100,20 @@ export class Lesari {
     const sóttar = sækjaAfleitt(
       this.afleiðslur,
       "stofnUppflettiraðir",
-      this.gögn.stofnar.fjöldiStofna,
+      this.stofnar.fjöldiStofna,
+      this.staðfestaGögn,
     );
     if (sóttar !== undefined) {
-      staðfestaAfleittUppflettiraðir(sóttar, this.gögn.flettur.fjöldi);
+      if (this.staðfestaGögn) {
+        staðfestaAfleittUppflettiraðir(sóttar, this.flettur.fjöldi);
+      }
       this.uppflettiraðir = sóttar;
       return sóttar;
     }
 
     const raðir = afkóðaUppflettiraðir(
-      this.gögn.stofnar.uppflettiraðarmismunir,
-      this.gögn.stofnar.fjöldiStofna,
+      this.stofnar.uppflettiraðarmismunir,
+      this.stofnar.fjöldiStofna,
     );
     this.uppflettiraðir = raðir;
     return raðir;
@@ -1027,17 +1124,21 @@ export class Lesari {
       return this.stofnByrjun;
     }
 
-    const sótt = sækjaAfleitt(this.afleiðslur, "stofnByrjun", this.gögn.stofnar.fjöldiStofna);
+    const sótt = sækjaAfleitt(
+      this.afleiðslur,
+      "stofnByrjun",
+      this.stofnar.fjöldiStofna,
+      this.staðfestaGögn,
+    );
     if (sótt !== undefined) {
-      staðfestaAfleittStofnByrjun(sótt, this.gögn.stofnar.fjöldiSniðliða, this.gögn.fjöldiOrðmynda);
+      if (this.staðfestaGögn) {
+        staðfestaAfleittStofnByrjun(sótt, this.stofnar.fjöldiSniðliða, this.fjöldiOrðmynda);
+      }
       this.stofnByrjun = sótt;
       return sótt;
     }
 
-    const byrjanir = leiðaStofnByrjun(
-      this.gögn.stofnar.fjöldiSniðliða,
-      this.gögn.stofnar.fjöldiStofna,
-    );
+    const byrjanir = leiðaStofnByrjun(this.stofnar.fjöldiSniðliða, this.stofnar.fjöldiStofna);
     this.stofnByrjun = byrjanir;
     return byrjanir;
   }
@@ -1047,26 +1148,33 @@ export class Lesari {
       return this.tilvikaformraðir;
     }
 
-    const sóttar = sækjaAfleitt(this.afleiðslur, "tilvikaformraðir", this.gögn.fjöldiOrðmynda);
+    const sóttar = sækjaAfleitt(
+      this.afleiðslur,
+      "tilvikaformraðir",
+      this.fjöldiOrðmynda,
+      this.staðfestaGögn,
+    );
     if (sóttar !== undefined) {
-      staðfestaAfleittTilvikaformraðir(sóttar, this.gögn.formlyklar.lyklafjöldi);
+      if (this.staðfestaGögn) {
+        staðfestaAfleittTilvikaformraðir(sóttar, this.formlyklar.lyklafjöldi);
+      }
       this.tilvikaformraðir = sóttar;
       return sóttar;
     }
 
     const formraðir = afkóðaTilvikaformraðir({
-      flettur: this.gögn.flettur,
+      flettur: this.flettur,
       stofnByrjun: this.tryggjaStofnByrjun(),
       uppflettiraðir: this.tryggjaUppflettiraðir(),
-      fjöldiSniðliða: this.gögn.stofnar.fjöldiSniðliða,
-      sniðvísar: this.gögn.stofnar.sniðvísar,
-      fjöldiSniða: this.gögn.snið.sniðhliðranir.length,
-      akkerastofnar: this.gögn.tilvik.akkerastofnar,
-      akkeraraðir: this.gögn.tilvik.akkeraraðir,
-      dálkar: this.gögn.tilvik.dálkar,
-      fjöldiStofna: this.gögn.stofnar.fjöldiStofna,
-      fjöldiForma: this.gögn.formlyklar.lyklafjöldi,
-      fjöldiOrðmynda: this.gögn.fjöldiOrðmynda,
+      fjöldiSniðliða: this.stofnar.fjöldiSniðliða,
+      sniðvísar: this.stofnar.sniðvísar,
+      fjöldiSniða: this.snið.sniðhliðranir.length,
+      akkerastofnar: this.tilvik.akkerastofnar,
+      akkeraraðir: this.tilvik.akkeraraðir,
+      dálkar: this.tilvik.dálkar,
+      fjöldiStofna: this.stofnar.fjöldiStofna,
+      fjöldiForma: this.formlyklar.lyklafjöldi,
+      fjöldiOrðmynda: this.fjöldiOrðmynda,
     });
     this.tilvikaformraðir = formraðir;
     return formraðir;
@@ -1081,22 +1189,25 @@ export class Lesari {
       this.afleiðslur,
       "formHliðrun",
       "formVísanir",
-      this.gögn.formlyklar.lyklafjöldi + 1,
-      this.gögn.fjöldiOrðmynda,
+      this.formlyklar.lyklafjöldi + 1,
+      this.fjöldiOrðmynda,
+      this.staðfestaGögn,
     );
     if (sótt !== undefined) {
-      staðfestaAfleittVísanasvið("formvísanasvið", sótt, this.gögn.fjöldiOrðmynda, (vísun) => {
-        const stofnsæti = vísun >>> ORÐMYND_BITAR;
-        staðfestaSviðsvísi(
-          "Afleitt: formVísanir.stofnsæti",
-          stofnsæti,
-          this.gögn.stofnar.fjöldiStofna,
-        );
-        const sniðliður = vísun & ORÐMYND_SÆTISMASKI;
-        if (sniðliður >= this.gögn.stofnar.fjöldiSniðliða[stofnsæti]!) {
-          throw new Error("Afleitt: formVísanir.sniðliður er utan stofnsniðs.");
-        }
-      });
+      if (this.staðfestaGögn) {
+        staðfestaAfleittVísanasvið("formvísanasvið", sótt, this.fjöldiOrðmynda, (vísun) => {
+          const stofnsæti = vísun >>> ORÐMYND_BITAR;
+          staðfestaSviðsvísi(
+            "Afleitt: formVísanir.stofnsæti",
+            stofnsæti,
+            this.stofnar.fjöldiStofna,
+          );
+          const sniðliður = vísun & ORÐMYND_SÆTISMASKI;
+          if (sniðliður >= this.stofnar.fjöldiSniðliða[stofnsæti]!) {
+            throw new Error("Afleitt: formVísanir.sniðliður er utan stofnsniðs.");
+          }
+        });
+      }
       this.formvísanasvið = sótt;
       return sótt;
     }
@@ -1104,10 +1215,10 @@ export class Lesari {
     const svið = leiðaFormVísanir(
       this.tryggjaTilvikaformraðir(),
       this.tryggjaStofnByrjun(),
-      this.gögn.stofnar.fjöldiSniðliða,
-      this.gögn.formlyklar.lyklafjöldi,
-      this.gögn.fjöldiOrðmynda,
-      this.gögn.stofnar.fjöldiStofna,
+      this.stofnar.fjöldiSniðliða,
+      this.formlyklar.lyklafjöldi,
+      this.fjöldiOrðmynda,
+      this.stofnar.fjöldiStofna,
     );
     this.formvísanasvið = svið;
     return svið;
@@ -1122,26 +1233,24 @@ export class Lesari {
       this.afleiðslur,
       "flettaHliðrun",
       "flettaVísanir",
-      this.gögn.flettur.fjöldi + 1,
-      this.gögn.stofnar.fjöldiStofna,
+      this.flettur.fjöldi + 1,
+      this.stofnar.fjöldiStofna,
+      this.staðfestaGögn,
     );
     if (sótt !== undefined) {
-      staðfestaAfleittVísanasvið(
-        "flettuvísanasvið",
-        sótt,
-        this.gögn.stofnar.fjöldiStofna,
-        (vísun) => {
-          staðfestaSviðsvísi("Afleitt: flettaVísanir", vísun, this.gögn.stofnar.fjöldiStofna);
-        },
-      );
+      if (this.staðfestaGögn) {
+        staðfestaAfleittVísanasvið("flettuvísanasvið", sótt, this.stofnar.fjöldiStofna, (vísun) => {
+          staðfestaSviðsvísi("Afleitt: flettaVísanir", vísun, this.stofnar.fjöldiStofna);
+        });
+      }
       this.flettuvísanasvið = sótt;
       return sótt;
     }
 
     const svið = leiðaFlettuVísanir(
       this.tryggjaUppflettiraðir(),
-      this.gögn.flettur.fjöldi,
-      this.gögn.stofnar.fjöldiStofna,
+      this.flettur.fjöldi,
+      this.stofnar.fjöldiStofna,
     );
     this.flettuvísanasvið = svið;
     return svið;
@@ -1177,7 +1286,7 @@ export class Lesari {
   }
 
   private stafmynsturStofns(stofnsæti: number): number {
-    return (this.gögn.stofnar.einkunnOgStafmynstur[stofnsæti]! >>> 3) & 0x3;
+    return (this.stofnar.einkunnOgStafmynstur[stofnsæti]! >>> 3) & 0x3;
   }
 
   private endurstafa(mynstur: number, lágstafað: string): string {
@@ -1187,7 +1296,7 @@ export class Lesari {
   private endurstafaUppflettiorð(stofnsæti: number, lágstafað: string): string {
     const mynstur = this.stafmynsturStofns(stofnsæti);
     if (mynstur === STAFMYNSTUR_UNDANTEKNING) {
-      return this.sækjaStafundantekningu(this.gögn.stafur.uppflettiorð, stofnsæti, lágstafað);
+      return this.sækjaStafundantekningu(this.stafur.uppflettiorð, stofnsæti, lágstafað);
     }
     return this.endurstafa(mynstur, lágstafað);
   }
@@ -1205,7 +1314,7 @@ export class Lesari {
 
     const texti =
       mynstur === STAFMYNSTUR_UNDANTEKNING
-        ? this.sækjaStafundantekningu(this.gögn.stafur.uppflettiorð, stofnsæti, lágstafað)
+        ? this.sækjaStafundantekningu(this.stafur.uppflettiorð, stofnsæti, lágstafað)
         : hástafaFyrstaLatin1Plús(lágstafað);
     return !hástafanæmt || texti === upphaflegt ? texti : undefined;
   }
@@ -1217,7 +1326,7 @@ export class Lesari {
   ): string {
     const mynstur = this.stafmynsturStofns(stofnsæti);
     if (mynstur === STAFMYNSTUR_UNDANTEKNING) {
-      return this.sækjaStafundantekningu(this.gögn.stafur.beygingarmyndir, orðmyndasæti, lágstafað);
+      return this.sækjaStafundantekningu(this.stafur.beygingarmyndir, orðmyndasæti, lágstafað);
     }
     return this.endurstafa(mynstur, lágstafað);
   }
@@ -1236,17 +1345,17 @@ export class Lesari {
 
     const texti =
       mynstur === STAFMYNSTUR_UNDANTEKNING
-        ? this.sækjaStafundantekningu(this.gögn.stafur.beygingarmyndir, orðmyndasæti, lágstafað)
+        ? this.sækjaStafundantekningu(this.stafur.beygingarmyndir, orðmyndasæti, lágstafað)
         : hástafaFyrstaLatin1Plús(lágstafað);
     return !hástafanæmt || texti === upphaflegt ? texti : undefined;
   }
 
   private uppflettibæti(uppflettiröð: number, út: Uint8Array): number {
-    return this.gögn.flettur.lykillÚrRöð(uppflettiröð, út);
+    return this.flettur.lykillÚrRöð(uppflettiröð, út);
   }
 
   private formbæti(formröð: number, út: Uint8Array): number {
-    return this.gögn.formlyklar.lykillÚrRöð(formröð, út);
+    return this.formlyklar.lykillÚrRöð(formröð, út);
   }
 
   private kóðaFyrirspurn(texti: string): number {
@@ -1267,7 +1376,7 @@ export class Lesari {
     if (lengd === FYRIRSPURN_EKKI_TIL) {
       return null;
     }
-    this.samsetningarþáttari ??= new Samsetningarþáttari(this.gögn.formlyklar);
+    this.samsetningarþáttari ??= new Samsetningarþáttari(this.formlyklar);
     return this.samsetningarþáttari.þátta(orð, this.fyrirspurnarvinna, lengd);
   }
 
@@ -1357,24 +1466,24 @@ export class Lesari {
   }
 
   private fjöldiSniðliða(stofnsæti: number): number {
-    return this.gögn.stofnar.fjöldiSniðliða[stofnsæti]!;
+    return this.stofnar.fjöldiSniðliða[stofnsæti]!;
   }
 
   private sniðvísirStofns(stofnsæti: number): number {
-    return this.gögn.stofnar.sniðvísar[stofnsæti]!;
+    return this.stofnar.sniðvísar[stofnsæti]!;
   }
 
   private einkunnOrðs(stofnsæti: number): number {
-    return this.gögn.stofnar.einkunnOgStafmynstur[stofnsæti]! & MASKI_EINKUNNAR_ORÐS;
+    return this.stofnar.einkunnOgStafmynstur[stofnsæti]! & MASKI_EINKUNNAR_ORÐS;
   }
 
   private birting(stofnsæti: number): number {
-    return (this.gögn.stofnar.birtingarbitar[stofnsæti >> 3]! >>> (stofnsæti & 7)) & 0x1;
+    return (this.stofnar.birtingarbitar[stofnsæti >> 3]! >>> (stofnsæti & 7)) & 0x1;
   }
 
   private málsniðOrðs(stofnsæti: number): number {
     return (
-      (this.gögn.stofnar.málsnið[stofnsæti >> 1]! >>> ((stofnsæti & 1) * BREIDD_MÁLSNIÐS_ORÐS)) &
+      (this.stofnar.málsnið[stofnsæti >> 1]! >>> ((stofnsæti & 1) * BREIDD_MÁLSNIÐS_ORÐS)) &
       MASKI_MÁLSNIÐS_ORÐS
     );
   }
@@ -1385,24 +1494,24 @@ export class Lesari {
 
   private markamaski(markvísir: number): Markamaskagildi {
     return {
-      lágt: this.gögn.markamaskar[markvísir * 2]!,
-      hátt: this.gögn.markamaskar[markvísir * 2 + 1]!,
+      lágt: this.markamaskar[markvísir * 2]!,
+      hátt: this.markamaskar[markvísir * 2 + 1]!,
     };
   }
 
   private beygingarkóði(sniðvísir: number, sniðliður: number): number {
-    return lesaBeygingarkóða(this.gögn.sniðbæti, this.gögn.snið, sniðvísir, sniðliður);
+    return lesaBeygingarkóða(this.sniðbæti, this.snið, sniðvísir, sniðliður);
   }
 
   private aukaflettuvísir(orðmyndasæti: number): number {
-    const sæti = this.gögn.textaaukar.orðmyndasæti;
+    const sæti = this.textaaukar.orðmyndasæti;
     let neðri = 0;
     let efri = sæti.length;
     while (neðri < efri) {
       const miðja = (neðri + efri) >>> 1;
       const gildi = sæti[miðja]!;
       if (gildi === orðmyndasæti) {
-        return this.gögn.textaaukar.aukaflettuvísar[miðja]!;
+        return this.textaaukar.aukaflettuvísar[miðja]!;
       }
       if (gildi < orðmyndasæti) {
         neðri = miðja + 1;
@@ -1416,31 +1525,31 @@ export class Lesari {
   private síaOrð(stofnsæti: number, sía: UndirbúinOrðsía): boolean {
     if (
       sía.orðflokkur !== undefined &&
-      this.gögn.orðflokkar.sækja(this.gögn.stofnar.orðflokkar[stofnsæti]!) !== sía.orðflokkur
+      this.orðflokkar.sækja(this.stofnar.orðflokkar[stofnsæti]!) !== sía.orðflokkur
     ) {
       return false;
     }
     if (
       sía.hluti !== undefined &&
-      this.gögn.hlutar.sækja(this.gögn.stofnar.hlutar[stofnsæti]!) !== sía.hluti
+      this.hlutar.sækja(this.stofnar.hlutar[stofnsæti]!) !== sía.hluti
     ) {
       return false;
     }
     if (
       sía.málsniðOrðs !== undefined &&
-      this.gögn.málsniðOrða.sækja(this.málsniðOrðs(stofnsæti)) !== sía.málsniðOrðs
+      this.málsniðOrða.sækja(this.málsniðOrðs(stofnsæti)) !== sía.málsniðOrðs
     ) {
       return false;
     }
     if (
       sía.málfræði !== undefined &&
-      this.gögn.málfræði.sækja(this.gögn.stofnar.málfræði[stofnsæti]!) !== sía.málfræði
+      this.málfræði.sækja(this.stofnar.málfræði[stofnsæti]!) !== sía.málfræði
     ) {
       return false;
     }
     if (
       sía.birting !== undefined &&
-      this.gögn.birtingar.sækja(this.birting(stofnsæti)) !== sía.birting
+      this.birtingar.sækja(this.birting(stofnsæti)) !== sía.birting
     ) {
       return false;
     }
@@ -1448,13 +1557,13 @@ export class Lesari {
   }
 
   private síaMark(markvísir: number, sía: UndirbúinBeygingarsía): boolean {
-    if (sía.mark !== undefined && this.gögn.mörk.sækja(markvísir) !== sía.mark) {
+    if (sía.mark !== undefined && this.mörk.sækja(markvísir) !== sía.mark) {
       return false;
     }
 
     if (sía.með !== undefined || sía.án !== undefined) {
-      const lágt = this.gögn.markamaskar[markvísir * 2]!;
-      const hátt = this.gögn.markamaskar[markvísir * 2 + 1]!;
+      const lágt = this.markamaskar[markvísir * 2]!;
+      const hátt = this.markamaskar[markvísir * 2 + 1]!;
       if (
         sía.með !== undefined &&
         ((lágt & sía.með.heildarmaskiLág) >>> 0 !== sía.með.heildarmaskiLág ||
@@ -1482,13 +1591,13 @@ export class Lesari {
     }
     if (
       sía.orðflokkur !== undefined &&
-      this.gögn.orðflokkar.sækja(this.gögn.stofnar.orðflokkar[stofnsæti]!) !== sía.orðflokkur
+      this.orðflokkar.sækja(this.stofnar.orðflokkar[stofnsæti]!) !== sía.orðflokkur
     ) {
       return false;
     }
     if (
       sía.hluti !== undefined &&
-      this.gögn.hlutar.sækja(this.gögn.stofnar.hlutar[stofnsæti]!) !== sía.hluti
+      this.hlutar.sækja(this.stofnar.hlutar[stofnsæti]!) !== sía.hluti
     ) {
       return false;
     }
@@ -1501,17 +1610,17 @@ export class Lesari {
       return geymdur;
     }
 
-    const millivísun = this.gögn.stofnar.millivísanir[stofnsæti]!;
+    const millivísun = this.stofnar.millivísanir[stofnsæti]!;
     const grunnur: Stofngrunnur = {
       orð: this.ógeymtOrðStofns(stofnsæti),
       auðkenni: this.auðkenniStofns(stofnsæti),
-      orðflokkur: this.gögn.orðflokkar.sækja(this.gögn.stofnar.orðflokkar[stofnsæti]!),
-      hluti: this.gögn.hlutar.sækja(this.gögn.stofnar.hlutar[stofnsæti]!),
+      orðflokkur: this.orðflokkar.sækja(this.stofnar.orðflokkar[stofnsæti]!),
+      hluti: this.hlutar.sækja(this.stofnar.hlutar[stofnsæti]!),
       einkunnOrðs: this.einkunnOrðs(stofnsæti),
-      málsniðOrðs: this.gögn.málsniðOrða.sækja(this.málsniðOrðs(stofnsæti)),
-      málfræði: this.gögn.málfræði.sækja(this.gögn.stofnar.málfræði[stofnsæti]!),
+      málsniðOrðs: this.málsniðOrða.sækja(this.málsniðOrðs(stofnsæti)),
+      málfræði: this.málfræði.sækja(this.stofnar.málfræði[stofnsæti]!),
       millivísun: millivísun === 0 ? null : millivísun,
-      birting: this.gögn.birtingar.sækja(this.birting(stofnsæti)) as Uppflettiorð["birting"],
+      birting: this.birtingar.sækja(this.birting(stofnsæti)) as Uppflettiorð["birting"],
       sniðvísir: this.sniðvísirStofns(stofnsæti),
       byrjun: this.byrjunStofns(stofnsæti),
     };
@@ -1565,7 +1674,7 @@ export class Lesari {
     const fjöldi = this.fjöldiSniðliða(stofnsæti);
     for (let sniðliður = 0; sniðliður < fjöldi; sniðliður++) {
       const markvísir = this.markvísir(grunnur.sniðvísir, sniðliður);
-      if (this.gögn.mörk.sækja(markvísir) !== færsla.mark) {
+      if (this.mörk.sækja(markvísir) !== færsla.mark) {
         continue;
       }
 
@@ -1608,7 +1717,7 @@ export class Lesari {
       orðflokkur: grunnur.orðflokkur,
       hluti: grunnur.hluti,
       beygingarmynd,
-      mark: this.gögn.mörk.sækja(this.markvísir(grunnur.sniðvísir, sniðliður)),
+      mark: this.mörk.sækja(this.markvísir(grunnur.sniðvísir, sniðliður)),
     };
   }
 
@@ -1631,23 +1740,23 @@ export class Lesari {
       millivísun: grunnur.millivísun,
       birting: grunnur.birting,
       beygingarmynd,
-      mark: this.gögn.mörk.sækja(kóði & MARKVÍSISMASKI),
+      mark: this.mörk.sækja(kóði & MARKVÍSISMASKI),
       einkunnBeygingarmyndar:
         (kóði >>> HLIÐRUN_EINKUNNAR_BEYGINGARMYNDAR) & MASKI_EINKUNNAR_BEYGINGARMYNDAR,
-      málsniðBeygingarmyndar: this.gögn.málsniðBeygingarmynda.sækja(
+      málsniðBeygingarmyndar: this.málsniðBeygingarmynda.sækja(
         (kóði >>> HLIÐRUN_MÁLSNIÐS_BEYGINGARMYNDAR) & MASKI_MÁLSNIÐS_BEYGINGARMYNDAR,
       ),
-      gildiBeygingarmyndar: this.gögn.gildiBeygingarmynda.sækja(
+      gildiBeygingarmyndar: this.gildiBeygingarmynda.sækja(
         (kóði >>> HLIÐRUN_GILDIS_BEYGINGARMYNDAR) & MASKI_GILDIS_BEYGINGARMYNDAR,
       ),
-      aukafletta: this.gögn.aukaflettur.sækja(this.aukaflettuvísir(orðmyndasæti)),
+      aukafletta: this.aukaflettur.sækja(this.aukaflettuvísir(orðmyndasæti)),
     };
   }
 
   private fjöldiAuðkennaÁUndan(auðkenni: number): number {
-    const bitar = this.gögn.auðkenni.bitar;
+    const bitar = this.auðkenni.bitar;
     const blokk = (auðkenni / IDBS_BLOKK) | 0;
-    let fjöldi = this.gögn.auðkenni.raðforsumma[blokk]!;
+    let fjöldi = this.auðkenni.raðforsumma[blokk]!;
     let bætavísir = blokk * (IDBS_BLOKK >> 3);
     const endabæti = auðkenni >> 3;
 
@@ -1663,10 +1772,10 @@ export class Lesari {
   }
 
   private stofnsætiAfAuðkenni(auðkenni: number): number {
-    if (!Number.isInteger(auðkenni) || auðkenni < 0 || auðkenni >= this.gögn.auðkenni.fjöldi) {
+    if (!Number.isInteger(auðkenni) || auðkenni < 0 || auðkenni >= this.auðkenni.fjöldi) {
       return TÓMT_U32;
     }
-    if ((this.gögn.auðkenni.bitar[auðkenni >> 3]! & (1 << (auðkenni & 7))) === 0) {
+    if ((this.auðkenni.bitar[auðkenni >> 3]! & (1 << (auðkenni & 7))) === 0) {
       return TÓMT_U32;
     }
     return this.fjöldiAuðkennaÁUndan(auðkenni);
@@ -1684,8 +1793,8 @@ export class Lesari {
     return (
       Number.isInteger(auðkenni) &&
       auðkenni >= 0 &&
-      auðkenni < this.gögn.auðkenni.fjöldi &&
-      (this.gögn.auðkenni.bitar[auðkenni >> 3]! & (1 << (auðkenni & 7))) !== 0
+      auðkenni < this.auðkenni.fjöldi &&
+      (this.auðkenni.bitar[auðkenni >> 3]! & (1 << (auðkenni & 7))) !== 0
     );
   }
 
@@ -1703,7 +1812,7 @@ export class Lesari {
       return false;
     }
 
-    const uppflettiröð = this.gögn.flettur.röð(this.fyrirspurnarvinna, 0, lengd);
+    const uppflettiröð = this.flettur.röð(this.fyrirspurnarvinna, 0, lengd);
     if (uppflettiröð < 0) {
       return false;
     }
@@ -1749,7 +1858,7 @@ export class Lesari {
       return false;
     }
 
-    const formröð = this.gögn.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
+    const formröð = this.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
     if (formröð < 0) {
       return false;
     }
@@ -1796,8 +1905,8 @@ export class Lesari {
     }
 
     let lágstafað: string | undefined;
-    const formröð = this.gögn.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
-    const uppflettiröð = this.gögn.flettur.röðMeðFormröð(formröð, this.fyrirspurnarvinna, 0, lengd);
+    const formröð = this.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
+    const uppflettiröð = this.flettur.röðMeðFormröð(formröð, this.fyrirspurnarvinna, 0, lengd);
     if (uppflettiröð >= 0) {
       if (!hástafanæmt) {
         return true;
@@ -1855,7 +1964,7 @@ export class Lesari {
     const fjöldi = this.fjöldiSniðliða(stofnsæti);
     for (let sniðliður = 0; sniðliður < fjöldi; sniðliður++) {
       const markvísir = this.markvísir(grunnur.sniðvísir, sniðliður);
-      if (this.gögn.mörk.sækja(markvísir) !== færsla.mark) {
+      if (this.mörk.sækja(markvísir) !== færsla.mark) {
         continue;
       }
 
@@ -2017,7 +2126,7 @@ export class Lesari {
       return [];
     }
 
-    const uppflettiröð = this.gögn.flettur.röð(this.fyrirspurnarvinna, 0, lengd);
+    const uppflettiröð = this.flettur.röð(this.fyrirspurnarvinna, 0, lengd);
     if (uppflettiröð < 0) {
       return [];
     }
@@ -2067,7 +2176,7 @@ export class Lesari {
       return [];
     }
 
-    const formröð = this.gögn.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
+    const formröð = this.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
     if (formröð < 0) {
       return [];
     }
@@ -2105,7 +2214,7 @@ export class Lesari {
           orðflokkur: grunnur.orðflokkur,
           hluti: grunnur.hluti,
           beygingarmynd: texti,
-          mark: this.gögn.mörk.sækja(markvísir),
+          mark: this.mörk.sækja(markvísir),
         } as Valið);
       } else {
         út.push(velja(this.ítarlegFærsla(stofnsæti, sniðliður, texti, grunnur)));
@@ -2137,7 +2246,7 @@ export class Lesari {
       return [];
     }
 
-    const formröð = this.gögn.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
+    const formröð = this.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
     if (formröð < 0) {
       return [];
     }
@@ -2206,8 +2315,8 @@ export class Lesari {
     };
 
     const lágstafað = this.lágstöfuðFyrirspurn(texti, lengd);
-    const formröð = this.gögn.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
-    const uppflettiröð = this.gögn.flettur.röðMeðFormröð(formröð, this.fyrirspurnarvinna, 0, lengd);
+    const formröð = this.formlyklar.röð(this.fyrirspurnarvinna, 0, lengd);
+    const uppflettiröð = this.flettur.röðMeðFormröð(formröð, this.fyrirspurnarvinna, 0, lengd);
     if (uppflettiröð >= 0) {
       this.fyrirHvernFlettustofn(uppflettiröð, (stofnsæti) => {
         if (
@@ -2355,7 +2464,7 @@ export class Lesari {
   }
 
   private lyklafjöldiSviðs(svið: Exclude<Leitarsvið, "allt">): number {
-    return svið === "beygingarmyndir" ? this.gögn.formlyklar.lyklafjöldi : this.gögn.flettur.fjöldi;
+    return svið === "beygingarmyndir" ? this.formlyklar.lyklafjöldi : this.flettur.fjöldi;
   }
 
   // Við endurheimt bendils má fara köldu leiðina; þegar niðurstöðusíðu er flett
@@ -2374,8 +2483,8 @@ export class Lesari {
   ): Leitarstraumur | undefined {
     const staða =
       svið === "beygingarmyndir"
-        ? this.gögn.formlyklar.forskeytiStaða(this.fyrirspurnarvinna, 0, forskeytislengd)
-        : this.gögn.flettur.forskeytiStaða(this.fyrirspurnarvinna, 0, forskeytislengd);
+        ? this.formlyklar.forskeytiStaða(this.fyrirspurnarvinna, 0, forskeytislengd)
+        : this.flettur.forskeytiStaða(this.fyrirspurnarvinna, 0, forskeytislengd);
     if (staða === null || staða.fjöldi === 0) {
       return undefined;
     }
@@ -2646,7 +2755,7 @@ export class Lesari {
   private tryggjaLeitargönguUppflettiorða(röð: number): Leitargöngustaða<Flettuganga> {
     let staða = this.leitargangaUppflettiorða;
     if (staða === undefined) {
-      const ganga = this.gögn.flettur.ganga(röð, HÁMARK_LYKILBÆTA);
+      const ganga = this.flettur.ganga(röð, HÁMARK_LYKILBÆTA);
       staða = {
         ganga,
         bæti: ganga.bæti,
@@ -2671,7 +2780,7 @@ export class Lesari {
   private tryggjaLeitargönguBeygingarmynda(röð: number): Leitargöngustaða<Dafsaganga> {
     let staða = this.leitargangaBeygingarmynda;
     if (staða === undefined) {
-      const ganga = this.gögn.formlyklar.ganga(röð, HÁMARK_LYKILBÆTA);
+      const ganga = this.formlyklar.ganga(röð, HÁMARK_LYKILBÆTA);
       staða = {
         ganga,
         bæti: ganga.bæti,
@@ -2878,7 +2987,7 @@ export class Lesari {
   }
 
   lesaUppflettiorð(vinna: (uppflettiorð: Uppflettiorð) => false | undefined): void {
-    for (let stofnsæti = 0; stofnsæti < this.gögn.stofnar.fjöldiStofna; stofnsæti++) {
+    for (let stofnsæti = 0; stofnsæti < this.stofnar.fjöldiStofna; stofnsæti++) {
       if (vinna(this.uppflettiorð(stofnsæti)) === false) {
         return;
       }
@@ -2893,7 +3002,7 @@ export class Lesari {
     const formraðir: number[] = [];
     const formmyndir: string[] = [];
 
-    for (let stofnsæti = 0; stofnsæti < this.gögn.stofnar.fjöldiStofna; stofnsæti++) {
+    for (let stofnsæti = 0; stofnsæti < this.stofnar.fjöldiStofna; stofnsæti++) {
       const auðkenni = this.auðkenniStofns(stofnsæti);
       const byrjun = stofnByrjun[stofnsæti]!;
       const fjöldi = this.fjöldiSniðliða(stofnsæti);
@@ -2908,7 +3017,7 @@ export class Lesari {
         const beygingarmynd = notaRaðarminni
           ? this.formtextiMeðRaðarminni(stofnsæti, orðmyndasæti, formröð, formraðir, formmyndir)
           : this.formtexti(stofnsæti, orðmyndasæti, formröð);
-        const mark = this.gögn.mörk.sækja(this.markvísir(sniðvísir, sniðliður));
+        const mark = this.mörk.sækja(this.markvísir(sniðvísir, sniðliður));
         if (vinna(auðkenni, beygingarmynd, mark) === false) {
           return;
         }
@@ -2924,7 +3033,7 @@ export class Lesari {
     let formraðamengi: Set<number> | undefined;
     let formmyndamengi: Set<string> | undefined;
 
-    for (let stofnsæti = 0; stofnsæti < this.gögn.stofnar.fjöldiStofna; stofnsæti++) {
+    for (let stofnsæti = 0; stofnsæti < this.stofnar.fjöldiStofna; stofnsæti++) {
       const auðkenni = this.auðkenniStofns(stofnsæti);
       const byrjun = stofnByrjun[stofnsæti]!;
       const fjöldi = this.fjöldiSniðliða(stofnsæti);
@@ -2977,8 +3086,8 @@ export class Lesari {
   flytjaAfleitt(): ReadonlyMap<string, Uint32Array> {
     this.undirbúa();
     const út = new Map<string, Uint32Array>();
-    this.gögn.formlyklar.safnaAfleiðslum(út);
-    this.gögn.flettur.safnaAfleiðslum(út);
+    this.formlyklar.safnaAfleiðslum(út);
+    this.flettur.safnaAfleiðslum(út);
     út.set("stofnByrjun", this.tryggjaStofnByrjun());
     út.set("stofnUppflettiraðir", this.tryggjaUppflettiraðir());
     út.set("stofnAuðkenni", this.tryggjaStofnAuðkenni());
@@ -2993,20 +3102,24 @@ export class Lesari {
   }
 
   undirbúa(): this {
-    this.gögn.formlyklar.undirbúa();
-    this.gögn.flettur.undirbúa();
+    if (this.búiðAðUndirbúa) {
+      return this;
+    }
+    this.formlyklar.undirbúa();
+    this.flettur.undirbúa();
     this.tryggjaStofnAuðkenni();
     this.tryggjaUppflettiraðir();
     this.tryggjaStofnByrjun();
     this.tryggjaTilvikaformraðir();
     this.tryggjaFormvísanasvið();
     this.tryggjaFlettuvísanasvið();
+    this.búiðAðUndirbúa = true;
     return this;
   }
 
   losa(): this {
-    this.gögn.formlyklar.losa();
-    this.gögn.flettur.losa();
+    this.#formlyklar?.losa();
+    this.#flettur?.losa();
     this.stofnAuðkenni = undefined;
     this.uppflettiraðir = undefined;
     this.stofnByrjun = undefined;
@@ -3014,6 +3127,7 @@ export class Lesari {
     this.formvísanasvið = undefined;
     this.flettuvísanasvið = undefined;
     this.stofngrunnar.length = 0;
+    this.búiðAðUndirbúa = false;
     return this;
   }
 }

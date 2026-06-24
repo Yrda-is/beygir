@@ -17,12 +17,14 @@
  * ```
  *
  * Sama leið opnar líka sérsmíðaðar gagnaskrár, svo lengi sem þær eru skrifaðar
- * á venjulegu Beygir-sniði. Dæmið
+ * á innbyggða gagnasniðinu. Smíðitól Beygis staðfesta úttakið við skrif; ef
+ * gagnaskrá kemur annars staðar frá er ráðlegt að opna hana með
+ * `staðfesta: true`. Dæmið
  * [`dæmi/bín-kjarni/smíða.ts`](https://github.com/Yrda-is/beygir/blob/stofn/dæmi/bín-kjarni/smíða.ts) sýnir hvernig má
  * smíða minni BÍN-kjarna úr pakkagagnaskránni og opna úttakið með
  * `opnaBeygi({ slóð })`.
  *
- * Pakkagagnaskráin getur fylgt þjöppuð sem Brotli-skrá. Ef óþjöppuð `.bin`-skrá
+ * Gagnaskrá getur fylgt þjöppuð sem Brotli-skrá. Ef óþjöppuð `.bin`-skrá
  * vantar reynir opnarinn að afþjappa henni og varðveita við hlið pakkans. Í
  * skrifvörðum umhverfum, til dæmis sumum keyrslu- eða dreifingarumhverfum, er
  * þjappaða skráin notuð áfram og afþjöppuð í minni við opnun. Til að stýra þessu
@@ -37,11 +39,18 @@
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { lesaAfleitt, skrifaAfleitt, type Afleittsafn } from "../snið/afleitt";
+import {
+  afleittSafnErÓnýtt,
+  hreinsaÓnýttAfleittSafn,
+  lesaAfleitt,
+  skrifaAfleitt,
+  type AfleittSafn,
+} from "../snið/afleitt";
 import { Beygir as Beygislesari } from "../snið/beygir";
 import {
   lesaGagnaskrárbiðminniSamstillt,
   lesaGagnaskrárbiðminniÓsamstillt,
+  type Gagnaskrárbiðminni,
 } from "../snið/geymsla/innlestur";
 import { hafnaÓþekktumReitum } from "../snið/inntak";
 import { Lesari } from "../snið/lestur";
@@ -65,19 +74,29 @@ export interface OpnaBeygiValkostir {
   /**
    * Hvernig afleiddir vísar eru sóttir eða geymdir.
    *
-   * Sjálfgefið er að leiða vísana út í minni eftir þörfum. Með `skrá-minni` eða
+   * Sjálfgefið er að leiða vísana út í minni eftir þörf. Með `skrá-minni` eða
    * `skrá-mmap` er reynt að endurnýta `.afleitt` hliðarskrá milli ferla;
-   * `skrá-mmap` er aðeins tiltækt í Bun. Ef gildi vantar er
-   * `BEYGIR_AFLEITT` lesið, eða `reikna` notað.
+   * `skrá-mmap` er aðeins tiltækt í Bun. Traust opnun notar hliðarskrána án
+   * SHA-256-samanburðar við gagnaskrána en `staðfesta: true` virkjar samanburðinn.
+   * Ef valkostinum er sleppt er `BEYGIR_AFLEITT` notað ef það er sett; annars
+   * er `reikna` notað.
    */
   readonly afleitt?: Afleiðsluhamur;
   /**
-   * Leiðir út letivísa strax við opnun.
+   * Leiðir út afleidda vísa strax við opnun.
    *
    * Þetta hentar þegar fyrri uppflettingar eiga ekki að greiða undirbúninginn.
    * Ef valkostinum er sleppt virkjar `BEYGIR_UNDIRBUA=1` sömu hegðun.
    */
   readonly undirbúa?: boolean;
+  /**
+   * Keyrir ítarlega staðfestingu á tengslum milli búta við opnun.
+   *
+   * Gagnaskrár skrifaðar með smíðitólum Beygis eru staðfestar við smíði, svo
+   * sjálfgefið er `false`. Notaðu `true` fyrir sérsmíðaðar eða ótraustar
+   * gagnaskrár og hliðarskrár.
+   */
+  readonly staðfesta?: boolean;
 }
 
 function varaViðUmhverfisham(skilaboð: string): void {
@@ -96,6 +115,7 @@ function staðfestaOpnunarvalkosti(valkostir: unknown): asserts valkostir is Opn
     "slóð",
     "afleitt",
     "undirbúa",
+    "staðfesta",
   ]);
 
   const hlutur = valkostir as Record<string, unknown>;
@@ -103,7 +123,10 @@ function staðfestaOpnunarvalkosti(valkostir: unknown): asserts valkostir is Opn
     throw new TypeError("opnaBeygi: slóð verður að vera strengur.");
   }
   if (hlutur["undirbúa"] !== undefined && typeof hlutur["undirbúa"] !== "boolean") {
-    throw new TypeError("opnaBeygi: undirbúa verður að vera satt eða ósatt.");
+    throw new TypeError("opnaBeygi: undirbúa verður að vera true eða false.");
+  }
+  if (hlutur["staðfesta"] !== undefined && typeof hlutur["staðfesta"] !== "boolean") {
+    throw new TypeError("opnaBeygi: staðfesta verður að vera true eða false.");
   }
 }
 
@@ -141,22 +164,33 @@ function leysaUndirbúning(valkostir: OpnaBeygiValkostir): boolean {
 }
 
 function slóðFyrirAfleitt(slóð: string): string {
-  return `${slóð.endsWith(".br") ? slóð.slice(0, -3) : slóð}.afleitt`;
+  return `${óþjöppuðGagnaskrárslóð(slóð)}.afleitt`;
 }
 
-function sha256(bæti: Uint8Array): Uint8Array {
-  return new Uint8Array(createHash("sha256").update(bæti).digest());
+function óþjöppuðGagnaskrárslóð(slóð: string): string {
+  return slóð.endsWith(".br") ? slóð.slice(0, -3) : slóð;
+}
+
+function biðminnisbæti(biðminni: Gagnaskrárbiðminni): Uint8Array {
+  return ArrayBuffer.isView(biðminni)
+    ? new Uint8Array(biðminni.buffer, biðminni.byteOffset, biðminni.byteLength)
+    : new Uint8Array(biðminni);
+}
+
+function sha256(biðminni: Gagnaskrárbiðminni): Uint8Array {
+  return new Uint8Array(createHash("sha256").update(biðminnisbæti(biðminni)).digest());
 }
 
 function lesaAfleittSafn(
   slóð: string,
-  lykill: Uint8Array,
+  sækjaLykil: () => Uint8Array | null,
   hamur: Exclude<Afleiðsluhamur, "reikna">,
-): Afleittsafn | null {
+): AfleittSafn | null {
   try {
     if (!existsSync(slóð)) {
       return null;
     }
+    const lykill = sækjaLykil();
     const bæti = hamur === "skrá-mmap" ? Bun.mmap(slóð) : readFileSync(slóð);
     return lesaAfleitt(bæti, lykill);
   } catch (villa) {
@@ -167,11 +201,12 @@ function lesaAfleittSafn(
   }
 }
 
-function vistaAfleitt(slóð: string, lesari: Lesari, lykill: Uint8Array): void {
+function vistaAfleitt(slóð: string, lesari: Lesari, lykill: Uint8Array): boolean {
   try {
     const bæti = skrifaAfleitt(lesari.flytjaAfleitt(), lykill);
     mkdirSync(dirname(slóð), { recursive: true });
     skrifaAtómísktSamstillt(slóð, bæti);
+    return true;
   } catch (villa) {
     if (!búiðAðVaraViðAfleittVistun) {
       búiðAðVaraViðAfleittVistun = true;
@@ -183,32 +218,37 @@ function vistaAfleitt(slóð: string, lesari: Lesari, lykill: Uint8Array): void 
         ].join("\n"),
       );
     }
+    return false;
   }
 }
 
 function vefjaBeygi(
-  biðminni: ArrayBuffer,
+  biðminni: Gagnaskrárbiðminni,
   slóð: string,
   hamur: Afleiðsluhamur,
   undirbúa: boolean,
+  staðfesta: boolean,
 ): LokanlegurBeygir {
-  let safn: Afleittsafn | null = null;
+  let safn: AfleittSafn | null = null;
   let viðUndirbúning: (() => void) | undefined;
   if (hamur !== "reikna") {
     const afleittSlóð = slóðFyrirAfleitt(slóð);
     let lykill: Uint8Array | undefined;
-    const sækjaLykil = (): Uint8Array => (lykill ??= sha256(new Uint8Array(biðminni)));
-    safn = existsSync(afleittSlóð) ? lesaAfleittSafn(afleittSlóð, sækjaLykil(), hamur) : null;
+    const sækjaReiknaðanLykil = (): Uint8Array => (lykill ??= sha256(biðminni));
+    const sækjaTraustanLykil = (): Uint8Array | null => (staðfesta ? sækjaReiknaðanLykil() : null);
+    safn = lesaAfleittSafn(afleittSlóð, sækjaTraustanLykil, hamur);
     let vistað = safn !== null;
     viðUndirbúning = () => {
-      if (!vistað || !existsSync(afleittSlóð)) {
-        vistaAfleitt(afleittSlóð, lesari, sækjaLykil());
-        vistað = existsSync(afleittSlóð);
+      if (!vistað || afleittSafnErÓnýtt(safn) || !existsSync(afleittSlóð)) {
+        vistað = vistaAfleitt(afleittSlóð, lesari, sækjaReiknaðanLykil());
+        if (vistað) {
+          hreinsaÓnýttAfleittSafn(safn);
+        }
       }
     };
   }
 
-  const lesari = new Lesari(biðminni, safn === null ? {} : { afleitt: safn });
+  const lesari = new Lesari(biðminni, safn === null ? { staðfesta } : { afleitt: safn, staðfesta });
   const beygir = new Beygislesari(lesari, {
     afleitt: hamur,
     afleittVirkt: safn !== null,
@@ -226,6 +266,7 @@ export function opnaBeygi(valkostir: OpnaBeygiValkostir = {}): LokanlegurBeygir 
     slóð,
     hamur,
     leysaUndirbúning(valkostir),
+    valkostir.staðfesta === true,
   );
 }
 
@@ -240,6 +281,7 @@ export async function opnaBeygiÓsamstillt(
     slóð,
     hamur,
     leysaUndirbúning(valkostir),
+    valkostir.staðfesta === true,
   );
 }
 

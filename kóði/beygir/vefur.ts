@@ -68,6 +68,14 @@ export type {
 
 export interface OpnaBeygiÚrBiðminniValkostir {
   readonly undirbúa?: boolean;
+  /**
+   * Keyrir ítarlega staðfestingu á tengslum milli búta við opnun.
+   *
+   * Veflestur staðfestir sjálfgefið þar sem `ArrayBuffer` eða sótt gögn geta
+   * komið frá ótraustum stað. Settu `false` þegar þú opnar trausta gagnaskrá sem
+   * var staðfest við smíði.
+   */
+  readonly staðfesta?: boolean;
 }
 
 export type SækjaFall = (slóð: RequestInfo | URL, beiðni?: RequestInit) => Promise<Response>;
@@ -81,7 +89,7 @@ export function opnaBeygiÚrBiðminni(
   inntak: ArrayBuffer | ArrayBufferView,
   valkostir: OpnaBeygiÚrBiðminniValkostir = {},
 ): LokanlegurBeygir {
-  const lesari = new Lesari(inntak);
+  const lesari = new Lesari(inntak, { staðfesta: valkostir.staðfesta !== false });
   const beygir = new Beygislesari(lesari, {
     afleitt: "reikna",
     afleittVirkt: false,

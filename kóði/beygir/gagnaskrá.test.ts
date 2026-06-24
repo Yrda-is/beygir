@@ -202,8 +202,9 @@ describe("gagnaskráropnun", () => {
     const slóð = await skrifaPrófunarskrá();
 
     expect(() => opnaBeygi(null as never)).toThrow(/valkostir/);
-    expect(() => opnaBeygi({ slóð, afleitt: "nei" as never })).toThrow(/afleiðsluhamur/);
-    expect(() => opnaBeygi({ slóð, undirbúa: "já" as never })).toThrow(/undirbúa/);
+    expect(() => opnaBeygi({ slóð, afleitt: "óþekkt" as never })).toThrow(/afleiðsluhamur/);
+    expect(() => opnaBeygi({ slóð, undirbúa: 1 as never })).toThrow(/undirbúa/);
+    expect(() => opnaBeygi({ slóð, staðfesta: 1 as never })).toThrow(/staðfesta/);
     expect(() => opnaBeygi({ slóð, undirbua: true } as never)).toThrow(
       /óþekktur valkostur 'undirbua'/,
     );
@@ -299,6 +300,74 @@ describe("afleidd hliðarskrá", () => {
       }
     });
   }
+
+  test("traust opnun notar hliðarskrá án SHA-256 en staðfest opnun sannreynir lykil", async () => {
+    let fyrri: LokanlegurBeygir | undefined;
+    let traustur: LokanlegurBeygir | undefined;
+    let staðfestur: LokanlegurBeygir | undefined;
+    try {
+      const slóð = await skrifaPrófunarskrá();
+      const afleittSlóð = `${slóð}.afleitt`;
+
+      fyrri = opnaBeygi({ slóð, afleitt: "skrá-minni" });
+      fyrri.undirbúa();
+      fyrri.loka();
+
+      const hliðarskrá = readFileSync(afleittSlóð);
+      hliðarskrá[12] = hliðarskrá[12]! ^ 0xff;
+      writeFileSync(afleittSlóð, hliðarskrá);
+
+      traustur = opnaBeygi({ slóð, afleitt: "skrá-minni" });
+      expect(traustur.staða().afleittVirkt).toBe(true);
+
+      staðfestur = opnaBeygi({ slóð, afleitt: "skrá-minni", staðfesta: true });
+      expect(staðfestur.staða().afleittVirkt).toBe(false);
+    } finally {
+      loka(staðfestur);
+      loka(traustur);
+      loka(fyrri);
+    }
+  });
+
+  test("traust opnun hunsar úrelta hliðarskrá með röngum stakafjölda", async () => {
+    let fyrri: LokanlegurBeygir | undefined;
+    let traustur: LokanlegurBeygir | undefined;
+    let staðfestur: LokanlegurBeygir | undefined;
+    try {
+      const slóð = await skrifaPrófunarskrá();
+      const afleittSlóð = `${slóð}.afleitt`;
+
+      fyrri = opnaBeygi({ slóð, afleitt: "skrá-minni" });
+      fyrri.undirbúa();
+      fyrri.loka();
+
+      const gömulHliðarskrá = readFileSync(afleittSlóð);
+      const nýjarFærslur = grunnlínur().concat(
+        lágmarkslína({
+          auðkenni: 4,
+          orð: "hundur",
+          beygingarmynd: "hundur",
+          mark: "NFET",
+        }),
+      );
+      const niðurstaða = await smíðaÚrKristínarsniði(nýjarFærslur);
+      writeFileSync(slóð, skrifaÍlát(niðurstaða.bútar));
+
+      traustur = opnaBeygi({ slóð, afleitt: "skrá-minni", undirbúa: true });
+
+      expect(traustur.hefur("hundur")).toBe(true);
+      expect(readFileSync(afleittSlóð).equals(gömulHliðarskrá)).toBe(false);
+
+      traustur.loka();
+      staðfestur = opnaBeygi({ slóð, afleitt: "skrá-minni", staðfesta: true });
+      expect(staðfestur.staða().afleittVirkt).toBe(true);
+      expect(staðfestur.hefur("hundur")).toBe(true);
+    } finally {
+      loka(staðfestur);
+      loka(traustur);
+      loka(fyrri);
+    }
+  });
 
   test("undirbúningur endurskrifar hliðarskrá sem hefur verið fjarlægð", async () => {
     let beygir: LokanlegurBeygir | undefined;

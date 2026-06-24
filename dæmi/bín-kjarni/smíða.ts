@@ -9,8 +9,8 @@ import { reiknaUppruna, skrifaSmíðaðaGagnaskrá } from "../../skriftur/smíð
  *
  * Þetta les ekki upprunalega Kristínarsniðsskrá. Í staðinn er venjuleg
  * gagnaskrá opnuð, uppflettiorð með `birting === "K"` valin og færslur
- * þeirra skrifaðar aftur sem ný gagnaskrá. Úttakið er því sama Beygir-snið og
- * má opna með `opnaBeygi({ slóð })`.
+ * þeirra skrifaðar aftur sem ný gagnaskrá. Úttakið notar sama innbyggða
+ * gagnaskrársnið og má opna með `opnaBeygi({ slóð })`.
  *
  * Keyrsla:
  *   bun run ./dæmi/bín-kjarni/smíða.ts .gögn/beygir.bin .gögn/beygir-kjarni.bin

@@ -68,7 +68,8 @@ const færslur = beygir.finnaBeygingarfærslur("hesti", {
 // [{ orð: "hestur", mark: "ÞGFET" }]
 ```
 
-Sjá einnig [ítarlegri notkunardæmi](#dæmi) útlistuð neðar.
+Sjá einnig [ítarlegri notkunardæmi](#dæmi) útlistuð neðar. Nánari API-skjölun
+er á [beygir.yrda.is](http://beygir.yrda.is).
 
 ## Hugtök
 
@@ -109,16 +110,17 @@ varðveita `.bin`-skrána við hlið pakkans. Í skrifvörðum umhverfum getur h
 ekki varðveitt úttakið og afþjappar þá í minni við opnun. Með `slóð` eða
 `GAGNASKRA_SLOD` má vísa beint á tilbúna gagnaskrá.
 
-Afleiddir vísar eru byggðir í leti. `undirbúa: true` framkvæmir þann
+Afleiddir vísar eru leiddir út eftir þörf. `undirbúa: true` framkvæmir þann
 undirbúning við opnun. `afleitt: "skrá-minni"` og `afleitt: "skrá-mmap"` reyna
 að endurnýta `.afleitt` hliðarskrá milli ferla; `skrá-mmap` er aðeins tiltækt í
-Bun. Ef hliðarskrá vantar eða passar ekki við gagnaskrána er hún leidd út aftur.
+Bun. Ef hliðarskrá vantar er hún leidd út aftur. Með `staðfesta: true` er hún
+líka borin saman við gagnaskrána.
 
 ### Umhverfisbreytur
 
 - `GAGNASKRA_SLOD` velur gagnaskrá þegar `slóð` er ekki gefin.
 - `BEYGIR_AFLEITT` velur afleiðsluham: `reikna`, `skrá-minni` eða `skrá-mmap`.
-- `BEYGIR_UNDIRBUA=1` undirbýr letivísa strax við opnun.
+- `BEYGIR_UNDIRBUA=1` undirbýr afleidda vísa strax við opnun.
 
 Nánar í skjölun um
 [opnaBeygi](http://beygir.yrda.is/functions/gagnaskrá.opnaBeygi.html).
@@ -196,10 +198,6 @@ bun run ./dæmi/bín-kjarni/smíða.ts .gögn/beygir.bin .gögn/beygir-kjarni.bi
 Úttakið er áfram venjuleg gagnaskrá sem má opna með `opnaBeygi({ slóð })`. Með
 núverandi gögnum er slíkur kjarni um 3,35 MiB óþjappaður og um 0,72 MiB með
 Brotli, samanborið við um 13,26 MiB / 3,21 MiB fyrir fulla gagnaskrá.
-
-## Skjölun
-
-Nánari skjölun er á [beygir.yrda.is](http://beygir.yrda.is).
 
 ## Tenglar og þakkir
 

@@ -118,7 +118,7 @@ function uppflettistrengir(
 
 export function smíðaÚrInntaki(inntak: Gagnaskrárinntak): SmíðaNiðurstaða {
   /*
-   * Þetta er kanóníska röðun smíðinnar. Nákvæmlega ein kóðun er leyfð fyrir
+   * Þetta er fasta röðun smíðinnar. Nákvæmlega ein kóðun er leyfð fyrir
    * hvern bút: engir getufánar, engin tímamerki og engin valkvæð röðun.
    * Determinismi er SHA-festur. Formlyklar fara í DAFB; DAFB-raðir fæða LBIT;
    * LBIT-val endurheimtir fyrsta sniðlið í TILB; fjöldi sniðliða í SNID

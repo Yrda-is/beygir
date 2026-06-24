@@ -1,7 +1,10 @@
 /**
- * Afleiddar vísitölur í hliðarskrá. Skráin er bundin SHA-256-lykli
- * gagnaskrárinnar; úrelt skyndiminni er hunsað, en skemmd skrá með réttum
- * lykli skilar villu svo lesarinn endurleiði ekki rangar vísitölur.
+ * Afleiddar vísitölur í hliðarskrá. Skráin getur verið bundin SHA-256-lykli
+ * gagnaskrárinnar þegar lesari biður um lykilstaðfestingu; traustir
+ * smíðaafurðir mega sleppa lyklinum við opnun og treysta á staðfestinguna sem
+ * átti sér stað við smíði.
+ * Skemmd skrá með staðfestum lykli skilar villu svo lesarinn endurleiði ekki
+ * rangar vísitölur.
  */
 import { jafna4 } from "./bitar";
 import { LENGD_SHA256_FINGRAFARS, STÆRÐ_AFLEIÐSLUHAUSS } from "./fastar";
@@ -28,8 +31,20 @@ const AFLEIDD_HEITI_MENGI = new Set<string>(AFLEIDD_HEITI);
 const HEITAMYNSTUR = /^[\x21-\x7e\xa1-\xff]+$/;
 
 /** Uppfletting afleiddra vísa eftir heiti; skilar engu sé færslan ekki til. */
-export interface Afleittsafn {
+export interface AfleittSafn {
   sækja(heiti: string): Uint32Array | undefined;
+}
+
+const ónýtAfleiddSöfn = new WeakSet<AfleittSafn>();
+
+export function afleittSafnErÓnýtt(safn: AfleittSafn | null | undefined): boolean {
+  return safn !== null && safn !== undefined && ónýtAfleiddSöfn.has(safn);
+}
+
+export function hreinsaÓnýttAfleittSafn(safn: AfleittSafn | null | undefined): void {
+  if (safn !== null && safn !== undefined) {
+    ónýtAfleiddSöfn.delete(safn);
+  }
 }
 
 function staðfestaLykil(lykill: Uint8Array): void {
@@ -71,19 +86,31 @@ function lyklarStemma(a: Uint8Array, b: Uint8Array): boolean {
 
 /**
  * Tekur færslu úr safninu og staðfestir stakafjöldann. Lengdarmisræmi eftir
- * staðfestan lykil þýðir að hliðarskráin á ekki við gagnaskrána.
+ * staðfestan lykil þýðir að hliðarskráin á ekki við gagnaskrána. Í traustri
+ * opnun án lykilstaðfestingar er misræmið meðhöndlað sem úrelt skyndiminni.
  */
 export function sækjaAfleitt(
-  safn: Afleittsafn | undefined,
+  safn: AfleittSafn | undefined,
   heiti: string,
   væntStök: number,
+  strangt = true,
 ): Uint32Array | undefined {
   staðfestaHeiti(heiti);
-  const gildi = safn?.sækja(heiti);
+  if (safn === undefined) {
+    return undefined;
+  }
+  if (!strangt && afleittSafnErÓnýtt(safn)) {
+    return undefined;
+  }
+  const gildi = safn.sækja(heiti);
   if (gildi === undefined) {
     return undefined;
   }
   if (gildi.length !== væntStök) {
+    if (!strangt) {
+      ónýtAfleiddSöfn.add(safn);
+      return undefined;
+    }
     throw new Error(
       `Afleitt: afleiðsla '${heiti}' hefur ${gildi.length} stök en vænti ${væntStök}.`,
     );
@@ -148,12 +175,16 @@ export function skrifaAfleitt(
 }
 
 /**
- * Les hliðarskrá og skilar safni sýna yfir hana. Rangur töfrastrengur, útgáfa
- * eða lykill þýðir að um úrelta eða ótengda skrá er að ræða og skilar `null`;
- * brotin færslumörk skila villu.
+ * Les hliðarskrá og skilar safni sýna yfir hana. Rangur töfrastrengur eða
+ * útgáfa þýðir að um úrelta skrá er að ræða og skilar `null`. Ef `lykill` er
+ * gefinn er hann borinn saman við hliðarskrána; misræmi skilar `null`. Ef
+ * `lykill` er `null` er hliðarskráin meðhöndluð sem traust smíðaafurð.
+ * Brotin færslumörk skila villu.
  */
-export function lesaAfleitt(bæti: Uint8Array, lykill: Uint8Array): Afleittsafn | null {
-  staðfestaLykil(lykill);
+export function lesaAfleitt(bæti: Uint8Array, lykill: Uint8Array | null): AfleittSafn | null {
+  if (lykill !== null) {
+    staðfestaLykil(lykill);
+  }
   if (bæti.byteLength < STÆRÐ_AFLEIÐSLUHAUSS) {
     return null;
   }
@@ -169,7 +200,7 @@ export function lesaAfleitt(bæti: Uint8Array, lykill: Uint8Array): Afleittsafn 
     haus.útgáfa !== AFLEIÐSLUÚTGÁFA ||
     haus.frátekið !== 0 ||
     haus.heildarlengd !== bæti.byteLength ||
-    !lyklarStemma(haus.lykill, lykill)
+    (lykill !== null && !lyklarStemma(haus.lykill, lykill))
   ) {
     return null;
   }

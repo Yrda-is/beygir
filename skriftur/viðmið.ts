@@ -165,7 +165,7 @@ function búaTilTilvik(): { beygir: LokanlegurBeygir; tilvik: Tilvik } {
     },
     samsetning: () => beygir.samsetning("hesthestur"),
     greina: () => beygir.greina("hesthestur"),
-    "undirbúa.heitt": () => beygir.undirbúa(),
+    "undirbúa.endurtekið": () => beygir.undirbúa(),
   };
 
   return { beygir, tilvik: heit };
@@ -180,6 +180,16 @@ function bætaKöldumTilvikum(tilvik: Tilvik): void {
   tilvik["opnaBeygiÓsamstillt"] = async () => {
     const beygir = await opnaÓsamstillt(false);
     do_not_optimize(beygir.staða());
+    beygir.loka();
+  };
+  tilvik["opnaBeygi+hefur"] = () => {
+    const beygir = opna(false);
+    do_not_optimize(beygir.hefur("hestur"));
+    beygir.loka();
+  };
+  tilvik["opnaBeygi+finna"] = () => {
+    const beygir = opna(false);
+    do_not_optimize(beygir.finna("hestur"));
     beygir.loka();
   };
   tilvik["opnaBeygi+undirbúa"] = () => {
@@ -255,6 +265,7 @@ async function hreinsaNiðurstöðu(niðurstaða: MitataNiðurstaða): Promise<u
     síur: {
       köld: meðKöldu,
       sía: sía ?? null,
+      afleitt: process.env["BEYGIR_AFLEITT"] ?? null,
     },
     keyrsla: {
       runtime: niðurstaða.context.runtime,

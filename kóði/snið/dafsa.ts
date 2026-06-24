@@ -1,4 +1,4 @@
-import { sækjaAfleitt as sækjaAfleiðslu, type Afleittsafn as Afleiðslusafn } from "./afleitt";
+import { sækjaAfleitt as sækjaAfleiðslu, type AfleittSafn as Afleiðslusafn } from "./afleitt";
 import { jafna4 } from "./bitar";
 import { STÆRÐ_DAFSAHAUSS } from "./fastar";
 import { lesaDafsahaus } from "./færslur";
@@ -258,12 +258,14 @@ export class DafsaLesari {
   private readonly merkingar: Uint8Array;
   private readonly mark: Uint32Array;
   private readonly afleiðslur: Afleiðslusafn | undefined;
+  private readonly staðfestaAfleiðslur: boolean;
 
   private viðbót: Uint32Array | undefined;
   private talning: Uint32Array | undefined;
 
-  constructor(bæti: Uint8Array, afleiðslur?: Afleiðslusafn) {
+  constructor(bæti: Uint8Array, afleiðslur?: Afleiðslusafn, staðfestaAfleiðslur = true) {
     this.afleiðslur = afleiðslur;
+    this.staðfestaAfleiðslur = staðfestaAfleiðslur;
     staðfestaLengd(bæti.byteLength, STÆRÐ_DAFSAHAUSS, "haus");
     const sýn = new DataView(bæti.buffer, bæti.byteOffset, bæti.byteLength);
     const haus = lesaDafsahaus(sýn, 0);
@@ -369,9 +371,16 @@ export class DafsaLesari {
       return this.talning;
     }
 
-    const sótt = sækjaAfleiðslu(this.afleiðslur, "dafb.talning", this.hnútafjöldi);
+    const sótt = sækjaAfleiðslu(
+      this.afleiðslur,
+      "dafb.talning",
+      this.hnútafjöldi,
+      this.staðfestaAfleiðslur,
+    );
     if (sótt !== undefined) {
-      staðfestaTalningu(sótt, this.rót, this.lyklafjöldi);
+      if (this.staðfestaAfleiðslur) {
+        staðfestaTalningu(sótt, this.rót, this.lyklafjöldi);
+      }
       this.talning = sótt;
       return sótt;
     }
@@ -434,16 +443,23 @@ export class DafsaLesari {
       return this.viðbót;
     }
 
-    const sótt = sækjaAfleiðslu(this.afleiðslur, "dafb.viðbót", this.leggjafjöldi);
+    const sótt = sækjaAfleiðslu(
+      this.afleiðslur,
+      "dafb.viðbót",
+      this.leggjafjöldi,
+      this.staðfestaAfleiðslur,
+    );
     if (sótt !== undefined) {
-      staðfestaViðbót(
-        sótt,
-        this.leggjamörk,
-        this.lokabitar,
-        this.tryggjaTalningu(),
-        this.mark,
-        this.hnútafjöldi,
-      );
+      if (this.staðfestaAfleiðslur) {
+        staðfestaViðbót(
+          sótt,
+          this.leggjamörk,
+          this.lokabitar,
+          this.tryggjaTalningu(),
+          this.mark,
+          this.hnútafjöldi,
+        );
+      }
       this.viðbót = sótt;
       return sótt;
     }
