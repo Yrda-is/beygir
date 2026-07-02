@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { createReadStream, createWriteStream } from "node:fs";
+import { createReadStream, createWriteStream, statSync } from "node:fs";
 import { rename, rm } from "node:fs/promises";
 import { pipeline } from "node:stream/promises";
 import { brotliCompressSync, constants as zlibFastar, createBrotliCompress } from "node:zlib";
@@ -33,7 +33,7 @@ export async function þjappaBrotliSkrá(
   try {
     await pipeline(
       createReadStream(inntaksslóð),
-      createBrotliCompress(brotliValkostir(Bun.file(inntaksslóð).size, valkostir)),
+      createBrotliCompress(brotliValkostir(statSync(inntaksslóð).size, valkostir)),
       createWriteStream(tímabundinSlóð, { flags: "wx" }),
     );
     await rename(tímabundinSlóð, úttaksslóð);

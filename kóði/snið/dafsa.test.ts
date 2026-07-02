@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { DafsaLesari } from "./dafsa";
+import { DafsaLesari, type Dafsaleggur } from "./dafsa";
 import { raðaDafsa } from "./dafsa-röðun";
 import { STÆRÐ_DAFSAHAUSS } from "./fastar";
 import { skrifaDafsahaus } from "./færslur";
@@ -177,5 +177,69 @@ describe("snið DAFSA", () => {
     const rangurLyklafjöldi = new Uint8Array(bútur);
     new DataView(rangurLyklafjöldi.buffer).setUint32(16, LYKLAR.length + 1, true);
     expect(() => new DafsaLesari(rangurLyklafjöldi).undirbúa()).toThrow(/lyklafjöldi/);
+  });
+});
+
+describe("snið DAFSA netganga", () => {
+  test("rótarstaða spannar allan lykilfjöldann", () => {
+    const lesari = nýrLesari();
+    const rót = lesari.rótarstaða();
+
+    expect(rót.röð).toBe(0);
+    expect(rót.fjöldi).toBe(LYKLAR.length);
+    expect(rót.erLokahnútur).toBe(false); // tómi lykillinn er ekki í LYKLAR
+  });
+
+  test("leggirFrá telur upp leggi í bætaröð með réttu raðnúmerabili", () => {
+    const lesari = nýrLesari();
+    const buf: Dafsaleggur[] = [];
+    const fjöldi = lesari.leggirFrá(lesari.rótarstaða(), buf);
+
+    const merkingar = buf.slice(0, fjöldi).map((l) => String.fromCharCode(l.merking));
+    expect(merkingar).toEqual(["a", "b", "d", "e", "z"]);
+    // Raðnúmer hvers barns sammælist uppsöfnuðum fjölda; summan er heildin.
+    expect(buf.slice(0, fjöldi).map((l) => l.staða.röð)).toEqual([0, 5, 8, 10, 13]);
+    expect(buf.slice(0, fjöldi).map((l) => l.staða.fjöldi)).toEqual([5, 3, 2, 3, 1]);
+    expect(buf.slice(0, fjöldi).reduce((s, l) => s + l.staða.fjöldi, 0)).toBe(LYKLAR.length);
+  });
+
+  test("fylgjaLegg framlengir forskeyti og heldur raðnúmeri í takt við röð()", () => {
+    const lesari = nýrLesari();
+    let staða: ReturnType<typeof lesari.rótarstaða> | null = lesari.rótarstaða();
+    for (const bæti of ascii("abc")) {
+      staða = staða && lesari.fylgjaLegg(staða, bæti);
+    }
+
+    expect(staða).not.toBeNull();
+    expect(staða!.erLokahnútur).toBe(true);
+    expect(staða!.röð).toBe(lesari.röð(ascii("abc"), 0, 3));
+    expect(lesari.fylgjaLegg(lesari.rótarstaða(), ascii("q")[0]!)).toBeNull();
+  });
+
+  test("hrágögn skilar tryggðri viðbót og samræmist netgöngu", () => {
+    const lesari = nýrLesari();
+    const g = lesari.hrágögn();
+
+    expect(g.rót).toBe(lesari.rótarstaða().hnútur);
+    expect(g.viðbót.length).toBe(lesari.leggjafjöldi);
+    // Hrá uppfletting fyrsta leggjar rótar verður að gefa sama raðnúmer og fylgjaLegg.
+    const fyrsta = lesari.fylgjaLegg(lesari.rótarstaða(), g.merkingar[g.leggjamörk[g.rót]!]!);
+    expect(fyrsta!.röð).toBe(g.viðbót[g.leggjamörk[g.rót]!]!);
+  });
+
+  test("grunngögn skilar hráum fylkjum án þess að leiða afleiðslur", () => {
+    const lesari = new DafsaLesari(raðaDafsa(LYKLAR.map(ascii)), {
+      sækja(): Uint32Array | undefined {
+        throw new Error("á ekki að sækja afleiðslu");
+      },
+    });
+    const g = lesari.grunngögn();
+
+    expect(g.rót).toBe(lesari.rótarstaða().hnútur);
+    expect(g.hnútafjöldi).toBe(lesari.hnútafjöldi);
+    expect(g.leggjafjöldi).toBe(lesari.leggjafjöldi);
+    expect(g.leggjamörk.length).toBe(lesari.hnútafjöldi + 1);
+    expect(g.merkingar.length).toBe(lesari.leggjafjöldi);
+    expect(g.mark.length).toBe(lesari.leggjafjöldi);
   });
 });

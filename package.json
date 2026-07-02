@@ -27,19 +27,9 @@
   "files": [
     "kóði/",
     "!kóði/**/*.test.ts",
-    "!kóði/kristínarsnið/",
-    "!kóði/snið/dafsa-röðun.ts",
-    "!kóði/snið/dafsa-smíði.ts",
     "!kóði/snið/skráarsnið/",
-    "!kóði/snið/smiður/",
-    "!kóði/snið/smíði.ts",
     "dreifing/",
-    "!dreifing/kóði/kristínarsnið/",
-    "!dreifing/kóði/snið/dafsa-röðun.d.ts",
-    "!dreifing/kóði/snið/dafsa-smíði.d.ts",
     "!dreifing/kóði/snið/skráarsnið/",
-    "!dreifing/kóði/snið/smiður/",
-    "!dreifing/kóði/snið/smíði.d.ts",
     ".gögn/beygir.bin.br",
     ".gögn/beygir.bin.sha256",
     "README.md",
@@ -57,6 +47,22 @@
       "types": "./dreifing/kóði/beygir/gagnaskrá.d.ts",
       "bun": "./kóði/beygir/gagnaskrá.ts",
       "default": "./dreifing/kóði/beygir/gagnaskrá.js"
+    },
+    "./gagnaskrá/smiður": {
+      "types": "./dreifing/kóði/beygir/gagnaskrá-smiður.d.ts",
+      "bun": "./kóði/beygir/gagnaskrá-smiður.ts",
+      "default": "./dreifing/kóði/beygir/gagnaskrá-smiður.js"
+    },
+    "./dafsa": {
+      "types": "./dreifing/kóði/beygir/dafsa.d.ts",
+      "bun": "./kóði/beygir/dafsa.ts",
+      "browser": "./dreifing/kóði/beygir/dafsa.js",
+      "default": "./dreifing/kóði/beygir/dafsa.js"
+    },
+    "./dafsa/smiður": {
+      "types": "./dreifing/kóði/beygir/dafsa-smiður.d.ts",
+      "bun": "./kóði/beygir/dafsa-smiður.ts",
+      "default": "./dreifing/kóði/beygir/dafsa-smiður.js"
     },
     "./vefur": {
       "types": "./dreifing/kóði/beygir/vefur.d.ts",

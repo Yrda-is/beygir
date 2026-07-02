@@ -8,6 +8,9 @@
     "paths": {
       "@yrda/beygir": ["./kóði/beygir/beygir.ts"],
       "@yrda/beygir/gagnaskrá": ["./kóði/beygir/gagnaskrá.ts"],
+      "@yrda/beygir/gagnaskrá/smiður": ["./kóði/beygir/gagnaskrá-smiður.ts"],
+      "@yrda/beygir/dafsa": ["./kóði/beygir/dafsa.ts"],
+      "@yrda/beygir/dafsa/smiður": ["./kóði/beygir/dafsa-smiður.ts"],
       "@yrda/beygir/vefur": ["./kóði/beygir/vefur.ts"]
     },
     "moduleDetection": "force",

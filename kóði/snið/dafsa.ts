@@ -247,6 +247,48 @@ function finnaLegg(
   return -1;
 }
 
+/**
+ * Staða í DAFSA-neti: hnútur ásamt raðnúmerabili lyklanna undir honum.
+ * Neytendur mega geyma stöður og bera þær saman.
+ */
+export interface Göngustaða {
+  /** Innri hnútvísir; ógagnsær fyrir neytendur, einungis til að halda áfram göngu. */
+  readonly hnútur: number;
+  /** Raðnúmer fyrsta lykils undir hnútnum í bætaraðaðri röð. */
+  readonly röð: number;
+  /** Fjöldi lykla undir hnútnum. */
+  readonly fjöldi: number;
+  /** Hvort hnúturinn sjálfur er lokastaða (þ.e. slóðin að honum er heill lykill). */
+  readonly erLokahnútur: boolean;
+}
+
+/** Leggur út frá hnút: merking (bæti) og staðan sem leggurinn leiðir í. */
+export interface Dafsaleggur {
+  readonly merking: number;
+  readonly staða: Göngustaða;
+}
+
+/** Hrátt DAFSA-fylki án afleiddrar talningar/viðbótar. */
+export interface Dafsagrunngögn {
+  readonly rót: number;
+  readonly hnútafjöldi: number;
+  readonly leggjafjöldi: number;
+  readonly leggjamörk: Uint32Array;
+  readonly lokabitar: Uint8Array;
+  readonly merkingar: Uint8Array;
+  readonly mark: Uint32Array;
+}
+
+/** Hrátt DAFSA-fylki með tryggðri viðbót fyrir heitar leitarlykkjur. */
+export interface Dafsahrágögn {
+  readonly rót: number;
+  readonly leggjamörk: Uint32Array;
+  readonly lokabitar: Uint8Array;
+  readonly merkingar: Uint8Array;
+  readonly mark: Uint32Array;
+  readonly viðbót: Uint32Array;
+}
+
 export class DafsaLesari {
   readonly hnútafjöldi: number;
   readonly leggjafjöldi: number;
@@ -617,5 +659,100 @@ export class DafsaLesari {
     }
 
     return { hnútur, grunnröð: röð, fjöldi };
+  }
+
+  /** Staða rótarinnar; upphafspunktur netgöngu fyrir sérleit (t.d. nálgunarleit). */
+  rótarstaða(): Göngustaða {
+    return {
+      hnútur: this.rót,
+      röð: 0,
+      fjöldi: this.lyklafjöldi,
+      erLokahnútur: erLokastaða(this.lokabitar, this.rót),
+    };
+  }
+
+  /**
+   * Fylgir einum legg með tiltekna merkingu frá `staða`; skilar null ef enginn
+   * slíkur leggur er til. Heldur réttu raðnúmerabili sjálfkrafa svo neytendur
+   * þurfi ekki að endurgera afgangsmarkareikninginn.
+   */
+  fylgjaLegg(staða: Göngustaða, merking: number): Göngustaða | null {
+    const viðbót = this.tryggjaViðbót();
+    const leggur = finnaLegg(this.leggjamörk, this.merkingar, staða.hnútur, merking);
+    if (leggur === -1) {
+      return null;
+    }
+    const endir = this.leggjamörk[staða.hnútur + 1]!;
+    const v = viðbót[leggur]!;
+    const næsta = leggur + 1 < endir ? viðbót[leggur + 1]! : staða.fjöldi;
+    const barn = this.mark[leggur]!;
+    return {
+      hnútur: barn,
+      röð: staða.röð + v,
+      fjöldi: næsta - v,
+      erLokahnútur: erLokastaða(this.lokabitar, barn),
+    };
+  }
+
+  /**
+   * Telur upp alla leggi út frá hnút stöðunnar í bætaröð og bætir þeim í `út`
+   * (sem er hreinsað fyrst); skilar fjölda leggja. Raðnúmerabil hvers barns er
+   * reiknað hér svo neytendur snerti aldrei innri fylkin beint.
+   */
+  leggirFrá(staða: Göngustaða, út: Dafsaleggur[]): number {
+    const viðbót = this.tryggjaViðbót();
+    const byrjun = this.leggjamörk[staða.hnútur]!;
+    const endir = this.leggjamörk[staða.hnútur + 1]!;
+    út.length = 0;
+    for (let leggur = byrjun; leggur < endir; leggur++) {
+      const v = viðbót[leggur]!;
+      const næsta = leggur + 1 < endir ? viðbót[leggur + 1]! : staða.fjöldi;
+      const barn = this.mark[leggur]!;
+      út.push({
+        merking: this.merkingar[leggur]!,
+        staða: {
+          hnútur: barn,
+          röð: staða.röð + v,
+          fjöldi: næsta - v,
+          erLokahnútur: erLokastaða(this.lokabitar, barn),
+        },
+      });
+    }
+    return endir - byrjun;
+  }
+
+  /**
+   * @internal Óstöðugt, ætlað innri notkun: skilar hráu DAFSA-fylkjunum fyrir
+   * innstu lykkjur (t.d. ritfjarlægðarleit) þar sem hlutamyndun stöðu á legg er
+   * of dýr. Lögunin fylgir innra bætasniði og getur breyst milli útgáfa; kjósið
+   * `rótarstaða` / `fylgjaLegg` / `leggirFrá` þegar hægt er. `viðbót` er tryggð
+   * fyrir skil.
+   */
+  hrágögn(): Dafsahrágögn {
+    return {
+      rót: this.rót,
+      leggjamörk: this.leggjamörk,
+      lokabitar: this.lokabitar,
+      merkingar: this.merkingar,
+      mark: this.mark,
+      viðbót: this.tryggjaViðbót(),
+    };
+  }
+
+  /**
+   * @internal Óstöðugt, ætlað innri notkun: skilar hráu DAFSA-fylkjunum án þess
+   * að leiða talningu eða viðbót. Þetta er ætlað neytendum sem leiða eigin
+   * afleiddar töflur í skömmtum; notið `hrágögn()` þegar leitarviðbót þarf strax.
+   */
+  grunngögn(): Dafsagrunngögn {
+    return {
+      rót: this.rót,
+      hnútafjöldi: this.hnútafjöldi,
+      leggjafjöldi: this.leggjafjöldi,
+      leggjamörk: this.leggjamörk,
+      lokabitar: this.lokabitar,
+      merkingar: this.merkingar,
+      mark: this.mark,
+    };
   }
 }
