@@ -6,10 +6,12 @@ import { basename, dirname, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import { Database } from "bun:sqlite";
 import { opnaBeygi, semÍtarlegFærsla, type LokanlegurBeygir } from "@yrda/beygir/gagnaskrá";
-import { bætiSemHex } from "../../kóði/snið/bitar";
-import { GAGNASKRÁRÚTGÁFA } from "../../kóði/snið/smíði";
-import { þjappaBrotliSkrá } from "../../skriftur/brotli";
-import { reiknaUppruna } from "../../skriftur/smíða-gagnaskrá";
+import { GAGNASKRÁRÚTGÁFA, reiknaUppruna, þjappaBrotliSkrá } from "@yrda/beygir/gagnaskrá/smiður";
+
+/** Lágstafað hex; samsvarar innri `bætiSemHex` án þess að flytja það inn. */
+function semHex(bæti: Uint8Array): string {
+  return Buffer.from(bæti.buffer, bæti.byteOffset, bæti.byteLength).toString("hex");
+}
 
 /*
  * Dæmi: smíða SQLite-gagnagrunn úr Beygi.
@@ -444,7 +446,7 @@ async function skrifaFingrafar(slóð: string): Promise<{
   readonly skráarstærð: number;
 }> {
   const fingrafar = await reiknaUppruna(slóð);
-  const sha256 = bætiSemHex(fingrafar.sha256);
+  const sha256 = semHex(fingrafar.sha256);
   const sha256Slóð = `${slóð}.sha256`;
   await Bun.write(sha256Slóð, `${sha256}  ${basename(slóð)}\n`);
   return { sha256Slóð, sha256, skráarstærð: fingrafar.bæti };
@@ -491,7 +493,7 @@ export async function smíðaSqlite(valkostir: SmíðaSqliteValkostir): Promise<
   const lýsigögn: Lýsigögn = {
     pakki: await lesaPakka(),
     inntaksskrá: basename(inntaksslóð),
-    inntakSha256: bætiSemHex(inntak.sha256),
+    inntakSha256: semHex(inntak.sha256),
     inntaksbæti: inntak.bæti,
   };
 

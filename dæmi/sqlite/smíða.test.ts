@@ -3,16 +3,23 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { brotliDecompressSync } from "node:zlib";
 import { Database } from "bun:sqlite";
-import { bætiSemHex } from "../../kóði/snið/bitar";
-import { GAGNASKRÁRÚTGÁFA, smíðaÚrKristínarsniði } from "../../kóði/snið/smíði";
-import { skrifaSmíðaðaGagnaskrá } from "../../skriftur/smíða-gagnaskrá";
+import {
+  GAGNASKRÁRÚTGÁFA,
+  skrifaSmíðaðaGagnaskrá,
+  smíðaÚrKristínarsniði,
+  type Kristínarsnið,
+} from "@yrda/beygir/gagnaskrá/smiður";
 import {
   búaTilBráðabirgðamöppu,
   hreinsaBráðabirgðamöppur,
   lágmarkslína,
 } from "../../próf/smíðihjálp";
 import { bætaVísumViðSqlite, smíðaSqlite } from "./smíða";
-import type { Kristínarsnið } from "../../kóði/kristínarsnið/snið";
+
+/** Lágstafað hex; samsvarar innri `bætiSemHex` án þess að flytja það inn. */
+function semHex(bæti: Uint8Array): string {
+  return Buffer.from(bæti.buffer, bæti.byteOffset, bæti.byteLength).toString("hex");
+}
 
 const bráðabirgðamöppur: string[] = [];
 
@@ -49,7 +56,7 @@ async function skrifaPrófskrá(mappa: string): Promise<string> {
 async function reiknaSha256Hex(slóð: string): Promise<string> {
   const tætari = new Bun.CryptoHasher("sha256");
   tætari.update(await Bun.file(slóð).arrayBuffer());
-  return bætiSemHex(new Uint8Array(tætari.digest()));
+  return semHex(new Uint8Array(tætari.digest()));
 }
 
 describe("SQLite-dæmi", () => {

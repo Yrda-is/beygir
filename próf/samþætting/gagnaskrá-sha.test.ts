@@ -3,7 +3,7 @@ import { bætiSemHex } from "../../kóði/snið/bitar";
 import { BÚTAMERKI_UPPRUNI } from "../../kóði/snið/bútamerki";
 import { lesaUpprunahaus } from "../../kóði/snið/færslur";
 import { lesaHausOgBútaskrá, sækjaBút } from "../../kóði/snið/ilát";
-import { staðfestaSmíðaðaGagnaskrá } from "../../skriftur/smíða-gagnaskrá";
+import { staðfestaSmíðaðaGagnaskrá } from "../../kóði/snið/gagnaskrá-skrif";
 
 interface VæntGagnaskrá {
   readonly sha256: string;

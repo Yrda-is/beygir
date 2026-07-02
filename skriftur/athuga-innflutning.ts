@@ -11,6 +11,9 @@ const snið = resolve(rót, "kóði/snið");
 const pakkaslóðir = new Map([
   ["@yrda/beygir", resolve(rót, "kóði/beygir/beygir.ts")],
   ["@yrda/beygir/gagnaskrá", resolve(rót, "kóði/beygir/gagnaskrá.ts")],
+  ["@yrda/beygir/gagnaskrá/smiður", resolve(rót, "kóði/beygir/gagnaskrá-smiður.ts")],
+  ["@yrda/beygir/dafsa", resolve(rót, "kóði/beygir/dafsa.ts")],
+  ["@yrda/beygir/dafsa/smiður", resolve(rót, "kóði/beygir/dafsa-smiður.ts")],
   ["@yrda/beygir/vefur", resolve(rót, "kóði/beygir/vefur.ts")],
 ]);
 const lagareglur = [
@@ -30,7 +33,13 @@ const lagareglur = [
     skilaboð: "snið má aðeins nota sjálft sig, kristínarsnið og málfræði.",
   },
 ];
-const sniðSmíðisskrár = new Set(["smíði", "dafsa-röðun", "dafsa-smíði"]);
+const sniðSmíðisskrár = new Set([
+  "smíði",
+  "dafsa-röðun",
+  "dafsa-smíði",
+  "gagnaskrá-skrif",
+  "brotli",
+]);
 
 type Sniðslag = "lestur" | "smíði" | "skráarsnið";
 type Villa = { skrá: string; lína: number; dálkur: number; skilaboð: string };

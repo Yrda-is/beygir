@@ -1,8 +1,11 @@
 #!/usr/bin/env bun
 
 import { opnaBeygi, semÍtarlegFærsla, type Uppflettiorð } from "@yrda/beygir/gagnaskrá";
-import { smíðaÚrKristínarsniði } from "../../kóði/snið/smíði";
-import { reiknaUppruna, skrifaSmíðaðaGagnaskrá } from "../../skriftur/smíða-gagnaskrá";
+import {
+  reiknaUppruna,
+  skrifaSmíðaðaGagnaskrá,
+  smíðaÚrKristínarsniði,
+} from "@yrda/beygir/gagnaskrá/smiður";
 
 /*
  * Dæmi: smíða minni BÍN-kjarna úr núverandi gagnaskrá.

@@ -5,8 +5,13 @@ import { sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const DREIFINGARMAPPA = "dreifing";
-const OPINBERAR_INNGÖNGUSKRÁR = ["kóði/beygir/beygir.ts", "kóði/beygir/gagnaskrá.ts"] as const;
-const VEF_INNGÖNGUSKRÁR = ["kóði/beygir/vefur.ts"] as const;
+const OPINBERAR_INNGÖNGUSKRÁR = [
+  "kóði/beygir/beygir.ts",
+  "kóði/beygir/gagnaskrá.ts",
+  "kóði/beygir/gagnaskrá-smiður.ts",
+  "kóði/beygir/dafsa-smiður.ts",
+] as const;
+const VEF_INNGÖNGUSKRÁR = ["kóði/beygir/vefur.ts", "kóði/beygir/dafsa.ts"] as const;
 const VEF_TEXTASÝN = fileURLToPath(new URL("../kóði/snið/textasýn.vefur.ts", import.meta.url));
 
 const textasýnVefsmíði: Bun.BunPlugin = {

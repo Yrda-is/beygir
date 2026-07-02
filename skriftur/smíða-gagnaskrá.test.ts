@@ -7,7 +7,8 @@ import { lesaUpprunahaus } from "../kóði/snið/færslur";
 import { bútamerkiSemU32, lesaHausOgBútaskrá, sækjaBút } from "../kóði/snið/ilát";
 import type { Kristínarsnið } from "../kóði/kristínarsnið/snið";
 import { búaTilBráðabirgðamöppu, hreinsaBráðabirgðamöppur, lágmarkslína } from "../próf/smíðihjálp";
-import { smíðaGagnaskrá, staðfestaSmíðaðaGagnaskrá } from "./smíða-gagnaskrá";
+import { staðfestaSmíðaðaGagnaskrá } from "../kóði/snið/gagnaskrá-skrif";
+import { smíðaGagnaskrá } from "./smíða-gagnaskrá";
 
 const bráðabirgðamöppur: string[] = [];
 const KRISTÍNARSNIÐSREITIR = [
