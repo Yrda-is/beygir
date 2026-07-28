@@ -18,7 +18,10 @@ import type {
   Markþáttaskilyrði,
   Marksía,
   Orðsía,
+  SkráðGreining,
+  SkráðGreiningarniðurstaða,
   Tilgátubeyging,
+  Tilgátugreining,
   Uppflettiorð,
   Velja,
   VeljaUppflettiorð,
@@ -45,7 +48,10 @@ export type {
   Markþáttaskilyrði,
   Marksía,
   Orðsía,
+  SkráðGreining,
+  SkráðGreiningarniðurstaða,
   Tilgátubeyging,
+  Tilgátugreining,
   Uppflettiorð,
   Velja,
   VeljaUppflettiorð,
@@ -747,26 +753,31 @@ export interface Beygir {
   samsetning(orð: string): readonly string[] | null;
 
   /**
-   * Greinir mögulegt samsett orð með þekktum höfuðlið.
+   * Greinir orð með raunverulegum niðurstöðum eða tilgátu um samsetningu.
    *
-   * Greiningin er aðeins skilað fyrir orð sem eru ekki sjálf til sem skráð
-   * uppflettiorð eða beygingarfærsla. Niðurstaðan er merkt `tilgáta: true`;
-   * afleiddar beygingar fá `auðkenni: null` og geyma auðkenni höfuðliðar í
-   * `höfuðAuðkenni`. Færslurnar í `beygingar` líkjast venjulegum
-   * {@link Færsla}-niðurstöðum, en eru tilgátur sem eru leiddar af
-   * beygingum höfuðliðarins.
+   * Ef orðið finnst sem skráð uppflettiorð eða beygingarfærsla er niðurstaðan
+   * merkt `tilgáta: false`. `niðurstöður` varðveitir öll uppflettiorð sem passa
+   * og raunverulegar beygingar þeirra úr gagnaskránni.
+   *
+   * Aðeins þegar ekkert skráð finnst er reynt að þátta orðið með þekktum
+   * höfuðlið. Sú niðurstaða er merkt `tilgáta: true`; afleiddar beygingar fá
+   * `auðkenni: null` og geyma auðkenni höfuðliðar í `höfuðAuðkenni`.
    *
    * Tímaflækja: `O(l^2 + f)` í versta falli, þar sem `f` er fjöldi formraða
-   * höfuðliðarins sem greiningin byggir á.
+   * skráðra niðurstaðna eða höfuðliðarins sem greiningin byggir á.
    *
    * @param orð Orðið sem á að greina.
-   * @returns Tilgátugreining samsetts orðs, eða `null`.
+   * @returns Skráð greining, tilgátugreining samsetts orðs eða `null`.
    *
    * @example
    * ```ts
    * const greining = beygir.greina("hesthús");
-   * if (greining !== null) {
+   * if (greining === null) {
+   *   // Hvorki skráð niðurstaða né tilgáta fannst.
+   * } else if (greining.tilgáta) {
    *   greining.beygingar.map((færsla) => færsla.beygingarmynd);
+   * } else {
+   *   greining.niðurstöður.map(({ uppflettiorð }) => uppflettiorð.orð);
    * }
    * ```
    */

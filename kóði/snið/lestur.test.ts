@@ -441,13 +441,17 @@ describe("snið lestur", () => {
       uppflettiorð: "hesthestur",
       orðflokkur: "kk",
     });
-    expect(greining?.beygingar[0]).toMatchObject({
+    expect(greining?.tilgáta).toBe(true);
+    if (greining?.tilgáta !== true) {
+      throw new Error("Vænti tilgátugreiningar.");
+    }
+    expect(greining.beygingar[0]).toMatchObject({
       orð: "hesthestur",
       auðkenni: null,
       höfuðAuðkenni: 1,
       tilgáta: true,
     });
-    expect(greining?.beygingar.map((færsla) => færsla.beygingarmynd)).toEqual([
+    expect(greining.beygingar.map((færsla) => færsla.beygingarmynd)).toEqual([
       "hesthestur",
       "hesthest",
       "hesthest",
@@ -459,7 +463,12 @@ describe("snið lestur", () => {
       höfuðUppflettiorð: "hestur",
       uppflettiorð: "hesthestur",
     });
-    expect(lesari.greina("hest")).toBeNull();
+    expect(lesari.greina("hest")).toMatchObject({
+      orð: "hest",
+      tilgáta: false,
+      niðurstöður: [{ uppflettiorð: { orð: "hestur", auðkenni: 1 } }],
+    });
+    expect(lesari.greina("xy")).toBeNull();
   });
 
   test("leitar í uppflettiorðum, beygingarmyndum og báðum sviðum", async () => {

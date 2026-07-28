@@ -160,8 +160,21 @@ export interface Tilgátubeyging {
   readonly tilgáta: true;
 }
 
-/** Greining með brjóstviti á samsettu orði sem er leitt af þekktum höfuðlið. */
-export interface Greining {
+/** Skráð uppflettiorð og raunverulegar beygingar þess úr gagnaskránni. */
+export interface SkráðGreiningarniðurstaða {
+  readonly uppflettiorð: Uppflettiorð;
+  readonly beygingar: readonly Færsla[];
+}
+
+/** Greining sem byggir á einni eða fleiri raunverulegum niðurstöðum úr gagnaskránni. */
+export interface SkráðGreining {
+  readonly orð: string;
+  readonly tilgáta: false;
+  readonly niðurstöður: readonly SkráðGreiningarniðurstaða[];
+}
+
+/** Tilgátugreining samsetts orðs sem er leitt af þekktum höfuðlið. */
+export interface Tilgátugreining {
   readonly orð: string;
   readonly samsett: true;
   readonly tilgáta: true;
@@ -174,6 +187,9 @@ export interface Greining {
   readonly orðflokkur: string;
   readonly beygingar: readonly Tilgátubeyging[];
 }
+
+/** Raunveruleg niðurstaða úr gagnaskránni eða tilgáta þegar ekkert skráð finnst. */
+export type Greining = SkráðGreining | Tilgátugreining;
 
 export type Velja<Valið> = (færsla: ÍtarlegFærsla) => Valið;
 export type VeljaUppflettiorð<Valið> = (uppflettiorð: Uppflettiorð) => Valið;
@@ -2407,6 +2423,23 @@ export class Lesari {
 
   greina(orð: string): Greining | null {
     staðfestaTexta("greina", orð);
+    const skráðUppflettiorð = this.finna(orð);
+    if (skráðUppflettiorð.length > 0) {
+      const niðurstöður = new Array<SkráðGreiningarniðurstaða>(skráðUppflettiorð.length);
+      for (let vísir = 0; vísir < skráðUppflettiorð.length; vísir++) {
+        const uppflettiorð = skráðUppflettiorð[vísir]!;
+        niðurstöður[vísir] = {
+          uppflettiorð,
+          beygingar: this.beygingar(uppflettiorð),
+        };
+      }
+      return {
+        orð,
+        tilgáta: false,
+        niðurstöður,
+      };
+    }
+
     const þáttun = this.þáttaSamsetningu(orð);
     if (þáttun === null) {
       return null;
