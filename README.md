@@ -56,7 +56,7 @@ const leitarniðurstöður = beygir.leita("hund", {
 
 const færslur = beygir.finnaBeygingarfærslur("hesti", {
   sía: { mark: "ÞGFET" },
-  velja: (færsla) => ({
+  varpa: (færsla) => ({
     orð: færsla.orð,
     mark: færsla.mark,
   }),

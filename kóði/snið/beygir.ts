@@ -66,42 +66,42 @@ export class Beygir implements LokanlegurBeygir {
     return this.#sækjaLesara().sækja(auðkenni);
   }
 
-  finna<Valið = Uppflettiorð>(texti: string, valkostir?: Orðaval<Valið>): readonly Valið[] {
+  finna<Varpað = Uppflettiorð>(texti: string, valkostir?: Orðaval<Varpað>): readonly Varpað[] {
     return this.#sækjaLesara().finna(texti, valkostir);
   }
 
-  finnaUppflettiorð<Valið = Uppflettiorð>(
+  finnaUppflettiorð<Varpað = Uppflettiorð>(
     orð: string,
-    valkostir?: Orðaval<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Orðaval<Varpað>,
+  ): readonly Varpað[] {
     return this.#sækjaLesara().finnaUppflettiorð(orð, valkostir);
   }
 
-  finnaUppflettiorðAfBeygingarmynd<Valið = Uppflettiorð>(
+  finnaUppflettiorðAfBeygingarmynd<Varpað = Uppflettiorð>(
     beygingarmynd: string,
-    valkostir?: Orðaval<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Orðaval<Varpað>,
+  ): readonly Varpað[] {
     return this.#sækjaLesara().finnaUppflettiorðAfBeygingarmynd(beygingarmynd, valkostir);
   }
 
-  finnaBeygingarfærslur<Valið = Færsla>(
+  finnaBeygingarfærslur<Varpað = Færsla>(
     beygingarmynd: string,
-    valkostir?: Færsluval<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Færsluval<Varpað>,
+  ): readonly Varpað[] {
     return this.#sækjaLesara().finnaBeygingarfærslur(beygingarmynd, valkostir);
   }
 
-  beygingar<Valið = Færsla>(
+  beygingar<Varpað = Færsla>(
     uppflettiorð: Uppflettiorð,
-    valkostir?: Beygingaval<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Beygingaval<Varpað>,
+  ): readonly Varpað[] {
     return this.#sækjaLesara().beygingar(uppflettiorð, valkostir);
   }
 
-  beygingarAuðkennis<Valið = Færsla>(
+  beygingarAuðkennis<Varpað = Færsla>(
     auðkenni: Auðkenni,
-    valkostir?: Beygingaval<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Beygingaval<Varpað>,
+  ): readonly Varpað[] {
     return this.#sækjaLesara().beygingarAuðkennis(auðkenni, valkostir);
   }
 
@@ -113,11 +113,11 @@ export class Beygir implements LokanlegurBeygir {
     return this.#sækjaLesara().beygingarmyndirAuðkennis(auðkenni);
   }
 
-  skiptaUmFall<Valið = Færsla>(
+  skiptaUmFall<Varpað = Færsla>(
     færsla: Færsla,
     fall: Fall,
-    valkostir?: Fallaval<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Fallaval<Varpað>,
+  ): readonly Varpað[] {
     return this.#sækjaLesara().skiptaUmFall(færsla, fall, valkostir);
   }
 

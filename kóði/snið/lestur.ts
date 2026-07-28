@@ -191,8 +191,8 @@ export interface Tilgátugreining {
 /** Raunveruleg niðurstaða úr gagnaskránni eða tilgáta þegar ekkert skráð finnst. */
 export type Greining = SkráðGreining | Tilgátugreining;
 
-export type Velja<Valið> = (færsla: ÍtarlegFærsla) => Valið;
-export type VeljaUppflettiorð<Valið> = (uppflettiorð: Uppflettiorð) => Valið;
+export type Vörpun<Varpað> = (færsla: ÍtarlegFærsla) => Varpað;
+export type VörpunUppflettiorðs<Varpað> = (uppflettiorð: Uppflettiorð) => Varpað;
 
 export interface Hástafanæmisvalkostir {
   readonly hástafanæmt?: boolean;
@@ -206,23 +206,23 @@ export interface HefurBeygingarfærsluvalkostir extends Hástafanæmisvalkostir 
   readonly sía?: Færslusía;
 }
 
-export interface Beygingarvalkostir<Valið = Færsla> {
+export interface Beygingarvalkostir<Varpað = Færsla> {
   readonly sía?: Beygingarsía;
-  readonly velja?: Velja<Valið>;
+  readonly varpa?: Vörpun<Varpað>;
 }
 
-export interface Uppflettiorðaleitarvalkostir<Valið = Uppflettiorð> extends Hástafanæmisvalkostir {
+export interface Uppflettiorðaleitarvalkostir<Varpað = Uppflettiorð> extends Hástafanæmisvalkostir {
   readonly sía?: Orðsía;
-  readonly velja?: VeljaUppflettiorð<Valið>;
+  readonly varpa?: VörpunUppflettiorðs<Varpað>;
 }
 
-export interface Beygingarfærsluleitarvalkostir<Valið = Færsla> extends Hástafanæmisvalkostir {
+export interface Beygingarfærsluleitarvalkostir<Varpað = Færsla> extends Hástafanæmisvalkostir {
   readonly sía?: Færslusía;
-  readonly velja?: Velja<Valið>;
+  readonly varpa?: Vörpun<Varpað>;
 }
 
-export interface Fallskiptavalkostir<Valið = Færsla> {
-  readonly velja?: Velja<Valið>;
+export interface Fallskiptavalkostir<Varpað = Færsla> {
+  readonly varpa?: Vörpun<Varpað>;
 }
 
 export interface Lesaravalkostir {
@@ -245,7 +245,7 @@ export type {
 } from "./leit";
 
 /** Skilar ítarlegri færslu úr `finnaBeygingarfærslur`/`beygingar*` í stað léttrar færslu. */
-export const semÍtarlegFærsla: Velja<ÍtarlegFærsla> = (færsla) => færsla;
+export const semÍtarlegFærsla: Vörpun<ÍtarlegFærsla> = (færsla) => færsla;
 
 const TÓMT_U32 = 0xffff_ffff;
 const STAFMYNSTUR_FYRSTI_HÁSTAFUR = 1;
@@ -306,10 +306,10 @@ const FÆRSLUSÍUREITIR = ["auðkenni", "orð", "orðflokkur", "hluti", "mark", 
 const HÁSTAFANÆMISVALKOSTIR = ["hástafanæmt"] as const;
 const HEFUR_ORÐ_VALKOSTIR = ["sía", "hástafanæmt"] as const;
 const HEFUR_FÆRSLU_VALKOSTIR = ["sía", "hástafanæmt"] as const;
-const BEYGINGARVALKOSTIR = ["sía", "velja"] as const;
-const ORÐALEITARVALKOSTIR = ["sía", "velja", "hástafanæmt"] as const;
-const FÆRSLULEITARVALKOSTIR = ["sía", "velja", "hástafanæmt"] as const;
-const FALLSKIPTAVALKOSTIR = ["velja"] as const;
+const BEYGINGARVALKOSTIR = ["sía", "varpa"] as const;
+const ORÐALEITARVALKOSTIR = ["sía", "varpa", "hástafanæmt"] as const;
+const FÆRSLULEITARVALKOSTIR = ["sía", "varpa", "hástafanæmt"] as const;
+const FALLSKIPTAVALKOSTIR = ["varpa"] as const;
 const NF_MARKAMASKI = reiknaMarkamaska(["NF"]);
 const ÞF_MARKAMASKI = reiknaMarkamaska(["ÞF"]);
 const ÞGF_MARKAMASKI = reiknaMarkamaska(["ÞGF"]);
@@ -692,18 +692,18 @@ function sækjaValfrjálstHástafanæmi(
   return gildi;
 }
 
-function sækjaValfrjálstVelja(
+function sækjaValfrjálsaVörpun(
   valkostir: Record<string, unknown> | undefined,
   heiti: string,
 ): ((gildi: unknown) => unknown) | undefined {
-  const velja = valkostir?.["velja"];
-  if (velja === undefined) {
+  const varpa = valkostir?.["varpa"];
+  if (varpa === undefined) {
     return undefined;
   }
-  if (typeof velja !== "function") {
-    throw new TypeError(`${heiti}.valkostir.velja verður að vera fall.`);
+  if (typeof varpa !== "function") {
+    throw new TypeError(`${heiti}.valkostir.varpa verður að vera fall.`);
   }
-  return velja as (gildi: unknown) => unknown;
+  return varpa as (gildi: unknown) => unknown;
 }
 
 export class Lesari {
@@ -1995,10 +1995,10 @@ export class Lesari {
     return false;
   }
 
-  beygingarAuðkennis<Valið = Færsla>(
+  beygingarAuðkennis<Varpað = Færsla>(
     auðkenni: number,
-    valkostir?: Beygingarvalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Beygingarvalkostir<Varpað>,
+  ): readonly Varpað[] {
     const staðfestirValkostir = staðfestaValkostahlut(
       "beygingarAuðkennis",
       valkostir,
@@ -2008,30 +2008,30 @@ export class Lesari {
       staðfestirValkostir?.["sía"] as Beygingarsía | undefined,
       "Beygingarsía",
     );
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "beygingarAuðkennis") as
-      | Velja<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "beygingarAuðkennis") as
+      | Vörpun<Varpað>
       | undefined;
     const stofnsæti = this.stofnsætiAfAuðkenni(auðkenni);
     if (stofnsæti === TÓMT_U32) {
       return [];
     }
-    return this.beygingarStofns(stofnsæti, sía, velja);
+    return this.beygingarStofns(stofnsæti, sía, varpa);
   }
 
-  beygingar<Valið = Færsla>(
+  beygingar<Varpað = Færsla>(
     uppflettiorð: Uppflettiorð,
-    valkostir?: Beygingarvalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Beygingarvalkostir<Varpað>,
+  ): readonly Varpað[] {
     const staðfestirValkostir = staðfestaValkostahlut("beygingar", valkostir, BEYGINGARVALKOSTIR);
     const sía = Lesari.undirbúaBeygingarsíu(
       staðfestirValkostir?.["sía"] as Beygingarsía | undefined,
       "Beygingarsía",
     );
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "beygingar") as
-      | Velja<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "beygingar") as
+      | Vörpun<Varpað>
       | undefined;
     const stofnsæti = this.stofnsætiFyrirUppflettiorð(uppflettiorð);
-    return this.beygingarStofns(stofnsæti, sía, velja);
+    return this.beygingarStofns(stofnsæti, sía, varpa);
   }
 
   beygingarmyndirAuðkennis(auðkenni: number): string[] {
@@ -2046,18 +2046,18 @@ export class Lesari {
     return this.beygingarmyndirStofns(this.stofnsætiFyrirUppflettiorð(uppflettiorð));
   }
 
-  private beygingarStofns<Valið>(
+  private beygingarStofns<Varpað>(
     stofnsæti: number,
     sía: UndirbúinBeygingarsía | undefined,
-    velja: Velja<Valið> | undefined,
-  ): readonly Valið[] {
+    varpa: Vörpun<Varpað> | undefined,
+  ): readonly Varpað[] {
     const grunnur = this.stofngrunnur(stofnsæti);
     const tilvikaformraðir = this.tryggjaTilvikaformraðir();
     const fjöldi = this.fjöldiSniðliða(stofnsæti);
     const notaRaðarminni = this.stafmynsturStofns(stofnsæti) !== STAFMYNSTUR_UNDANTEKNING;
     const formraðir: number[] = [];
     const formmyndir: string[] = [];
-    const út: Valið[] = [];
+    const út: Varpað[] = [];
 
     for (let sniðliður = 0; sniðliður < fjöldi; sniðliður++) {
       const orðmyndasæti = grunnur.byrjun + sniðliður;
@@ -2071,9 +2071,9 @@ export class Lesari {
         ? this.formtextiMeðRaðarminni(stofnsæti, orðmyndasæti, formröð, formraðir, formmyndir)
         : this.formtexti(stofnsæti, orðmyndasæti, formröð);
       út.push(
-        velja === undefined
-          ? (this.færsla(stofnsæti, sniðliður, beygingarmynd, grunnur) as Valið)
-          : velja(this.ítarlegFærsla(stofnsæti, sniðliður, beygingarmynd, grunnur)),
+        varpa === undefined
+          ? (this.færsla(stofnsæti, sniðliður, beygingarmynd, grunnur) as Varpað)
+          : varpa(this.ítarlegFærsla(stofnsæti, sniðliður, beygingarmynd, grunnur)),
       );
     }
 
@@ -2122,18 +2122,18 @@ export class Lesari {
     return formmyndir;
   }
 
-  finnaUppflettiorð<Valið = Uppflettiorð>(
+  finnaUppflettiorð<Varpað = Uppflettiorð>(
     orð: string,
-    valkostir?: Uppflettiorðaleitarvalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Uppflettiorðaleitarvalkostir<Varpað>,
+  ): readonly Varpað[] {
     staðfestaTexta("finnaUppflettiorð", orð);
     const staðfestirValkostir = staðfestaValkostahlut(
       "finnaUppflettiorð",
       valkostir,
       ORÐALEITARVALKOSTIR,
     );
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "finnaUppflettiorð") as
-      | VeljaUppflettiorð<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "finnaUppflettiorð") as
+      | VörpunUppflettiorðs<Varpað>
       | undefined;
     const erHástafanæmt = sækjaValfrjálstHástafanæmi(staðfestirValkostir, "finnaUppflettiorð");
     const undirbúinSía = Lesari.undirbúaOrðsíu(staðfestirValkostir?.["sía"] as Orðsía | undefined);
@@ -2148,7 +2148,7 @@ export class Lesari {
     }
 
     const lágstafað = this.lágstöfuðFyrirspurn(orð, lengd);
-    const út: Valið[] = [];
+    const út: Varpað[] = [];
     const svið = this.tryggjaFlettuvísanasvið();
     for (
       let vísir = svið.hliðrun[uppflettiröð]!;
@@ -2165,23 +2165,23 @@ export class Lesari {
         continue;
       }
       const uppflettiorð = this.uppflettiorð(stofnsæti);
-      út.push(velja === undefined ? (uppflettiorð as Valið) : velja(uppflettiorð));
+      út.push(varpa === undefined ? (uppflettiorð as Varpað) : varpa(uppflettiorð));
     }
     return út;
   }
 
-  finnaBeygingarfærslur<Valið = Færsla>(
+  finnaBeygingarfærslur<Varpað = Færsla>(
     beygingarmynd: string,
-    valkostir?: Beygingarfærsluleitarvalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Beygingarfærsluleitarvalkostir<Varpað>,
+  ): readonly Varpað[] {
     staðfestaTexta("finnaBeygingarfærslur", beygingarmynd);
     const staðfestirValkostir = staðfestaValkostahlut(
       "finnaBeygingarfærslur",
       valkostir,
       FÆRSLULEITARVALKOSTIR,
     );
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "finnaBeygingarfærslur") as
-      | Velja<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "finnaBeygingarfærslur") as
+      | Vörpun<Varpað>
       | undefined;
     const erHástafanæmt = sækjaValfrjálstHástafanæmi(staðfestirValkostir, "finnaBeygingarfærslur");
     const undirbúinSía = Lesari.undirbúaFærslusíu(
@@ -2198,7 +2198,7 @@ export class Lesari {
     }
 
     const lágstafað = this.lágstöfuðFyrirspurn(beygingarmynd, lengd);
-    const út: Valið[] = [];
+    const út: Varpað[] = [];
     const svið = this.tryggjaFormvísanasvið();
     const stofnByrjun = this.tryggjaStofnByrjun();
     for (let vísir = svið.hliðrun[formröð]!; vísir < svið.hliðrun[formröð + 1]!; vísir++) {
@@ -2223,7 +2223,7 @@ export class Lesari {
         continue;
       }
 
-      if (velja === undefined) {
+      if (varpa === undefined) {
         út.push({
           orð: grunnur.orð,
           auðkenni: grunnur.auðkenni,
@@ -2231,26 +2231,26 @@ export class Lesari {
           hluti: grunnur.hluti,
           beygingarmynd: texti,
           mark: this.mörk.sækja(markvísir),
-        } as Valið);
+        } as Varpað);
       } else {
-        út.push(velja(this.ítarlegFærsla(stofnsæti, sniðliður, texti, grunnur)));
+        út.push(varpa(this.ítarlegFærsla(stofnsæti, sniðliður, texti, grunnur)));
       }
     }
     return út;
   }
 
-  finnaUppflettiorðAfBeygingarmynd<Valið = Uppflettiorð>(
+  finnaUppflettiorðAfBeygingarmynd<Varpað = Uppflettiorð>(
     beygingarmynd: string,
-    valkostir?: Uppflettiorðaleitarvalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Uppflettiorðaleitarvalkostir<Varpað>,
+  ): readonly Varpað[] {
     staðfestaTexta("finnaUppflettiorðAfBeygingarmynd", beygingarmynd);
     const staðfestirValkostir = staðfestaValkostahlut(
       "finnaUppflettiorðAfBeygingarmynd",
       valkostir,
       ORÐALEITARVALKOSTIR,
     );
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "finnaUppflettiorðAfBeygingarmynd") as
-      | VeljaUppflettiorð<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "finnaUppflettiorðAfBeygingarmynd") as
+      | VörpunUppflettiorðs<Varpað>
       | undefined;
     const erHástafanæmt = sækjaValfrjálstHástafanæmi(
       staðfestirValkostir,
@@ -2269,7 +2269,7 @@ export class Lesari {
 
     const lágstafað = this.lágstöfuðFyrirspurn(beygingarmynd, lengd);
     const séð = new Set<number>();
-    const út: Valið[] = [];
+    const út: Varpað[] = [];
     this.fyrirHvertFormtilvik(formröð, (stofnsæti, sniðliður) => {
       const orðmyndasæti = this.byrjunStofns(stofnsæti) + sniðliður;
       if (
@@ -2293,20 +2293,20 @@ export class Lesari {
       }
       séð.add(auðkenni);
       const uppflettiorð = this.uppflettiorð(stofnsæti);
-      út.push(velja === undefined ? (uppflettiorð as Valið) : velja(uppflettiorð));
+      út.push(varpa === undefined ? (uppflettiorð as Varpað) : varpa(uppflettiorð));
       return undefined;
     });
     return út;
   }
 
-  finna<Valið = Uppflettiorð>(
+  finna<Varpað = Uppflettiorð>(
     texti: string,
-    valkostir?: Uppflettiorðaleitarvalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Uppflettiorðaleitarvalkostir<Varpað>,
+  ): readonly Varpað[] {
     staðfestaTexta("finna", texti);
     const staðfestirValkostir = staðfestaValkostahlut("finna", valkostir, ORÐALEITARVALKOSTIR);
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "finna") as
-      | VeljaUppflettiorð<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "finna") as
+      | VörpunUppflettiorðs<Varpað>
       | undefined;
     const erHástafanæmt = sækjaValfrjálstHástafanæmi(staðfestirValkostir, "finna");
     const undirbúinSía = Lesari.undirbúaOrðsíu(staðfestirValkostir?.["sía"] as Orðsía | undefined);
@@ -2316,7 +2316,7 @@ export class Lesari {
     }
 
     const séð = new Set<number>();
-    const út: Valið[] = [];
+    const út: Varpað[] = [];
     const bætaVið = (stofnsæti: number): void => {
       if (undirbúinSía !== undefined && !this.síaOrð(stofnsæti, undirbúinSía)) {
         return;
@@ -2327,7 +2327,7 @@ export class Lesari {
       }
       séð.add(auðkenni);
       const uppflettiorð = this.uppflettiorð(stofnsæti);
-      út.push(velja === undefined ? (uppflettiorð as Valið) : velja(uppflettiorð));
+      út.push(varpa === undefined ? (uppflettiorð as Varpað) : varpa(uppflettiorð));
     };
 
     const lágstafað = this.lágstöfuðFyrirspurn(texti, lengd);
@@ -2366,19 +2366,19 @@ export class Lesari {
     return út;
   }
 
-  skiptaUmFall<Valið = Færsla>(
+  skiptaUmFall<Varpað = Færsla>(
     færsla: Færsla,
     fall: Fall,
-    valkostir?: Fallskiptavalkostir<Valið>,
-  ): readonly Valið[] {
+    valkostir?: Fallskiptavalkostir<Varpað>,
+  ): readonly Varpað[] {
     staðfestaFall(fall);
     const staðfestirValkostir = staðfestaValkostahlut(
       "skiptaUmFall",
       valkostir,
       FALLSKIPTAVALKOSTIR,
     );
-    const velja = sækjaValfrjálstVelja(staðfestirValkostir, "skiptaUmFall") as
-      | Velja<Valið>
+    const varpa = sækjaValfrjálsaVörpun(staðfestirValkostir, "skiptaUmFall") as
+      | Vörpun<Varpað>
       | undefined;
     const { stofnsæti, sniðliður, grunnur } = this.finnaFærslusæti(færsla);
     const upprunamaski = this.markamaski(this.markvísir(grunnur.sniðvísir, sniðliður));
@@ -2392,7 +2392,7 @@ export class Lesari {
     const notaRaðarminni = this.stafmynsturStofns(stofnsæti) !== STAFMYNSTUR_UNDANTEKNING;
     const formraðir: number[] = [];
     const formmyndir: string[] = [];
-    const út: Valið[] = [];
+    const út: Varpað[] = [];
 
     for (let næstiSniðliður = 0; næstiSniðliður < fjöldi; næstiSniðliður++) {
       const markvísir = this.markvísir(grunnur.sniðvísir, næstiSniðliður);
@@ -2407,9 +2407,9 @@ export class Lesari {
         ? this.formtextiMeðRaðarminni(stofnsæti, orðmyndasæti, formröð, formraðir, formmyndir)
         : this.formtexti(stofnsæti, orðmyndasæti, formröð);
       út.push(
-        velja === undefined
-          ? (this.færsla(stofnsæti, næstiSniðliður, beygingarmynd, grunnur) as Valið)
-          : velja(this.ítarlegFærsla(stofnsæti, næstiSniðliður, beygingarmynd, grunnur)),
+        varpa === undefined
+          ? (this.færsla(stofnsæti, næstiSniðliður, beygingarmynd, grunnur) as Varpað)
+          : varpa(this.ítarlegFærsla(stofnsæti, næstiSniðliður, beygingarmynd, grunnur)),
       );
     }
 

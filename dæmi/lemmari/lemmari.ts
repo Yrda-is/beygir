@@ -15,12 +15,12 @@ const orðskipting = new Intl.Segmenter("is", { granularity: "word" });
 
 function finnaLemmur(orð: string): Set<string> {
   let lemmur = beygir.finna(orð, {
-    velja: (uppflettiorð) => uppflettiorð.orð,
+    varpa: (uppflettiorð) => uppflettiorð.orð,
   });
 
   if (lemmur.length === 0) {
     lemmur = beygir.finna(orð.toLocaleLowerCase("is"), {
-      velja: (uppflettiorð) => uppflettiorð.orð,
+      varpa: (uppflettiorð) => uppflettiorð.orð,
     });
   }
 

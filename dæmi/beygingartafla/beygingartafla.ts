@@ -24,7 +24,7 @@ if (niðurstöður.length === 0) {
 function prentaBeygingar(uppflettiorð: Uppflettiorð, sía?: Beygingarsía): void {
   const færslur = beygir.beygingar(uppflettiorð, {
     ...(sía === undefined ? {} : { sía }),
-    velja: ({ mark, beygingarmynd }) => ({ mark, beygingarmynd }),
+    varpa: ({ mark, beygingarmynd }) => ({ mark, beygingarmynd }),
   });
 
   console.log(`\nBeygingartafla fyrir "${uppflettiorð.orð}" (${uppflettiorð.orðflokkur}):`);

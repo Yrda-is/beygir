@@ -100,7 +100,7 @@ describe("sérstök frávik", () => {
         ).toContain(tilvik.auðkenni);
         expect(
           sækjaFærslu(
-            beygir.beygingarAuðkennis(tilvik.auðkenni, { velja: semÍtarlegFærsla }),
+            beygir.beygingarAuðkennis(tilvik.auðkenni, { varpa: semÍtarlegFærsla }),
             tilvik,
           ),
         ).toBeDefined();
@@ -117,13 +117,13 @@ describe("sérstök frávik", () => {
         });
         expect(
           sækjaFærslu(
-            beygir.beygingarAuðkennis(tilvik.auðkenni, { velja: semÍtarlegFærsla }),
+            beygir.beygingarAuðkennis(tilvik.auðkenni, { varpa: semÍtarlegFærsla }),
             tilvik,
           ),
         ).toBeDefined();
         expect(
           sækjaFærslu(
-            beygir.finnaBeygingarfærslur(tilvik.beygingarmynd, { velja: semÍtarlegFærsla }),
+            beygir.finnaBeygingarfærslur(tilvik.beygingarmynd, { varpa: semÍtarlegFærsla }),
             tilvik,
           ),
         ).toBeDefined();
