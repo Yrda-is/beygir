@@ -409,7 +409,7 @@
       <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
       <span data-lina class="inndráttur-1"><span class="kóði-gildi">{</span></span>
       <span data-lina class="inndráttur-2">
-        <span class="kóði-gildi">velja: ({ auðkenni, orð, orðflokkur }) => ({</span></span
+        <span class="kóði-gildi">varpa: ({ auðkenni, orð, orðflokkur }) => ({</span></span
       >
       <span data-lina class="inndráttur-3"><span class="kóði-gildi">auðkenni,</span></span>
       <span data-lina class="inndráttur-3"><span class="kóði-gildi">orð,</span></span>
@@ -442,7 +442,7 @@
       <span data-lina class="inndráttur-1"><span class="kóði-gildi" data-ord></span>,</span>
       <span data-lina class="inndráttur-1"><span class="kóði-gildi">{</span></span>
       <span data-lina class="inndráttur-2"
-        ><span class="kóði-gildi">velja: (færsla) => [</span></span
+        ><span class="kóði-gildi">varpa: (færsla) => [</span></span
       >
       <span data-lina class="inndráttur-3"><span class="kóði-gildi">færsla.orð,</span></span>
       <span data-lina class="inndráttur-3"
@@ -527,20 +527,20 @@
         ].join("\n");
       }
 
-      function veljaUppflettiorð({ auðkenni, orð, orðflokkur }) {
+      function varpaUppflettiorði({ auðkenni, orð, orðflokkur }) {
         return { auðkenni, orð, orðflokkur };
       }
 
-      function veljaBeygingarfærslu(færsla) {
+      function varpaBeygingarfærslu(færsla) {
         return [færsla.orð, færsla.beygingarmynd, færsla.mark];
       }
 
       function mótaLeitarsamhengi(beygir, texti) {
         return {
           texti,
-          uppflettiorð: beygir.finna(texti, { velja: veljaUppflettiorð }),
+          uppflettiorð: beygir.finna(texti, { varpa: varpaUppflettiorði }),
           beygingarfærslur: beygir.finnaBeygingarfærslur(texti, {
-            velja: veljaBeygingarfærslu,
+            varpa: varpaBeygingarfærslu,
           }),
         };
       }
@@ -561,7 +561,7 @@
         },
         finna: {
           dæmi: "hesti",
-          sækja: (beygir, orð) => beygir.finna(orð, { velja: veljaUppflettiorð }),
+          sækja: (beygir, orð) => beygir.finna(orð, { varpa: varpaUppflettiorði }),
         },
         beygingarmyndir: {
           dæmi: "hestur",
@@ -574,7 +574,7 @@
           dæmi: "maður",
           sækja: (beygir, orð) =>
             beygir.finnaBeygingarfærslur(orð, {
-              velja: veljaBeygingarfærslu,
+              varpa: varpaBeygingarfærslu,
             }),
         },
         greina: {

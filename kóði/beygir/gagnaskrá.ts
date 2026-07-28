@@ -324,9 +324,9 @@ export type {
   Tilgátubeyging,
   Tilgátugreining,
   Uppflettiorð,
-  Velja,
-  VeljaUppflettiorð,
   VinnaBeygingarfærslu,
   VinnaBeygingarmynd,
   VinnaUppflettiorð,
+  Vörpun,
+  VörpunUppflettiorðs,
 } from "../snið/viðmót";

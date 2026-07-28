@@ -104,23 +104,23 @@ function væntaOpinberanSamning(beygir: LokanlegurBeygir): void {
   expect(beygir.hefurBeygingarfærslu("skikkunin", { sía: { mark: "NFETgr" } })).toBe(true);
   expect(beygir.hefurBeygingarfærslu("skikkunin", { sía: { mark: "ÞFET" } })).toBe(false);
 
-  expect(beygir.finnaUppflettiorð("hestur", { velja: (orð) => orð.auðkenni })).toEqual([1]);
+  expect(beygir.finnaUppflettiorð("hestur", { varpa: (orð) => orð.auðkenni })).toEqual([1]);
   expect(
     beygir.finnaUppflettiorðAfBeygingarmynd("skikkunin", {
-      velja: (orð) => orð.orð,
+      varpa: (orð) => orð.orð,
     }),
   ).toEqual(["skikkun"]);
-  expect(beygir.finna("skikkunin", { velja: (orð) => orð.auðkenni })).toEqual([2]);
-  expect(beygir.finna("akureyri", { hástafanæmt: false, velja: (orð) => orð.orð })).toEqual([
+  expect(beygir.finna("skikkunin", { varpa: (orð) => orð.auðkenni })).toEqual([2]);
+  expect(beygir.finna("akureyri", { hástafanæmt: false, varpa: (orð) => orð.orð })).toEqual([
     "Akureyri",
   ]);
   expect(
     beygir.finnaBeygingarfærslur("hest", {
       sía: { með: ["ÞF"] },
-      velja: (færsla) => færsla.mark,
+      varpa: (færsla) => færsla.mark,
     }),
   ).toEqual(["ÞFET"]);
-  expect(beygir.finnaBeygingarfærslur("hest", { velja: semÍtarlegFærsla })[0]).toMatchObject({
+  expect(beygir.finnaBeygingarfærslur("hest", { varpa: semÍtarlegFærsla })[0]).toMatchObject({
     orð: "hestur",
     beygingarmynd: "hest",
     mark: "ÞFET",
@@ -130,13 +130,13 @@ function væntaOpinberanSamning(beygir: LokanlegurBeygir): void {
   expect(
     beygir.beygingar(hestur, {
       sía: { án: ["ÞGF"] },
-      velja: (færsla) => færsla.beygingarmynd,
+      varpa: (færsla) => færsla.beygingarmynd,
     }),
   ).toEqual(["hestur", "hest", "hests"]);
   expect(beygir.beygingarmyndirAuðkennis(1)).toEqual(["hestur", "hest", "hesti", "hests"]);
 
   const þolfall = væntaGildis(beygir.finnaBeygingarfærslur("hest", { sía: { mark: "ÞFET" } })[0]);
-  expect(beygir.skiptaUmFall(þolfall, "EF", { velja: (færsla) => færsla.beygingarmynd })).toEqual([
+  expect(beygir.skiptaUmFall(þolfall, "EF", { varpa: (færsla) => færsla.beygingarmynd })).toEqual([
     "hests",
   ]);
 

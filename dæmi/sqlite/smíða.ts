@@ -401,7 +401,7 @@ function afritaGögn(
       );
       fjöldiUppflettiorða++;
 
-      const beygingar = beygir.beygingar(uppflettiorð, { velja: semÍtarlegFærsla });
+      const beygingar = beygir.beygingar(uppflettiorð, { varpa: semÍtarlegFærsla });
       for (let röð = 0; röð < beygingar.length; röð++) {
         const færsla = beygingar[röð]!;
         setjaBeygingu.run(

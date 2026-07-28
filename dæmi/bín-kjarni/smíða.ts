@@ -44,7 +44,7 @@ function* kjarnafærslur(inntaksslóð: string) {
     });
 
     for (const uppflettiorð of kjarnaorð) {
-      for (const færsla of beygir.beygingar(uppflettiorð, { velja: semÍtarlegFærsla })) {
+      for (const færsla of beygir.beygingar(uppflettiorð, { varpa: semÍtarlegFærsla })) {
         yield færsla;
       }
     }

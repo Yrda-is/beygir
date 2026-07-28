@@ -23,8 +23,8 @@ import type {
   Tilgátubeyging,
   Tilgátugreining,
   Uppflettiorð,
-  Velja,
-  VeljaUppflettiorð,
+  Vörpun,
+  VörpunUppflettiorðs,
 } from "./lestur";
 
 export { semÍtarlegFærsla } from "./lestur";
@@ -53,8 +53,8 @@ export type {
   Tilgátubeyging,
   Tilgátugreining,
   Uppflettiorð,
-  Velja,
-  VeljaUppflettiorð,
+  Vörpun,
+  VörpunUppflettiorðs,
 };
 export type { Markaþáttur };
 
@@ -115,43 +115,43 @@ export interface Færslutilvist extends Hástafaval {
 /**
  * Valkostir fyrir aðferðir sem skila uppflettiorðum.
  *
- * @typeParam Valið - Gerð gildisins sem `velja` skilar.
+ * @typeParam Varpað - Gerð gildisins sem `varpa` skilar.
  */
-export interface Orðaval<Valið = Uppflettiorð> extends Orðatilvist {
+export interface Orðaval<Varpað = Uppflettiorð> extends Orðatilvist {
   /** Vörpun úr uppflettiorði í þá lögun sem á að skila. */
-  readonly velja?: VeljaUppflettiorð<Valið>;
+  readonly varpa?: VörpunUppflettiorðs<Varpað>;
 }
 
 /**
  * Valkostir fyrir aðferðir sem skila formfærslum úr textaleit.
  *
- * @typeParam Valið - Gerð gildisins sem `velja` skilar.
+ * @typeParam Varpað - Gerð gildisins sem `varpa` skilar.
  */
-export interface Færsluval<Valið = Færsla> extends Færslutilvist {
+export interface Færsluval<Varpað = Færsla> extends Færslutilvist {
   /** Vörpun úr ítarlegri færslu í þá lögun sem á að skila. */
-  readonly velja?: Velja<Valið>;
+  readonly varpa?: Vörpun<Varpað>;
 }
 
 /**
  * Valkostir fyrir aðferðir sem skila beygingum þekkts uppflettiorðs.
  *
- * @typeParam Valið - Gerð gildisins sem `velja` skilar.
+ * @typeParam Varpað - Gerð gildisins sem `varpa` skilar.
  */
-export interface Beygingaval<Valið = Færsla> {
+export interface Beygingaval<Varpað = Færsla> {
   /** Valfrjáls marksía á beygingar uppflettiorðsins. */
   readonly sía?: Beygingarsía;
   /** Vörpun úr ítarlegri færslu í þá lögun sem á að skila. */
-  readonly velja?: Velja<Valið>;
+  readonly varpa?: Vörpun<Varpað>;
 }
 
 /**
  * Valkostir fyrir fallskipti.
  *
- * @typeParam Valið - Gerð gildisins sem `velja` skilar.
+ * @typeParam Varpað - Gerð gildisins sem `varpa` skilar.
  */
-export interface Fallaval<Valið = Færsla> {
+export interface Fallaval<Varpað = Færsla> {
   /** Vörpun úr ítarlegri færslu í þá lögun sem á að skila. */
-  readonly velja?: Velja<Valið>;
+  readonly varpa?: Vörpun<Varpað>;
 }
 
 /** Staða opins Beygis-lesara og afleiddra vísa hans. */
@@ -173,8 +173,8 @@ export interface Beygisstaða {
  *
  * Aðgerðir sem geta skilað mörgum niðurstöðum skila fylki og nota `[]` þegar
  * ekkert finnst. Aðgerðir sem skila einu staki skila `null` þegar ekkert finnst.
- * Lestraraðgerðir geta tekið síu og/eða `velja`-vörpunarfall til að velja hvaða
- * gögnum eigi að skila og með hvaða sniði. Ógild mörk, föll eða önnur viðföng
+ * Lestraraðgerðir geta tekið síu og/eða `varpa`-vörpunarfall sem ræður hvaða
+ * gögnum er skilað og með hvaða sniði. Ógild mörk, föll eða önnur viðföng
  * skila villu.
  *
  * Textalyklar eru þjappaðir í DAFSA-vísum og mörk eru síuð með bitmöskum þegar
@@ -338,11 +338,11 @@ export interface Beygir {
    * @example Vörpun
    * ```ts
    * beygir.finna("hestur", {
-   *   velja: (uppflettiorð) => uppflettiorð.auðkenni,
+   *   varpa: (uppflettiorð) => uppflettiorð.auðkenni,
    * }); // [6179, ...]
    * ```
    */
-  finna<Valið = Uppflettiorð>(texti: string, valkostir?: Orðaval<Valið>): readonly Valið[];
+  finna<Varpað = Uppflettiorð>(texti: string, valkostir?: Orðaval<Varpað>): readonly Varpað[];
 
   /**
    * Skilar uppflettiorðum út frá nákvæmu uppflettiorði.
@@ -370,14 +370,14 @@ export interface Beygir {
    * @example Vörpun á uppflettiorði
    * ```ts
    * beygir.finnaUppflettiorð("hestur", {
-   *   velja: (uppflettiorð) => uppflettiorð.auðkenni,
+   *   varpa: (uppflettiorð) => uppflettiorð.auðkenni,
    * }); // [6179, ...]
    * ```
    */
-  finnaUppflettiorð<Valið = Uppflettiorð>(
+  finnaUppflettiorð<Varpað = Uppflettiorð>(
     orð: string,
-    valkostir?: Orðaval<Valið>,
-  ): readonly Valið[];
+    valkostir?: Orðaval<Varpað>,
+  ): readonly Varpað[];
 
   /**
    * Finnur uppflettiorð sem tiltekin beygingarmynd tilheyrir.
@@ -402,16 +402,16 @@ export interface Beygir {
    *
    * @see {@link Beygir.finnaBeygingarfærslur} ef þú þarft mörk eða nákvæma formfærslu.
    */
-  finnaUppflettiorðAfBeygingarmynd<Valið = Uppflettiorð>(
+  finnaUppflettiorðAfBeygingarmynd<Varpað = Uppflettiorð>(
     beygingarmynd: string,
-    valkostir?: Orðaval<Valið>,
-  ): readonly Valið[];
+    valkostir?: Orðaval<Varpað>,
+  ): readonly Varpað[];
 
   /**
    * Finnur formfærslur fyrir beygingarmynd.
    *
    * Skilar `[]` ef myndin finnst ekki eða sían útilokar allar færslur. Með
-   * `velja` er byggð ítarleg færsla fyrir hverja geymda röð og vörpunin ræður
+   * `varpa` er byggð ítarleg færsla fyrir hverja geymda röð og vörpunin ræður
    * því sem skilað er.
    *
    * `Færsla.orð` er uppflettiorðið sem formið tilheyrir; fundna myndin er í
@@ -436,14 +436,14 @@ export interface Beygir {
    * @example Vörpun án síu
    * ```ts
    * beygir.finnaBeygingarfærslur("hestur", {
-   *   velja: (færsla) => færsla.mark,
+   *   varpa: (færsla) => færsla.mark,
    * }); // ["NFET", "ÞFET", ...]
    * ```
    */
-  finnaBeygingarfærslur<Valið = Færsla>(
+  finnaBeygingarfærslur<Varpað = Færsla>(
     beygingarmynd: string,
-    valkostir?: Færsluval<Valið>,
-  ): readonly Valið[];
+    valkostir?: Færsluval<Varpað>,
+  ): readonly Varpað[];
 
   /**
    * Skilar geymdum formfærslum uppflettiorðs.
@@ -476,14 +476,14 @@ export interface Beygir {
    * ```ts
    * beygir.beygingar(uppflettiorð, {
    *   sía: { með: ["NF"], án: ["gr"] },
-   *   velja: (færsla) => færsla.beygingarmynd,
+   *   varpa: (færsla) => færsla.beygingarmynd,
    * }); // ["hestur", "hestar"]
    * ```
    */
-  beygingar<Valið = Færsla>(
+  beygingar<Varpað = Færsla>(
     uppflettiorð: Uppflettiorð,
-    valkostir?: Beygingaval<Valið>,
-  ): readonly Valið[];
+    valkostir?: Beygingaval<Varpað>,
+  ): readonly Varpað[];
 
   /**
    * Skilar geymdum formfærslum auðkennis án þess að smíða `Uppflettiorð` fyrst.
@@ -505,10 +505,10 @@ export interface Beygir {
    * }); // Formfærslur fyrir "hestur" og "hestar".
    * ```
    */
-  beygingarAuðkennis<Valið = Færsla>(
+  beygingarAuðkennis<Varpað = Færsla>(
     auðkenni: Auðkenni,
-    valkostir?: Beygingaval<Valið>,
-  ): readonly Valið[];
+    valkostir?: Beygingaval<Varpað>,
+  ): readonly Varpað[];
 
   /**
    * Skilar aðeins strengjunum úr `beygingar(uppflettiorð)`.
@@ -574,16 +574,16 @@ export interface Beygir {
    * const [ef] = beygir.finnaBeygingarfærslur("hestanna");
    * if (ef !== undefined) {
    *   beygir.skiptaUmFall(ef, "NF", {
-   *     velja: (færsla) => færsla.beygingarmynd,
+   *     varpa: (færsla) => færsla.beygingarmynd,
    *   }); // ["hestarnir"]
    * }
    * ```
    */
-  skiptaUmFall<Valið = Færsla>(
+  skiptaUmFall<Varpað = Færsla>(
     færsla: Færsla,
     fall: Fall,
-    valkostir?: Fallaval<Valið>,
-  ): readonly Valið[];
+    valkostir?: Fallaval<Varpað>,
+  ): readonly Varpað[];
 
   /**
    * Les öll uppflettiorð gagnaskrárinnar í sniðröð.

@@ -285,7 +285,7 @@ describe("snið lestur", () => {
     expect(
       lesari.beygingarAuðkennis(1, {
         sía: { með: ["ÞF"] },
-        velja: (færsla) => færsla.mark,
+        varpa: (færsla) => færsla.mark,
       }),
     ).toEqual(["ÞFET"]);
     expect(lesari.beygingarAuðkennis(999)).toEqual([]);
@@ -313,7 +313,7 @@ describe("snið lestur", () => {
     expect(lesari.hefurBeygingarfærslu("akureyri", { hástafanæmt: false })).toBe(true);
 
     expect(lesari.finnaUppflettiorð("hestur").map((orð) => orð.auðkenni)).toEqual([1]);
-    expect(lesari.finnaUppflettiorð("hestur", { velja: (orð) => orð.orðflokkur })).toEqual(["kk"]);
+    expect(lesari.finnaUppflettiorð("hestur", { varpa: (orð) => orð.orðflokkur })).toEqual(["kk"]);
     expect(lesari.finnaUppflettiorð("kona", { sía: { orðflokkur: "kk" } })).toEqual([]);
     expect(lesari.finnaUppflettiorð(ÓKÓÐANLEGUR_LEITARTEXTI)).toEqual([]);
     expect(
@@ -321,7 +321,7 @@ describe("snið lestur", () => {
     ).toEqual(["Akureyri"]);
     expect(
       lesari.finnaUppflettiorð("akureyri", {
-        velja: (orð) => orð.orð,
+        varpa: (orð) => orð.orð,
         hástafanæmt: false,
       }),
     ).toEqual(["Akureyri"]);
@@ -348,7 +348,7 @@ describe("snið lestur", () => {
       lesari.finnaBeygingarfærslur("hest", { sía: { án: ["ÞGF"] } }).map((færsla) => færsla.mark),
     ).toEqual(["ÞFET"]);
     expect(lesari.finnaBeygingarfærslur("hest", { sía: { hluti: "gæl" } })).toEqual([]);
-    expect(lesari.finnaBeygingarfærslur("hest", { velja: (færsla) => færsla.auðkenni })).toEqual([
+    expect(lesari.finnaBeygingarfærslur("hest", { varpa: (færsla) => færsla.auðkenni })).toEqual([
       1, 1,
     ]);
     expect(
@@ -359,7 +359,7 @@ describe("snið lestur", () => {
 
     const ítarleg = lesari.finnaBeygingarfærslur("hest", {
       sía: { mark: "ÞFET" },
-      velja: semÍtarlegFærsla,
+      varpa: semÍtarlegFærsla,
     });
     expect(ítarleg).toHaveLength(1);
     expect(ítarleg[0]).toMatchObject({
@@ -394,6 +394,9 @@ describe("snið lestur", () => {
     expect(() => lesari.finnaUppflettiorð("hestur", { sía: { orðflokkur: 1 } } as never)).toThrow(
       /Orðsía\.orðflokkur/,
     );
+    expect(() => lesari.finnaUppflettiorð("hestur", { varpa: 1 } as never)).toThrow(
+      /valkostir\.varpa/,
+    );
     expect(() => lesari.finnaBeygingarfærslur("hestur", null as never)).toThrow(/valkostir/);
     expect(() =>
       lesari.hefurBeygingarfærslu("hestur", { sía: { auðkenni: "1" } } as never),
@@ -411,10 +414,10 @@ describe("snið lestur", () => {
     expect(lesari.skiptaUmFall(þolfall, "NF").map((færsla) => færsla.beygingarmynd)).toEqual([
       "hestur",
     ]);
-    expect(lesari.skiptaUmFall(þolfall, "EF", { velja: (færsla) => færsla.beygingarmynd })).toEqual(
+    expect(lesari.skiptaUmFall(þolfall, "EF", { varpa: (færsla) => færsla.beygingarmynd })).toEqual(
       ["hests"],
     );
-    expect(lesari.skiptaUmFall(þolfall, "ÞGF", { velja: (færsla) => færsla.mark })).toEqual([
+    expect(lesari.skiptaUmFall(þolfall, "ÞGF", { varpa: (færsla) => færsla.mark })).toEqual([
       "ÞGFET",
     ]);
     expect(() => lesari.skiptaUmFall(þolfall, "XX" as never)).toThrow(/Óstutt fall/);
