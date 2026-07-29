@@ -177,6 +177,10 @@ export interface Beygisstaða {
  * gögnum er skilað og með hvaða sniði. Ógild mörk, föll eða önnur viðföng
  * skila villu.
  *
+ * Nema annað sé tekið fram fylgja niðurstöður gagnskrárröð: uppflettiorð eru í
+ * vaxandi auðkennaröð og form í geymdri formröð innan auðkennis. Síun og vörpun
+ * breyta ekki röð þeirra niðurstaðna sem eftir standa.
+ *
  * Textalyklar eru þjappaðir í DAFSA-vísum og mörk eru síuð með bitmöskum þegar
  * hægt er. Í tímaflækjulýsingum táknar `l` lengd inntaks eftir textakóðun, `r`
  * fjölda geymdra raða sem þarf að heimsækja til að skila niðurstöðum, `f` fjölda
@@ -321,6 +325,9 @@ export interface Beygir {
    * honum í gegnum geymda beygingarmynd. Tvítekningar eru fjarlægðar eftir
    * `auðkenni`, þannig að sama uppflettiorð kemur aðeins einu sinni fyrir þótt
    * textinn passi í báðum sviðum.
+   * Beinar samsvaranir eru í stigvaxandi auðkennaröð og koma á undan niðurstöðum
+   * sem fundust aðeins út frá beygingarmynd; þær eru einnig í stigvaxandi
+   * auðkennaröð.
    *
    * Tímaflækja: `O(l + r)`, þar sem `r` er fjöldi raða sem þarf að heimsækja til
    * að finna og sameina niðurstöður.
@@ -757,7 +764,8 @@ export interface Beygir {
    *
    * Ef orðið finnst sem skráð uppflettiorð eða beygingarfærsla er niðurstaðan
    * merkt `tilgáta: false`. `niðurstöður` varðveitir öll uppflettiorð sem passa
-   * og raunverulegar beygingar þeirra úr gagnaskránni.
+   * og raunverulegar beygingar þeirra úr gagnaskránni í sömu röð og
+   * {@link Beygir.finna}.
    *
    * Aðeins þegar ekkert skráð finnst er reynt að þátta orðið með þekktum
    * höfuðlið. Sú niðurstaða er merkt `tilgáta: true`; afleiddar beygingar fá
